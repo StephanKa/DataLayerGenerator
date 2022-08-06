@@ -1,0 +1,196 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "Enums": {
+      "type": "array",
+      "items": [
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string"
+            },
+            "values": {
+              "type": "array",
+              "items": [
+                {
+                  "type": "string"
+                }
+              ]
+            },
+            "autoId": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "name",
+            "type",
+            "values",
+            "autoId"
+          ]
+        }
+      ]
+    },
+    "Groups": {
+      "type": "array",
+      "items": [
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "persistence": {
+              "type": "string"
+            },
+            "baseId": {
+              "type": "string"
+            },
+            "version": {
+              "type": "object",
+              "properties": {
+                "major": {
+                  "type": "integer"
+                },
+                "minor": {
+                  "type": "integer"
+                },
+                "build": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "major",
+                "minor",
+                "build"
+              ]
+            }
+          },
+          "required": [
+            "name",
+            "persistence",
+            "baseId",
+            "version"
+          ]
+        }
+      ]
+    },
+    "Structs": {
+      "type": "array",
+      "items": [
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "parameter": {
+              "type": "array",
+              "items": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "type": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "name",
+                    "type"
+                  ]
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "type": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "name",
+                    "type"
+                  ]
+                }
+              ]
+            }
+          },
+          "required": [
+            "name",
+            "parameter"
+          ]
+        }
+      ]
+    },
+    "Datapoints": {
+      "type": "array",
+      "items": [
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "group": {
+              "type": "string"
+            },
+            "id": {
+              "type": "integer"
+            },
+            "type": {
+              "type": "string"
+            },
+            "access": {
+              "type": "string"
+            },
+            "namespace": {
+              "type": "string"
+            },
+            "version": {
+              "type": "object",
+              "properties": {
+                "major": {
+                  "type": "integer"
+                },
+                "minor": {
+                  "type": "integer"
+                },
+                "build": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "major",
+                "minor",
+                "build"
+              ]
+            }
+          },
+          "required": [
+            "name",
+            "group",
+            "id",
+            "type",
+            "access",
+            "version"
+          ]
+        }
+      ]
+    }
+  },
+  "required": [
+    "Enums",
+    "Groups",
+    "Structs",
+    "Datapoints"
+  ]
+}

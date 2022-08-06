@@ -1,0 +1,61 @@
+#include <datalayerBase.h>
+
+{% for enum in enums -%}
+enum class {{ enum.name }} : {{ enum.type }}
+{
+{%- for value in enum["values"] %}
+    {%- if enum.autoId%}
+    {{ value }},
+    {%- else %}
+    {{ value.name }} = {{ value.value }},
+    {%- endif %}
+{%- endfor %}
+};
+
+{% endfor %}
+
+{%- for struct in structs %}
+struct {{ struct.name }}
+{
+    constexpr {{ struct.name }}(
+    {%- for parameter in struct.parameter -%}
+    {{ parameter.type }} {{ parameter.name }}_{% if not loop.last %}, {% endif %}
+    {%- endfor %}) : {% for parameter in struct.parameter -%}
+    {{ parameter.name }}({{ parameter.name }}_){% if not loop.last %}, {% endif %}
+    {%- endfor %}{}
+    constexpr {{ struct.name }}() = default;
+    {% for parameter in struct.parameter %}
+    {{ parameter.type }} {{ parameter.name }}{};
+    {%- endfor %}
+};
+{%- endfor %}
+
+{% for group in groups %}
+constexpr DataLayer::GroupInfo<{{ group.baseId }}, DataLayer::Persistance::{{ group.persistence }}, "{{ group.name }}", Version<{{ group.version.major }}, {{ group.version.minor }}, {{ group.version.build }}>{}> {{ group.name }}Info;
+{%- endfor %}
+
+{%- set namespace_name = namespace(value="") %}
+{% for dp in data_points|sort(attribute='name')|sort(attribute='namespace') %}
+{%- if dp.namespace|length %}
+{%- if dp.namespace != namespace_name.value %}
+{%- set namespace_name.value = dp.namespace %}
+namespace {{ dp.namespace }}
+{
+{%- endif %}
+DataLayer::DataPoint<{{ dp.type }}, {{ dp.group }}Info, {{ "%0x" | format( dp.id | int) }}, Helper::{{ dp.access }}, Version<{{ dp.version.major }}, {{ dp.version.minor }}, {{ dp.version.build }}>{}, "{{ dp.name }}"> {{ dp.name }};
+{%- if dp.namespace != namespace_name.value %}
+{%- set namespace_name.value = dp.namespace %}
+} // namespace {{ dp.namespace }}
+{%- endif %}
+{%- else %}
+DataLayer::DataPoint<{{ dp.type }}, {{ dp.group }}Info, {{ "%0x" | format( dp.id | int) }}, Helper::{{ dp.access }}, Version<{{ dp.version.major }}, {{ dp.version.minor }}, {{ dp.version.build }}>{}, "{{ dp.name }}"> {{ dp.name }};
+{%- endif %}
+{%- if namespace_name.value != "" and  loop.last %}
+} // namespace {{ namespace_name.value }}
+{%- endif %}
+{%- endfor %}
+{% for group in group_data_points_mapping %}
+constexpr DataLayer::GroupDataPointMapping {{ group  }} { {{ group }}Info, {% for parameter in group_data_points_mapping[group] -%}
+    {{ parameter }}{% if not loop.last %}, {% endif %}
+    {%- endfor %}};
+{%- endfor %}
