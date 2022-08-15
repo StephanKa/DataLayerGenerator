@@ -9,7 +9,7 @@ enum class Persistance : uint32_t { None, Cyclic, OnWrite };
 
 
 // group definitions
-template<uint16_t BaseId, Persistance persistence = Persistance::None, FixedString Name = "", auto Version = Version<0, 0, 0>{}> struct GroupInfo
+template<uint16_t BaseId, FixedString Name, Persistance persistence = Persistance::None, auto Version = Version<0, 0, 0>{}> struct GroupInfo
 {
     constexpr static Persistance persist{ persistence };
     constexpr static uint16_t baseId{ BaseId };

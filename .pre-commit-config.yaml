@@ -48,7 +48,3 @@ repos:
   rev: 6.1.1  # pick a git hash / tag to point to
   hooks:
     - id: pydocstyle
-- repo: https://github.com/motet-a/jinjalint
-  rev: 01e0a4d8
-  hooks:
-    - id: jinjalint

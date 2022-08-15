@@ -31,7 +31,7 @@ struct {{ struct.name }}
 {%- endfor %}
 
 {% for group in groups %}
-constexpr DataLayer::GroupInfo<{{ group.baseId }}, DataLayer::Persistance::{{ group.persistence }}, "{{ group.name }}", Version<{{ group.version.major }}, {{ group.version.minor }}, {{ group.version.build }}>{}> {{ group.name }}Info;
+constexpr DataLayer::GroupInfo<{{ group.baseId }}, "{{ group.name }}", DataLayer::Persistance::{{ group.persistence }}, Version<{{ group.version.major }}, {{ group.version.minor }}, {{ group.version.build }}>{}> {{ group.name }}Info;
 {%- endfor %}
 
 {%- set namespace_name = namespace(value="") %}

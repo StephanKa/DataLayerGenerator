@@ -16,7 +16,7 @@ template<unsigned N> struct FixedString
     {
         for (unsigned i = 0; i != N; ++i) { buf[i] = input[i]; }
     }
-    constexpr operator char const *() const { return buf; }
+    constexpr operator char const *() const { return buf.data(); }
 };
 template<unsigned N> FixedString(const char (&)[N]) -> FixedString<N - 1>;
 
