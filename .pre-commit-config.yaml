@@ -49,6 +49,6 @@ repos:
   hooks:
     - id: pydocstyle
 - repo: https://github.com/motet-a/jinjalint
-  rev: 'master'
+  rev: 01e0a4d8
   hooks:
     - id: jinjalint

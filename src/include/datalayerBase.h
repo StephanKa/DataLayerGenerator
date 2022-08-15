@@ -68,22 +68,17 @@ template<typename T, GroupInfo group, uint16_t id, typename Access, auto Version
     constexpr static auto getVersion() { return Version; }
 
     template<typename A = Access>
-        requires Helper::ReadConcept<A>
-    T operator()() const
-    {
-        return m_value;
-    }
+    requires Helper::ReadConcept<A> T operator()() const { return m_value; }
 
     template<typename A = Access>
-        requires Helper::ReadConcept<A>
-    T &get()
+    requires Helper::ReadConcept<A> T &get()
     {
         // serialize can be done with free function "toBytes()"
         return m_value;
     }
 
     template<typename A = Access>
-        requires Helper::WriteConcept<A>
+    requires Helper::WriteConcept<A>
     void set(const T &value)
     {
         // deserialize can be done with free function "fromBytes()"
