@@ -11,12 +11,12 @@ template<uint32_t Major, uint32_t Minor, uint32_t Build> struct Version
 
 template<unsigned N> struct FixedString
 {
-    char buf[N + 1]{};
+    std::array<char, N + 1> buf{};
     constexpr FixedString(char const *input)
     {
         for (unsigned i = 0; i != N; ++i) { buf[i] = input[i]; }
     }
-    constexpr explicit operator char const *() const { return buf; }
+    constexpr operator char const *() const { return buf; }
 };
 template<unsigned N> FixedString(const char (&)[N]) -> FixedString<N - 1>;
 
