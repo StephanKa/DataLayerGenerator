@@ -1,14 +1,10 @@
 """This generator will validate json defined JSON as model via a schema and generate according C++."""
 import json
 import os
-from jinja2 import Environment, FileSystemLoader
 import jsonschema
 import argparse
-
-
-BASE_TYPES = ['uint8_t', 'uint16_t', 'uint32_t', 'int8_t', 'int16_t', 'int32_t', 'float', 'double']
-SUPPORTED_PERSISTENCE = ['None', 'Cyclic', 'OnWrite']
-BASE_ACCESS = ['READACCESS', 'WRITEACCESS', 'READWRITE']
+from jinja2 import Environment, FileSystemLoader
+from validators import enum_validator, struct_validator, group_validator, data_point_validator
 
 
 def validate_json(model_data, schema):
@@ -20,128 +16,6 @@ def validate_json(model_data, schema):
     :return:
     """
     jsonschema.validate(instance=model_data, schema=schema)
-
-
-class EnumException(Exception):
-    """User defined exception for faulty enum definitions."""
-
-    pass
-
-
-class GroupException(Exception):
-    """User defined exception for faulty group definitions."""
-
-    pass
-
-
-class StructException(Exception):
-    """User defined exception for faulty struct definitions."""
-
-    pass
-
-
-class DatapointException(Exception):
-    """User defined exception for faulty data points definitions."""
-
-    pass
-
-
-def enum_validator(enum_data):
-    """Check the given enum data for consistency, duplicated and autoId.
-
-    :param enum_data: dictionary of all enum definitions
-    :return: given enum_data
-    """
-    check_names = dict()
-    for temp_enum in enum_data:
-        if temp_enum['name'] in check_names:
-            raise EnumException("Enum name '{}' already defined, please check your model".format(temp_enum['name']))
-        check_names[temp_enum['name']] = None
-        if temp_enum['type'] not in BASE_TYPES:
-            raise EnumException("Enum type '{}' is not supported".format(temp_enum['type']))
-        if temp_enum['autoId'] and len(temp_enum['values']) > 0 and not isinstance(temp_enum['values'][0], str):
-            raise EnumException('Enum autoId is true but values are not string only')
-        elif not temp_enum['autoId'] and len(temp_enum['values']) > 0 and isinstance(temp_enum['values'][0], str):
-            raise EnumException('Enum autoId is false defined but values are string only')
-    return enum_data
-
-
-def group_validator(group_data):
-    """
-    Check the given group data for consistency, duplicated and autoId.
-
-    :param group_data: dictionary of all group definitions
-    :return: given group_data
-    """
-    check_names = dict()
-    base_id = dict()
-    for temp_group in group_data:
-        if temp_group['name'] in check_names:
-            raise GroupException("Group name '{}' already defined, please check your model".format(temp_group['name']))
-        check_names[temp_group['name']] = None
-        if temp_group['persistence'] not in SUPPORTED_PERSISTENCE:
-            raise EnumException("Persistence type '{}' is not supported".format(temp_group['persistence']))
-        if temp_group['baseId'] in check_names:
-            raise GroupException("Group baseId '{}' already defined, please check your model".format(temp_group['baseId']))
-        base_id[temp_group['baseId']] = None
-    return group_data
-
-
-def struct_validator(struct_data):
-    """
-    Check the given struct data for consistency, duplicated and autoId.
-
-    :param struct_data: dictionary of all struct definitions
-    :return: given struct_data
-    """
-    check_names = dict()
-    for temp_group in struct_data:
-        if temp_group['name'] in check_names:
-            raise StructException("Struct name '{}' already defined, please check your model".format(temp_group['name']))
-        check_names[temp_group['name']] = None
-        parameter_names = list()
-        for temp_parameter in temp_group['parameter']:
-            if temp_parameter['name'] in parameter_names:
-                raise StructException("Struct name '{}' already defined, please check your model".format(temp_group['name']))
-            parameter_names.append(temp_parameter['name'])
-            if temp_parameter['type'] not in BASE_TYPES:
-                raise StructException("Parameter type '{}' is not supported".format(temp_parameter['type']))
-    return struct_data, check_names
-
-
-def data_point_validator(data_point_data, struct_list):
-    """
-    Check the given data point for consistency and if given struct is defined.
-
-    :param struct_list: dictionary of all struct definitions
-    :param data_point_data: dictionary of all data points definitions
-    :return: given data_point_data
-    """
-    check_names = dict()
-    group_id = dict()
-    for temp_dp in data_point_data:
-        group = temp_dp['group']
-        name = temp_dp['name']
-        access = temp_dp['access']
-        dp_id = temp_dp['id']
-        dp_type = temp_dp['type']
-        if 'namespace' in temp_dp:
-            name = '{}::{}'.format(temp_dp['namespace'], name)
-        else:
-            temp_dp['namespace'] = ''
-        if name in check_names:
-            raise DatapointException(f"Datapoint name '{name}' already defined, please check your model")
-        check_names[name] = None
-        if access not in BASE_ACCESS:
-            raise DatapointException(f"Datapoint access type '{access}' is not supported")
-        if dp_type not in BASE_TYPES and dp_type not in struct_list:
-            raise DatapointException(f"Datapoint type '{dp_type}' is not supported")
-        if group not in group_id:
-            group_id[group] = list()
-        if group in group_id and dp_id in group_id[group]:
-            raise DatapointException(f"Datapoint id '{dp_id}' is already registered for group '{group}'")
-        group_id[group].append(dp_id)
-    return data_point_data
 
 
 def create_group_data_point_dict(dps):
@@ -175,7 +49,12 @@ def get_args():
     return parser.parse_args()
 
 
-if __name__ == '__main__':
+def main(template_file_name):
+    """
+    Execute all work for parsing and validating.
+
+    :param template_file_name: defines the file that shall be rendered.
+    """
     args = get_args()
     with open(f'{args.source_dir}/generator/schema.json') as f:
         datalayer_schema = json.load(f)
@@ -198,10 +77,14 @@ if __name__ == '__main__':
 
     group_data_points_mapping = create_group_data_point_dict(data_points)
 
-    template = env.get_template('datalayer.h.jinja2')
+    template = env.get_template(template_file_name)
     output = template.render(enums=enums, groups=groups, structs=structs, data_points=data_points, group_data_points_mapping=group_data_points_mapping)
 
     if not os.path.exists(f'{args.out_dir}/generated'):
         os.mkdir(f'{args.out_dir}/generated')
     with open(f'{args.out_dir}/generated/datalayer.h', 'w') as f:
         f.write(output)
+
+
+if __name__ == '__main__':
+    main('datalayer.h.jinja2')
