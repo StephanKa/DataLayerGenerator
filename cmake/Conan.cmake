@@ -10,11 +10,13 @@ MACRO(RUN_CONAN)
     CONAN_CMAKE_RUN(
             REQUIRES
             ${CONAN_EXTRA_REQUIRES}
-            catch2/2.13.9
-            fmt/8.1.1
-            spdlog/1.10.0
+            catch2/3.2.1
+            fmt/9.1.0
+            spdlog/1.11.0
             OPTIONS
             ${CONAN_EXTRA_OPTIONS}
+            SETTINGS
+            compiler.cppstd=${CMAKE_CXX_STANDARD}
             BASIC_SETUP
             CMAKE_TARGETS # individual targets to link to
             BUILD
