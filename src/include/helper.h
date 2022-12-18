@@ -1,4 +1,5 @@
 #pragma once
+#include <array>
 #include <cstring>
 
 template<uint32_t Major, uint32_t Minor, uint32_t Build> struct Version
