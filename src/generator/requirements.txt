@@ -1,2 +1,4 @@
+conan
 Jinja2
 jsonschema
+setuptools

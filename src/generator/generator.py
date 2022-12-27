@@ -49,7 +49,33 @@ def get_args():
     return parser.parse_args()
 
 
-def main(template_file_name):
+def read_json_files(args):
+    """
+    Read all defined JSON files in model dir.
+
+    :return: json_data of all JSON files
+    """
+    json_data = {'Enums': [], 'Groups': [], 'Structs': [], 'Datapoints': []}
+    for root, dirs, files in os.walk(f'{args.source_dir}/model'):
+        for name in files:
+            with open(os.path.join(root, name)) as file:
+                tmp_json = json.load(file)
+
+            if json_data is None:
+                json_data = tmp_json
+                continue
+            if 'Enums' in tmp_json:
+                json_data['Enums'].extend(tmp_json['Enums'])
+            if 'Groups' in tmp_json:
+                json_data['Groups'].extend(tmp_json['Groups'])
+            if 'Structs' in tmp_json:
+                json_data['Structs'].extend(tmp_json['Structs'])
+            if 'Datapoints' in tmp_json:
+                json_data['Datapoints'].extend(tmp_json['Datapoints'])
+    return json_data
+
+
+def main(template_file_name, template_formatter_file_name):
     """
     Execute all work for parsing and validating.
 
@@ -62,9 +88,7 @@ def main(template_file_name):
     file_loader = FileSystemLoader(f'{args.source_dir}/template')
     env = Environment(loader=file_loader)
 
-    with open(f'{args.source_dir}/model/model.json') as file:
-        data = file.read()
-    json_data = json.loads(data)
+    json_data = read_json_files(args)
 
     # validate json scheme
     validate_json(json_data, datalayer_schema)
@@ -77,14 +101,22 @@ def main(template_file_name):
 
     group_data_points_mapping = create_group_data_point_dict(data_points)
 
-    template = env.get_template(template_file_name)
-    output = template.render(enums=enums, groups=groups, structs=structs, data_points=data_points, group_data_points_mapping=group_data_points_mapping)
-
     if not os.path.exists(f'{args.out_dir}/generated'):
         os.mkdir(f'{args.out_dir}/generated')
+
+    template = env.get_template(template_file_name)
+    output = template.render(enums=enums, groups=groups, structs=structs, data_points=data_points, group_data_points_mapping=group_data_points_mapping)
     with open(f'{args.out_dir}/generated/datalayer.h', 'w') as f:
+        f.write(output)
+
+    template = env.get_template(template_formatter_file_name)
+    struct_types = dict()
+    for struct in structs:
+        struct_types[struct['name']] = struct['parameter']
+    output = template.render(structs=structs, data_points=data_points, struct_types=struct_types)
+    with open(f'{args.out_dir}/generated/formatter.h', 'w') as f:
         f.write(output)
 
 
 if __name__ == '__main__':
-    main('datalayer.h.jinja2')
+    main('datalayer.h.jinja2', 'customFormatter.h.jinja2')

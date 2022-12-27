@@ -1,14 +1,15 @@
 #include "include/version.hpp"
 #include <datalayer.h>
+#include <formatter.h>
 
 
 template<> struct fmt::formatter<SoftwareVersion>
 {
     template<typename ParseContext> constexpr auto parse(ParseContext &ctx) { return ctx.begin(); }
 
-    template<typename FormatContext> auto format(const SoftwareVersion & /*version*/, FormatContext &ctx)
+    template<typename FormatContext> auto format(const SoftwareVersion &version, FormatContext &ctx)
     {
-        return format_to(ctx.out(), "Major: {} Minor: {} Build: {} Githash: {}", SoftwareVersion::Major, SoftwareVersion::Minor, SoftwareVersion::Patch, SoftwareVersion::GitHash);
+        return format_to(ctx.out(), "Major: {} Minor: {} Build: {} Githash: {}", version.Major, version.Minor, version.Patch, version.GitHash);
     }
 };
 
@@ -34,21 +35,20 @@ int main()
       versionTest.minor,
       versionTest.build);
 
-    constexpr Temperature a{ 42.2f, 1234 };
+    constexpr Temperature a{ .value = 42.2F, .raw = 1234 };
     test4.set(a);
     const auto test4Value = test4();
     const auto version4Test = test4.getVersion();
     fmt::print(R"(Datapoints
     id: {:#06x}
-    value: temp={} raw={}
+    value: {}
     version:
         Major = {}
         Minor = {}
         Build = {}
 )",
       test4.getId(),
-      test4Value.value,
-      test4Value.raw,
+      test4Value,
       version4Test.major,
       version4Test.minor,
       version4Test.build);

@@ -7,7 +7,6 @@
 namespace DataLayer {
 enum class Persistance : uint32_t { None, Cyclic, OnWrite };
 
-
 // group definitions
 template<uint16_t BaseId, FixedString Name, Persistance persistence = Persistance::None, auto Version = Version<0, 0, 0>{}> struct GroupInfo
 {
@@ -61,7 +60,8 @@ template<typename GroupInfo, typename... Datapoints> struct GroupDataPointMappin
 template<typename T, GroupInfo group, uint16_t id, typename Access, auto Version = Version<0, 0, 0>{}, FixedString Name = ""> class DataPoint
 {
   public:
-    DataPoint() = default;
+    constexpr DataPoint() = default;
+    constexpr explicit DataPoint(T value) : m_value(value) {}
     static constexpr char const *name = Name;
 
     constexpr static uint16_t getId() { return group.baseId + id; }

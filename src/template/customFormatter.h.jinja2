@@ -1,0 +1,13 @@
+#pragma once
+{%- for struct in struct_types %}
+
+template<> struct fmt::formatter<{{ struct }}>
+{
+    template<typename ParseContext> constexpr auto parse(ParseContext &ctx) { return ctx.begin(); }
+
+    template<typename FormatContext> auto format(const {{ struct }}& value, FormatContext &ctx)
+    {
+        return format_to(ctx.out(), "{% for item in struct_types[struct] %} {{ item.name }} = {}{% endfor %}"{% for item in struct_types[struct] %}, value.{{ item.name }}{% endfor %});
+    }
+};
+{%- endfor %}

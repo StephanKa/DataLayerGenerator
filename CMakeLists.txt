@@ -9,6 +9,7 @@ SET(CMAKE_CXX_STANDARD 20)
 INCLUDE(cmake/StandardProjectSettings.cmake)
 INCLUDE(cmake/PreventInSourceBuilds.cmake)
 INCLUDE(cmake/CodeFormat.cmake)
+INCLUDE(cmake/Python.cmake)
 
 EXECUTE_PROCESS(
         COMMAND git log -1 --format=%h
@@ -18,11 +19,6 @@ EXECUTE_PROCESS(
 )
 
 CONFIGURE_FILE("templates/version.hpp.in" "${CMAKE_BINARY_DIR}/generated/include/version.hpp" ESCAPE_QUOTES)
-
-FIND_PACKAGE(Python COMPONENTS Interpreter REQUIRED)
-
-# install PyPI Python package using pip
-EXECUTE_PROCESS(COMMAND ${Python_EXECUTABLE} -m pip install --user --upgrade pip setuptools jinja2 conan jsonschema)
 
 # Link this 'library' to set the c++ standard / compile-time options requested
 ADD_LIBRARY(project_options INTERFACE)

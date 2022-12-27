@@ -1,0 +1,41 @@
+{
+  "Enums": [
+    {
+      "name": "Status",
+      "type": "uint32_t",
+      "values": [
+        "Booting",
+        "Starting",
+        "Finished"
+      ],
+      "autoId": true
+    },
+    {
+      "name": "ErrorStates",
+      "type": "uint32_t",
+      "values": [
+        {
+          "name": "Info",
+          "value": 1
+        },
+        {
+          "name": "Warn",
+          "value": 4
+        },
+        {
+          "name": "Error",
+          "value": 5
+        },
+        {
+          "name": "Critical",
+          "value": 9
+        },
+        {
+          "name": "Fatal",
+          "value": 10
+        }
+      ],
+      "autoId": false
+    }
+  ]
+}

@@ -6,7 +6,6 @@ repos:
     - id: trailing-whitespace
     - id: end-of-file-fixer
     - id: check-merge-conflict
-    - id: pretty-format-json
     - id: check-yaml
     - id: check-ast
     - id: check-json
@@ -29,12 +28,6 @@ repos:
   hooks:
   - id: clang-format
     types_or: [c++, c, cuda]
-- repo: https://github.com/python-jsonschema/check-jsonschema
-  rev: 0.17.1
-  hooks:
-    - id: check-jsonschema
-      files: ^src//model.*\.json$
-      args: ["--schemafile", "src/generator/schema.json"]
 - repo: https://github.com/pycqa/pydocstyle
   rev: 6.1.1  # pick a git hash / tag to point to
   hooks:

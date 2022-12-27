@@ -17,13 +17,6 @@ enum class {{ enum.name }} : {{ enum.type }}
 {%- for struct in structs %}
 struct {{ struct.name }}
 {
-    constexpr {{ struct.name }}(
-    {%- for parameter in struct.parameter -%}
-    {{ parameter.type }} {{ parameter.name }}_{% if not loop.last %}, {% endif %}
-    {%- endfor %}) : {% for parameter in struct.parameter -%}
-    {{ parameter.name }}({{ parameter.name }}_){% if not loop.last %}, {% endif %}
-    {%- endfor %}{}
-    constexpr {{ struct.name }}() = default;
     {% for parameter in struct.parameter %}
     {{ parameter.type }} {{ parameter.name }}{};
     {%- endfor %}
@@ -42,13 +35,13 @@ constexpr DataLayer::GroupInfo<{{ group.baseId }}, "{{ group.name }}", DataLayer
 namespace {{ dp.namespace }}
 {
 {%- endif %}
-DataLayer::DataPoint<{{ dp.type }}, {{ dp.group }}Info, {{ "%0x" | format( dp.id | int) }}, Helper::{{ dp.access }}, Version<{{ dp.version.major }}, {{ dp.version.minor }}, {{ dp.version.build }}>{}, "{{ dp.name }}"> {{ dp.name }};
+DataLayer::DataPoint<{{ dp.type }}, {{ dp.group }}Info, {{ "%0x" | format( dp.id | int) }}, Helper::{{ dp.access }}, Version<{{ dp.version.major }}, {{ dp.version.minor }}, {{ dp.version.build }}>{}, "{{ dp.name }}"> {{ dp.name }}{% if 'default' in dp %}({% if dp.default is number %}{{ dp.default }}{% else %}{% for attr in dp.default.keys() %}.{{ attr }}={{ dp.default[attr] }}{% endfor %}{% endif %}){% endif %};
 {%- if dp.namespace != namespace_name.value %}
 {%- set namespace_name.value = dp.namespace %}
 } // namespace {{ dp.namespace }}
 {%- endif %}
 {%- else %}
-DataLayer::DataPoint<{{ dp.type }}, {{ dp.group }}Info, {{ "%0x" | format( dp.id | int) }}, Helper::{{ dp.access }}, Version<{{ dp.version.major }}, {{ dp.version.minor }}, {{ dp.version.build }}>{}, "{{ dp.name }}"> {{ dp.name }};
+DataLayer::DataPoint<{{ dp.type }}, {{ dp.group }}Info, {{ "%0x" | format( dp.id | int) }}, Helper::{{ dp.access }}, Version<{{ dp.version.major }}, {{ dp.version.minor }}, {{ dp.version.build }}>{}, "{{ dp.name }}"> {{ dp.name }}{% if 'default' in dp %}({% if dp.default is number %}{{ dp.default }}{% else %}{{ dp.type }}{ {%- for attr in dp.default.keys() %}.{{ attr }}={{ dp.default[attr] }}, {% endfor -%} }{% endif %}){% endif %};
 {%- endif %}
 {%- if namespace_name.value != "" and  loop.last %}
 } // namespace {{ namespace_name.value }}

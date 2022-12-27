@@ -1,0 +1,59 @@
+{
+  "Datapoints": [
+    {
+      "name": "test",
+      "group": "DefaultGroup",
+      "id": 1,
+      "type": "int32_t",
+      "default": 4211,
+      "access": "READWRITE",
+      "namespace": "Testify",
+      "version": {
+        "major": 1,
+        "minor": 0,
+        "build": 1
+      }
+    },
+    {
+      "name": "est2",
+      "group": "DefaultGroup",
+      "id": 2,
+      "type": "int32_t",
+      "access": "READWRITE",
+      "namespace": "Testify",
+      "version": {
+        "major": 1,
+        "minor": 0,
+        "build": 1
+      }
+    },
+    {
+      "name": "test3",
+      "group": "DefaultGroup",
+      "id": 3,
+      "type": "int32_t",
+      "access": "READWRITE",
+      "version": {
+        "major": 1,
+        "minor": 0,
+        "build": 1
+      }
+    },
+    {
+      "name": "test4",
+      "group": "CyclicGroup",
+      "id": 4,
+      "type": "Temperature",
+      "default": {
+        "value": 123.0,
+        "raw": 5555
+      },
+      "access": "READWRITE",
+      "version": {
+        "major": 1,
+        "minor": 0,
+        "build": 1
+      }
+    }
+  ]
+}
