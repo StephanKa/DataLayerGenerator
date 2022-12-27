@@ -1,7 +1,7 @@
 FIND_PACKAGE(Python COMPONENTS Interpreter REQUIRED)
 
 # install PyPI Python package using pip
-EXECUTE_PROCESS(COMMAND ${Python_EXECUTABLE} -m pip install --upgrade pip virtualenv)
+EXECUTE_PROCESS(COMMAND ${Python_EXECUTABLE} -m pip install --upgrade pip virtualenv conan)
 
 EXECUTE_PROCESS(COMMAND ${Python_EXECUTABLE} -m venv ${CMAKE_BINARY_DIR}/.venv)
 ## update the environment with VIRTUAL_ENV variable (mimic the activate script)
