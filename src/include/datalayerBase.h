@@ -57,7 +57,7 @@ template<typename GroupInfo, typename... Datapoints> struct GroupDataPointMappin
     }
 
   private:
-    constexpr static bool setter(const auto &value, auto &args, bool &ret)
+    constexpr static bool setter([[maybe_unused]] const auto &value, [[maybe_unused]] auto &args, [[maybe_unused]] bool &ret)
     {
         if constexpr (Helper::WriteConcept<std::remove_cvref_t<decltype(args.TypeAccess)>>) {
             args.set(value);
@@ -66,7 +66,7 @@ template<typename GroupInfo, typename... Datapoints> struct GroupDataPointMappin
         return true;
     }
 
-    constexpr static bool getter(auto &value, const auto &args, bool &ret)
+    constexpr static bool getter([[maybe_unused]] auto &value, [[maybe_unused]] const auto &args, [[maybe_unused]] bool &ret)
     {
         if constexpr (Helper::ReadConcept<std::remove_cvref_t<decltype(args.TypeAccess)>>) {
             value = args();
