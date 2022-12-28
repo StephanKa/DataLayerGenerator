@@ -1,0 +1,17 @@
+{
+  "Structs": [
+    {
+      "name": "Temperature",
+      "parameter": [
+        {
+          "name": "value",
+          "type": "float"
+        },
+        {
+          "name": "raw",
+          "type": "uint32_t"
+        }
+      ]
+    }
+  ]
+}

@@ -46,6 +46,8 @@ def get_args():
     parser = argparse.ArgumentParser(description='Generates code from defined model.')
     parser.add_argument('-s', '--source_dir', required=True, help='Source directory which point to the generator')
     parser.add_argument('-o', '--out_dir', required=True, help='Out directory which point to the folder where the generated files will be saved.')
+    parser.add_argument('-t', '--template_dir', required=True, help='Template directory where the jinja2 templates are located.')
+    parser.add_argument('-c', '--schema_dir', required=True, help='Scheme directory where the schema.json is located.')
     return parser.parse_args()
 
 
@@ -79,13 +81,14 @@ def main(template_file_name, template_formatter_file_name):
     """
     Execute all work for parsing and validating.
 
+    :param template_formatter_file_name: defines the template for the fmt formatter
     :param template_file_name: defines the file that shall be rendered.
     """
     args = get_args()
-    with open(f'{args.source_dir}/generator/schema.json') as f:
+    with open(f'{args.schema_dir}/schema.json') as f:
         datalayer_schema = json.load(f)
 
-    file_loader = FileSystemLoader(f'{args.source_dir}/template')
+    file_loader = FileSystemLoader(f'{args.template_dir}')
     env = Environment(loader=file_loader)
 
     json_data = read_json_files(args)
@@ -102,7 +105,7 @@ def main(template_file_name, template_formatter_file_name):
     group_data_points_mapping = create_group_data_point_dict(data_points)
 
     if not os.path.exists(f'{args.out_dir}/generated'):
-        os.mkdir(f'{args.out_dir}/generated')
+        os.makedirs(f'{args.out_dir}/generated')
 
     template = env.get_template(template_file_name)
     output = template.render(enums=enums, groups=groups, structs=structs, data_points=data_points, group_data_points_mapping=group_data_points_mapping)

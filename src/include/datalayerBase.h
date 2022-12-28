@@ -31,11 +31,12 @@ template<typename GroupInfo, typename... Datapoints> struct GroupDataPointMappin
 
     template<typename T> [[nodiscard]] bool setDatapoint(uint32_t dataPointId, const T &value) const
     {
+
         return std::apply(
           [&](auto &...args) {
-              bool ret{};
+              bool ret = false;
 
-              (((dataPointId == args.getId()) && (args.set(value), ret = true, true)) || ... || (false));
+              (((dataPointId == args.getId()) && (setter(value, args, ret))) || ... || false);
 
               return ret;
           },
@@ -46,13 +47,32 @@ template<typename GroupInfo, typename... Datapoints> struct GroupDataPointMappin
     {
         return std::apply(
           [&](const auto &...args) {
-              bool ret{};
+              bool ret = false;
 
-              (((dataPointId == args.getId()) && (value = args(), ret = true, true)) || ... || (false));
+              (((dataPointId == args.getId()) && (getter(value, args, ret))) || ... || false);
 
               return ret;
           },
           datapoints);
+    }
+
+  private:
+    constexpr static bool setter(const auto &value, auto &args, bool &ret)
+    {
+        if constexpr (Helper::WriteConcept<std::remove_cvref_t<decltype(args.TypeAccess)>>) {
+            args.set(value);
+            ret = true;
+        }
+        return true;
+    }
+
+    constexpr static bool getter(auto &value, const auto &args, bool &ret)
+    {
+        if constexpr (Helper::ReadConcept<std::remove_cvref_t<decltype(args.TypeAccess)>>) {
+            value = args();
+            ret = true;
+        }
+        return true;
     }
 };
 
@@ -60,6 +80,7 @@ template<typename GroupInfo, typename... Datapoints> struct GroupDataPointMappin
 template<typename T, GroupInfo group, uint16_t id, typename Access, auto Version = Version<0, 0, 0>{}, FixedString Name = ""> class DataPoint
 {
   public:
+    constexpr static Access TypeAccess{};
     constexpr DataPoint() = default;
     constexpr explicit DataPoint(T value) : m_value(value) {}
     static constexpr char const *name = Name;

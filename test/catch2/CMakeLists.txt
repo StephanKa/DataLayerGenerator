@@ -5,20 +5,32 @@ ADD_LIBRARY(catch_main STATIC catch_main.cpp)
 TARGET_LINK_LIBRARIES(catch_main PUBLIC CONAN_PKG::catch2)
 TARGET_LINK_LIBRARIES(catch_main PRIVATE project_options)
 
-ADD_EXECUTABLE(catch_tests tests.cpp)
-TARGET_LINK_LIBRARIES(catch_tests PRIVATE project_warnings project_options catch_main)
+FOREACH(TEST_NAME datapoints groups)
+    ADD_EXECUTABLE(${TEST_NAME}_tests ${TEST_NAME}/test.cpp)
+    ADD_CUSTOM_TARGET(${TEST_NAME}GenerateDataLayer
+                      COMMAND ${Python_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/../../src/generator/generator.py
+                      --source_dir ${CMAKE_CURRENT_SOURCE_DIR}/${TEST_NAME}
+                      --out_dir ${CMAKE_CURRENT_BINARY_DIR}/${TEST_NAME}
+                      --template_dir ${CMAKE_CURRENT_SOURCE_DIR}/../../src/template
+                      --schema_dir ${CMAKE_CURRENT_SOURCE_DIR}/../../src/generator)
 
-# automatically discover tests that are defined in catch based test files you can modify the unittests. Set TEST_PREFIX
-# to whatever you want, or use different for different binaries
-CATCH_DISCOVER_TESTS(
-        catch_tests
-        TEST_PREFIX
-        "catch_unittests."
-        REPORTER
-        JUnit
-        OUTPUT_DIR
-        .
-        OUTPUT_PREFIX
-        "catch_unittests."
-        OUTPUT_SUFFIX
-        .xml)
+    TARGET_INCLUDE_DIRECTORIES(${TEST_NAME}_tests PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/${TEST_NAME}/generated ${CMAKE_CURRENT_SOURCE_DIR}/../../src/include)
+    TARGET_LINK_LIBRARIES(${TEST_NAME}_tests PRIVATE project_warnings project_options catch_main CONAN_PKG::fmt)
+
+    ADD_DEPENDENCIES(${TEST_NAME}_tests ${TEST_NAME}GenerateDataLayer)
+
+    # automatically discover tests that are defined in catch based test files you can modify the unittests. Set TEST_PREFIX
+    # to whatever you want, or use different for different binaries
+    CATCH_DISCOVER_TESTS(
+            ${TEST_NAME}_tests
+            TEST_PREFIX
+            "${TEST_NAME}."
+            REPORTER
+            JUnit
+            OUTPUT_DIR
+            .
+            OUTPUT_PREFIX
+            "${TEST_NAME}."
+            OUTPUT_SUFFIX
+            .xml)
+ENDFOREACH()

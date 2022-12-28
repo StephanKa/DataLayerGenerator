@@ -1,0 +1,14 @@
+{
+  "Groups": [
+    {
+      "name": "DefaultGroup",
+      "persistence": "None",
+      "baseId": "0x4000",
+      "version": {
+        "major": 2,
+        "minor": 4,
+        "build": 5
+      }
+    }
+  ]
+}
