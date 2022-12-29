@@ -20,11 +20,11 @@ jobs:
 
       - name: Build docker-ci image
         shell: bash
-        run: ./docker/build-ci-image.sh
+        run: cd docker && ./build-ci-image.sh
 
       - name: Build docker-dev image
         shell: bash
-        run: ./docker/build-dev-image.sh
+        run: cd docker && ./build-dev-image.sh
   linux:
     name: ${{ matrix.os }}, ${{ matrix.compiler.name }}
     runs-on: ${{ matrix.os }}
