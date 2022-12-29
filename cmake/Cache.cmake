@@ -1,4 +1,3 @@
-OPTION(ENABLE_CACHE "Enable cache if available" ON)
 IF(NOT ENABLE_CACHE)
     RETURN()
 ENDIF()

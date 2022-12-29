@@ -12,6 +12,19 @@ env:
   CONAN_USER_HOME_SHORT: "${{ github.workspace }}/conan-cache/short"
 
 jobs:
+  docker:
+    name: ${{ matrix.os }}, ${{ matrix.compiler.name }}
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Build docker-ci image
+        shell: bash
+        run: ./docker/build-ci-image.sh
+
+      - name: Build docker-dev image
+        shell: bash
+        run: ./docker/build-dev-image.sh
   linux:
     name: ${{ matrix.os }}, ${{ matrix.compiler.name }}
     runs-on: ${{ matrix.os }}
@@ -71,7 +84,7 @@ jobs:
       # We need to source the profile file to make sure conan is in PATH
       run: |
         source ~/.profile
-        cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE
+        cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DENABLE_SANITIZER_ADDRESS=TRUE -DENABLE_SANITIZER_LEAK=TRUE -DENABLE_SANITIZER_UNDEFINED_BEHAVIOR=TRUE
 
     - name: Build
       working-directory: ${{runner.workspace}}/build

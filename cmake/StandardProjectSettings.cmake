@@ -17,7 +17,6 @@ ENDIF()
 # Generate compile_commands.json to make it easier to work with clang based tools
 SET(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-OPTION(ENABLE_IPO "Enable Interprocedural Optimization, aka Link Time Optimization (LTO)" OFF)
 
 IF(ENABLE_IPO)
     INCLUDE(CheckIPOSupported)

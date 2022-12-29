@@ -3,7 +3,6 @@
 # https://github.com/lefticus/cppbestpractices/blob/master/02-Use_the_Tools_Available.md
 
 FUNCTION(SET_PROJECT_WARNINGS project_name)
-    OPTION(WARNINGS_AS_ERRORS "Treat compiler warnings as errors" TRUE)
 
     SET(MSVC_WARNINGS
         /W4 # Baseline reasonable warnings

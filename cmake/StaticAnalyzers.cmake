@@ -1,7 +1,3 @@
-OPTION(ENABLE_CPPCHECK "Enable static analysis with cppcheck" OFF)
-OPTION(ENABLE_CLANG_TIDY "Enable static analysis with clang-tidy" OFF)
-OPTION(ENABLE_INCLUDE_WHAT_YOU_USE "Enable static analysis with include-what-you-use" OFF)
-
 IF(ENABLE_CPPCHECK)
     FIND_PROGRAM(CPPCHECK cppcheck)
     IF(CPPCHECK)

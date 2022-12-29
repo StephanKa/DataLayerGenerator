@@ -6,6 +6,7 @@ PROJECT(DatalayerGenerator
         VERSION 0.0.1)
 SET(CMAKE_CXX_STANDARD 20)
 
+INCLUDE(cmake/Options.cmake)
 INCLUDE(cmake/StandardProjectSettings.cmake)
 INCLUDE(cmake/PreventInSourceBuilds.cmake)
 INCLUDE(cmake/CodeFormat.cmake)

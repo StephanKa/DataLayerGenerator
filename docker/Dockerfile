@@ -2,7 +2,7 @@
 # Build and test environment for CI
 # =================================
 
-FROM ubuntu:20.04 as cpp-docker-ci
+FROM ubuntu:22.10 as cpp-docker-ci
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -10,21 +10,21 @@ RUN apt-get update && apt-get -y dist-upgrade && apt-get -y install --fix-missin
   binutils \
   build-essential \
   bzip2 \
-  clang-format \
   cmake \
   cppcheck \
   lsb-release \
   ninja-build \
-  python \
+  python3 \
   python3-pip \
   ssh \
   software-properties-common \
   sudo \
   tar \
-  wget \
-  && apt-get autoremove -y && apt-get clean
- RUN bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)" \
- RUN pip install --user conan
+  wget
+RUN bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"
+RUN apt-get -y install clang-format clang-tidy
+RUN apt-get autoremove -y && apt-get clean
+RUN pip install --user conan Jinja2 jsonschema setuptools
 
 
 
