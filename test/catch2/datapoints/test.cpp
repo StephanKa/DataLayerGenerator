@@ -131,3 +131,28 @@ TEST_CASE("Test datapoint 'testWithoutDefaultValueWriteOnly' access", "[Datapoin
 {
     static_assert(std::is_same_v<std::remove_cv_t<decltype(testWithoutDefaultValueWriteOnly.TypeAccess)>, Helper::WRITEONLY>);
 }
+
+TEST_CASE("Test datapoint 'testWithoutDefaultValueWriteOnly' can't read", "[Datapoints]")
+{
+    constexpr auto dpId = testWithoutDefaultValueWriteOnly.getId();
+    Temperature value{};
+    REQUIRE(!DefaultGroup.getDatapoint(dpId, value));
+}
+
+TEST_CASE("Test datapoint 'testWithoutDefaultValue' set via group", "[Datapoints]")
+{
+    const auto initialValue = testWithoutDefaultValue.get();
+    constexpr auto dpId = testWithoutDefaultValue.getId();
+    constexpr auto EPSILON = 0.1;
+    Temperature value{};
+    REQUIRE(DefaultGroup.getDatapoint(dpId, value));
+    REQUIRE(value.raw == initialValue.raw);
+    REQUIRE_THAT(value.value, Catch::Matchers::WithinRel(static_cast<double>(value.value), EPSILON));
+
+    // write new data
+    constexpr float newValue{ 321.4f };
+    constexpr uint32_t newRaw{ 3214u };
+    const Temperature newData{ newValue, newRaw };
+
+    REQUIRE(!DefaultGroup.setDatapoint(dpId, newData));
+}
