@@ -5,7 +5,7 @@ ADD_LIBRARY(catch_main STATIC catch_main.cpp)
 TARGET_LINK_LIBRARIES(catch_main PUBLIC CONAN_PKG::catch2)
 TARGET_LINK_LIBRARIES(catch_main PRIVATE project_options)
 
-FOREACH(TEST_NAME datapoints groups)
+FOREACH(TEST_NAME datapoints groups enums)
     ADD_EXECUTABLE(${TEST_NAME}_tests ${TEST_NAME}/test.cpp)
     ADD_CUSTOM_TARGET(${TEST_NAME}GenerateDataLayer
                       COMMAND ${Python_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/../../src/generator/generator.py
