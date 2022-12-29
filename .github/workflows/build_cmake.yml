@@ -13,7 +13,7 @@ env:
 
 jobs:
   docker:
-    name: ${{ matrix.os }}, ${{ matrix.compiler.name }}
+    name: Test docker images
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
