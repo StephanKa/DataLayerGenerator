@@ -7,3 +7,6 @@
 
 - [ ] python abstract data in classes? https://pypi.org/project/dataclasses-json/
 - [ ] add C++ tests
+- [ ] add coverage
+- [ ] test docker image
+- [ ] add possibility to distinguish between MCU and desktop operating systems
