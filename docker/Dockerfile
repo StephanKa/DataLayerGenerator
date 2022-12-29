@@ -55,7 +55,7 @@ RUN groupadd -g 1000 ${DEV_USER} && \
 
 # fix "Missing privilege separation directory" error in SSHD
 # see: https://bugs.launchpad.net/ubuntu/+source/openssh/+bug/45234
-RUN mkdir /var/run/sshd && chmod 0755 /var/run/sshd
+RUN chmod 0755 /var/run/sshd
 
 COPY ccache.conf /etc/.
 
