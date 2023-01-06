@@ -1,9 +1,7 @@
+# misc
 OPTION(ENABLE_CACHE "Enable cache if available" ON)
-
 OPTION(WARNINGS_AS_ERRORS "Treat compiler warnings as errors" TRUE)
-
 OPTION(ENABLE_DOXYGEN "Enable doxygen doc builds of source" OFF)
-
 OPTION(ENABLE_COVERAGE "Enable coverage reporting for gcc/clang" FALSE)
 
 # sanitizer options

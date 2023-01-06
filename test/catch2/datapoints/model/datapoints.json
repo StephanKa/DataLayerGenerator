@@ -1,43 +1,43 @@
 {
   "Datapoints": [
     {
-      "name": "test",
+      "access": "READWRITE",
+      "default": {
+        "raw": 4711,
+        "value": 123.0
+      },
       "group": "DefaultGroup",
       "id": 4,
+      "name": "test",
       "type": "Temperature",
-      "default": {
-        "value": 123.0,
-        "raw": 4711
-      },
-      "access": "READWRITE",
       "version": {
+        "build": 22,
         "major": 1,
-        "minor": 0,
-        "build": 22
+        "minor": 0
       }
     },
     {
-      "name": "testWithoutDefaultValue",
+      "access": "READONLY",
       "group": "DefaultGroup",
       "id": 8,
+      "name": "testWithoutDefaultValue",
       "type": "Temperature",
-      "access": "READONLY",
       "version": {
+        "build": 223,
         "major": 2,
-        "minor": 10,
-        "build": 223
+        "minor": 10
       }
     },
     {
-      "name": "testWithoutDefaultValueWriteOnly",
+      "access": "WRITEONLY",
       "group": "DefaultGroup",
       "id": 12,
+      "name": "testWithoutDefaultValueWriteOnly",
       "type": "Temperature",
-      "access": "WRITEONLY",
       "version": {
+        "build": 3,
         "major": 0,
-        "minor": 2,
-        "build": 3
+        "minor": 2
       }
     }
   ]

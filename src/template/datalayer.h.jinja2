@@ -17,9 +17,9 @@ enum class {{ enum.name }} : {{ enum.type }}
 {%- for struct in structs %}
 struct {{ struct.name }}
 {
-    {% for parameter in struct.parameter %}
+    {% for parameter in struct.parameter -%}
     {{ parameter.type }} {{ parameter.name }}{};
-    {%- endfor %}
+    {% endfor %}
 };
 {%- endfor %}
 

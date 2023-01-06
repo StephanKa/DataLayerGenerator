@@ -1,13 +1,13 @@
 {
   "Groups": [
     {
+      "baseId": "0x4000",
       "name": "DefaultGroup",
       "persistence": "None",
-      "baseId": "0x4000",
       "version": {
+        "build": 5,
         "major": 2,
-        "minor": 4,
-        "build": 5
+        "minor": 4
       }
     }
   ]
