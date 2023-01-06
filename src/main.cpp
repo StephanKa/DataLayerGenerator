@@ -35,7 +35,7 @@ int main()
       versionTest.minor,
       versionTest.build);
 
-    constexpr Temperature a{ .value = 42.2F, .raw = 1234 };
+    constexpr Temperature a{ .raw = 1234, .value = 42.2F };
     test4.set(a);
     const auto test4Value = test4();
     const auto version4Test = test4.getVersion();

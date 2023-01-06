@@ -54,7 +54,7 @@ TEST_CASE("Test datapoint read / write", "[Datapoints]")
     // write new data
     constexpr float newValue{ 123.4f };
     constexpr uint32_t newRaw{ 1234u };
-    const Temperature newData{ newValue, newRaw };
+    const Temperature newData{ newRaw, newValue };
     test.set(newData);
 
     // verify data
@@ -83,7 +83,7 @@ TEST_CASE("Test datapoint set via group", "[Datapoints]")
     // write new data
     constexpr float newValue{ 321.4f };
     constexpr uint32_t newRaw{ 3214u };
-    const Temperature newData{ newValue, newRaw };
+    const Temperature newData{ newRaw, newValue };
 
     REQUIRE(DefaultGroup.setDatapoint(dpId, newData));
     REQUIRE(test().raw == newRaw);
@@ -152,7 +152,7 @@ TEST_CASE("Test datapoint 'testWithoutDefaultValue' set via group", "[Datapoints
     // write new data
     constexpr float newValue{ 321.4f };
     constexpr uint32_t newRaw{ 3214u };
-    const Temperature newData{ newValue, newRaw };
+    const Temperature newData{ newRaw, newValue };
 
     REQUIRE(!DefaultGroup.setDatapoint(dpId, newData));
 }
