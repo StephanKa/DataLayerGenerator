@@ -60,7 +60,7 @@ jobs:
     - run:   |
              sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"
              sudo apt update
-             sudo apt install ${{ matrix.compiler.pkgs }}
+             sudo apt install ninja-build ${{ matrix.compiler.pkgs }}
       shell: bash
 
     - name: Install conan
