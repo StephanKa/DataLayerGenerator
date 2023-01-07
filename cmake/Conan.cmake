@@ -7,11 +7,16 @@ MACRO(RUN_CONAN)
 
     INCLUDE(${CMAKE_BINARY_DIR}/conan.cmake)
 
+    SET(FMT_LIBRARY "")
+    IF(ENABLE_FMT)
+        SET(FMT_LIBRARY fmt/9.1.0)
+    ENDIF()
+
     CONAN_CMAKE_RUN(
             REQUIRES
             ${CONAN_EXTRA_REQUIRES}
             catch2/3.2.1
-            fmt/9.1.0
+            ${FMT_LIBRARY}
             spdlog/1.11.0
             OPTIONS
             ${CONAN_EXTRA_OPTIONS}

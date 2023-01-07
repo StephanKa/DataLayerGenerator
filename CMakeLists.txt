@@ -12,6 +12,10 @@ INCLUDE(cmake/PreventInSourceBuilds.cmake)
 INCLUDE(cmake/CodeFormat.cmake)
 INCLUDE(cmake/Python.cmake)
 
+IF(ENABLE_FMT)
+    ADD_COMPILE_DEFINITIONS(USE_FMT)
+ENDIF()
+
 EXECUTE_PROCESS(
         COMMAND git log -1 --format=%h
         WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
@@ -53,12 +57,7 @@ ENABLE_DOXYGEN()
 # allow for static analysis options
 INCLUDE(cmake/StaticAnalyzers.cmake)
 
-OPTION(BUILD_SHARED_LIBS "Enable compilation of shared libraries" OFF)
-OPTION(ENABLE_TESTING "Enable Test Builds" ON)
-OPTION(ENABLE_FUZZING "Enable Fuzzing Builds" OFF)
-
 # Very basic PCH example
-OPTION(ENABLE_PCH "Enable Precompiled Headers" OFF)
 IF(ENABLE_PCH)
     # This sets a global PCH parameter, each project will build its own PCH, which is a good idea if any #define's change
     #

@@ -1,6 +1,9 @@
 #pragma once
 #include <cstdint>
+#include <tuple>
+#ifdef USE_FMT
 #include <fmt/format.h>
+#endif
 #include <helper.h>
 #include <type_traits>
 
@@ -25,8 +28,10 @@ template<typename GroupInfo, typename... Datapoints> struct GroupDataPointMappin
 
     void printDatapoints() const
     {
+#ifdef USE_FMT
         fmt::print("Group: {}\n", group.name);
         std::apply([&](const auto &...args) { ((fmt::print("{}: {}\n", args.name, args.getId())), ...); }, datapoints);
+#endif
     }
 
     template<typename T> [[nodiscard]] bool setDatapoint(uint32_t dataPointId, const T &value) const

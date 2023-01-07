@@ -1,5 +1,6 @@
 #include "include/version.hpp"
 #include <datalayer.h>
+#include <fmt/format.h>
 #include <formatter.h>
 
 
