@@ -168,7 +168,7 @@
     }, 
     { 
       "name": "clang-13-release", 
-      "configurePreset": "clang-13-release" 
+      "configurePreset": "clang-13-release" 
     },
     { 
       "name": "clang-14-debug", 
@@ -226,7 +226,7 @@
     }, 
     { 
       "name": "clang-13-release", 
-      "configurePreset": "clang-13-release" 
+      "configurePreset": "clang-13-release" 
     },
     { 
       "name": "clang-14-debug", 
