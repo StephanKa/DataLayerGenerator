@@ -3,9 +3,6 @@ name: C/C++ CMake CI
 on: [push]
 
 env:
-  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
-  BUILD_TYPE: RelWithDebInfo
-
   # Conan cache environment variables
   CONAN_SYSREQUIRES_MODE: enabled
   CONAN_USER_HOME: "${{ github.workspace }}/conan-cache"
@@ -81,20 +78,20 @@ jobs:
       # We need to source the profile file to make sure conan is in PATH
       run: |
         source ~/.profile
-        cmake --preset ${{ matrix.compiler.preset }}-debug $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DENABLE_SANITIZER_ADDRESS=TRUE -DENABLE_SANITIZER_LEAK=TRUE -DENABLE_SANITIZER_UNDEFINED_BEHAVIOR=TRUE
+        cmake --preset ${{ matrix.compiler.preset }}-debug $GITHUB_WORKSPACE -DENABLE_SANITIZER_ADDRESS=TRUE -DENABLE_SANITIZER_LEAK=TRUE -DENABLE_SANITIZER_UNDEFINED_BEHAVIOR=TRUE
 
     - name: Build
       working-directory: ${{runner.workspace}}/build
       shell: bash
       # Execute the build.  You can specify a specific target with "--target <NAME>"
-      run: cmake --preset ${{ matrix.compiler.preset }}-debug --build . --config $BUILD_TYPE
+      run: cmake --preset ${{ matrix.compiler.preset }}-debug --build .
 
     - name: Test
       working-directory: ${{runner.workspace}}/build
       shell: bash
       # Execute tests defined by the CMake configuration.
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-      run: ctest -C $BUILD_TYPE
+      run: ctest -C
   windows:
     name: ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
@@ -123,15 +120,15 @@ jobs:
         # The CMake binaries on the Github Actions machines are (as of this writing) 3.12
         #
         # We need to source the profile file to make sure conan is in PATH
-        run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE
+        run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=RelWithDebInfo
       - name: Build
         shell: bash
         working-directory: ${{github.workspace}}/build
         # Execute the build.  You can specify a specific target with "--target <NAME>"
-        run: cmake --build . --config $BUILD_TYPE
+        run: cmake --build . --config RelWithDebInfo
       - name: Test
         shell: bash
         working-directory: ${{github.workspace}}/build
         # Execute tests defined by the CMake configuration.
         # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-        run: ctest -C $BUILD_TYPE
+        run: ctest -C RelWithDebInfo
