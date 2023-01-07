@@ -1,0 +1,156 @@
+{
+  "version": 2,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 15,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "debug-base",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/debug",
+      "displayName": "Base preset for debug builds",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "release-base",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/release",
+      "displayName": "Base preset for release builds",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "clang-12-debug",
+      "inherits": "debug-base",
+      "displayName": "Preset for clang 12 debug build",
+      "environment": {
+        "CXX": "clang++-12",
+        "CC": "clang-12"
+      }
+    },
+    {
+      "name": "clang-12-release",
+      "inherits": "release-base",
+      "displayName": "Preset for clang 12 release build",
+      "environment": {
+        "CXX": "clang++-12",
+        "CC": "clang-12"
+      }
+    },
+    {
+      "name": "clang-13-debug",
+      "inherits": "debug-base",
+      "displayName": "Preset for clang 13 debug build",
+      "environment": {
+        "CXX": "clang++-13",
+        "CC": "clang-13"
+      }
+    },
+    {
+      "name": "clang-13-release",
+      "inherits": "release-base",
+      "displayName": "Preset for clang 13 release build",
+      "environment": {
+        "CXX": "clang++-13",
+        "CC": "clang-13"
+      }
+    },
+    {
+      "name": "clang-14-debug",
+      "inherits": "debug-base",
+      "displayName": "Preset for clang 14 debug build",
+      "environment": {
+        "CXX": "clang++-14",
+        "CC": "clang-14"
+      }
+    },
+    {
+      "name": "clang-14-release",
+      "inherits": "release-base",
+      "displayName": "Preset for clang 14 release build",
+      "environment": {
+        "CXX": "clang++-14",
+        "CC": "clang-14"
+      }
+    },
+    {
+      "name": "clang-15-debug",
+      "inherits": "debug-base",
+      "displayName": "Preset for clang 15 debug build",
+      "environment": {
+        "CXX": "clang++-15",
+        "CC": "clang-15"
+      }
+    },
+    {
+      "name": "clang-15-release",
+      "inherits": "release-base",
+      "displayName": "Preset for clang 15 release build",
+      "environment": {
+        "CXX": "clang++-15",
+        "CC": "clang-15"
+      }
+    },
+    {
+      "name": "gcc-10-debug",
+      "inherits": "debug-base",
+      "displayName": "Preset for gcc 10 debug builds",
+      "environment": {
+        "CXX": "g++-10",
+        "CC": "gcc-10"
+      }
+    },
+    {
+      "name": "gcc-10-release",
+      "inherits": "release-base",
+      "displayName": "Preset for gcc 10 release builds",
+      "environment": {
+        "CXX": "g++-10",
+        "CC": "gcc-10"
+      }
+    },
+    {
+      "name": "gcc-11-debug",
+      "inherits": "debug-base",
+      "displayName": "Preset for gcc 11 debug builds",
+      "environment": {
+        "CXX": "g++-11",
+        "CC": "gcc-11"
+      }
+    },
+    {
+      "name": "gcc-11-release",
+      "inherits": "release-base",
+      "displayName": "Preset for gcc 11 release builds",
+      "environment": {
+        "CXX": "g++-11",
+        "CC": "gcc-11"
+      }
+    },
+    {
+      "name": "gcc-12-debug",
+      "inherits": "debug-base",
+      "displayName": "Preset for gcc debug builds",
+      "environment": {
+        "CXX": "g++-12",
+        "CC": "gcc-12"
+      }
+    },
+    {
+      "name": "gcc-12-release",
+      "inherits": "release-base",
+      "displayName": "Preset for gcc release builds",
+      "environment": {
+        "CXX": "g++-12",
+        "CC": "gcc-12"
+      }
+    }
+  ]
+}
