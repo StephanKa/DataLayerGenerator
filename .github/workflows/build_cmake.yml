@@ -84,7 +84,7 @@ jobs:
       working-directory: ${{runner.workspace}}/build
       shell: bash
       # Execute the build.  You can specify a specific target with "--target <NAME>"
-      run: cmake --preset ${{ matrix.compiler.preset }}-debug --build .
+      run: cmake --preset ${{ matrix.compiler.preset }}-debug --build
 
     - name: Test
       working-directory: ${{runner.workspace}}/build
