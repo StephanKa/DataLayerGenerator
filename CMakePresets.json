@@ -162,35 +162,25 @@
     {
       "name": "windows-debug",
       "displayName": "Windows x64 Debug",
-      "generator": "Ninja",
+      "generator": "Visual Studio 16 2019",
       "architecture": {
         "value": "x64",
         "strategy": "external"
       },
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug"
-      },
-      "condition": {
-        "type": "equals",
-        "lhs": "${hostSystemName}",
-        "rhs": "Windows"
       }
     },
     {
       "name": "windows-release",
       "displayName": "Windows x64 release",
-      "generator": "Ninja",
+      "generator": "Visual Studio 16 2019",
       "architecture": {
         "value": "x64",
         "strategy": "external"
       },
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release"
-      },
-      "condition": {
-        "type": "equals",
-        "lhs": "${hostSystemName}",
-        "rhs": "Windows"
       }
     }
   ],
