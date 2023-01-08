@@ -160,9 +160,10 @@
       }
     },
     {
-      "name": "windows-debug",
+      "name": "windows-2019-debug",
       "displayName": "Windows x64 Debug",
       "generator": "Visual Studio 16 2019",
+      "binaryDir": "${sourceDir}/build/debug",
       "architecture": {
         "value": "x64",
         "strategy": "external"
@@ -172,9 +173,36 @@
       }
     },
     {
-      "name": "windows-release",
+      "name": "windows-2019-release",
       "displayName": "Windows x64 release",
       "generator": "Visual Studio 16 2019",
+      "binaryDir": "${sourceDir}/build/debug",
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "windows-2022-debug",
+      "displayName": "Windows x64 Debug",
+      "generator": "Visual Studio 17 2022,
+      "binaryDir": "${sourceDir}/build/debug",
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "windows-2022-release",
+      "displayName": "Windows x64 release",
+      "generator": "Visual Studio 17 2022",
+      "binaryDir": "${sourceDir}/build/debug",
       "architecture": {
         "value": "x64",
         "strategy": "external"
