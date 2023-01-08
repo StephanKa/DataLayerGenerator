@@ -24,7 +24,7 @@ jobs:
         run: cd docker && ./build-dev-image.sh
 
   linux:
-    name: ${{ matrix.os }}, ${{ matrix.compiler.name }}, ${{ matrix.compiler.build-type }}
+    name: ${{ matrix.os }}, ${{ matrix.compiler.name }}, ${{ matrix.compiler.buildtype }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false  # 'false' means Don't stop matrix workflows even if some matrix entry fails.
