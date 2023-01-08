@@ -30,7 +30,7 @@ jobs:
       fail-fast: false  # 'false' means Don't stop matrix workflows even if some matrix entry fails.
       matrix:
         os: [ubuntu-22.04]
-        build-type: [debug, release]
+        buildtype: [debug, release]
         compiler: [ {name: 'GCC 10', preset: gcc-10, pkgs: 'gcc-10 g++-10 lib32gcc-10-dev gcc-multilib'},
                     {name: 'GCC 11', preset: gcc-11, pkgs: 'gcc-11 g++-11 lib32gcc-11-dev gcc-multilib'},
                     {name: 'Clang 12', preset: clang-12, pkgs: 'clang-12 llvm-12'},
@@ -68,24 +68,26 @@ jobs:
       # Use a bash shell so we can use the same syntax for environment variable
       # access regardless of the host operating system
       shell: bash
-      run: cmake --preset ${{ matrix.compiler.preset }}-${{ matrix.compiler.build-type }}
+      run: cmake --preset ${{ matrix.compiler.preset }}-${{ matrix.compiler.buildtype }}
 
     - name: Build
       shell: bash
       # Execute the build.  You can specify a specific target with "--target <NAME>"
-      run:  cmake --build --preset ${{ matrix.compiler.preset }}-${{ matrix.compiler.build-type }}
+      run:  cmake --build --preset ${{ matrix.compiler.preset }}-${{ matrix.compiler.buildtype }}
 
     - name: Test
       shell: bash
-      run: ctest --preset ${{ matrix.compiler.preset }}-${{ matrix.compiler.build-type }}
+      run: ctest --preset ${{ matrix.compiler.preset }}-${{ matrix.compiler.buildtype }}
 
   windows:
-    name: ${{ matrix.os }}
+    name: ${{ matrix.os }}, ${{ matrix.buildtype }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false  # 'false' means Don't stop matrix workflows even if some matrix entry fails.
       matrix:
         os: [windows-latest, windows-2019]
+        compiler: [windows]
+        buildtype: [debug, release]
     steps:
       - uses: actions/checkout@v3
       - name: Install conan
@@ -93,29 +95,16 @@ jobs:
         run: |
           python3 -m pip install --upgrade pip setuptools
           python3 -m pip install conan jsonschema virtualenv
-      - name: Create Build Environment
-        # Some projects don't allow in-source building, so create a separate build directory
-        # We'll use this as our working directory for all subsequent commands
-        run: cmake -E make_directory ${{github.workspace}}/build
+
       - name: Configure CMake
         # Use a bash shell so we can use the same syntax for environment variable
         shell: bash
-        # access regardless of the host operating system
-        working-directory: ${{github.workspace}}/build
-        # Note the current convention is to use the -S and -B options here to specify source
-        # and build directories, but this is only available with CMake 3.13 and higher.
-        # The CMake binaries on the Github Actions machines are (as of this writing) 3.12
-        #
-        # We need to source the profile file to make sure conan is in PATH
-        run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=RelWithDebInfo
+        run: cmake --preset ${{ matrix.compiler }}-${{ matrix.compiler.buildtype }}
+
       - name: Build
         shell: bash
-        working-directory: ${{github.workspace}}/build
-        # Execute the build.  You can specify a specific target with "--target <NAME>"
-        run: cmake --build . --config RelWithDebInfo
+        run:  cmake --build --preset ${{ matrix.compiler.preset }}-${{ matrix.compiler.buildtype }}
+
       - name: Test
         shell: bash
-        working-directory: ${{github.workspace}}/build
-        # Execute tests defined by the CMake configuration.
-        # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-        run: ctest -C RelWithDebInfo
+        run: ctest --preset ${{ matrix.compiler }}-${{ matrix.compiler.buildtype }}
