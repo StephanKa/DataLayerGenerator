@@ -24,7 +24,7 @@ jobs:
         run: cd docker && ./build-dev-image.sh
 
   linux:
-    name: ${{ matrix.os }}, ${{ matrix.compiler.name }}, ${{ matrix.compiler.buildtype }}
+    name: ${{ matrix.os }}, ${{ matrix.compiler.name }}, ${{ matrix.buildtype }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false  # 'false' means Don't stop matrix workflows even if some matrix entry fails.
@@ -68,16 +68,16 @@ jobs:
       # Use a bash shell so we can use the same syntax for environment variable
       # access regardless of the host operating system
       shell: bash
-      run: cmake --preset ${{ matrix.compiler.preset }}-${{ matrix.compiler.buildtype }}
+      run: cmake --preset ${{ matrix.compiler.preset }}-${{ matrix.buildtype }}
 
     - name: Build
       shell: bash
       # Execute the build.  You can specify a specific target with "--target <NAME>"
-      run:  cmake --build --preset ${{ matrix.compiler.preset }}-${{ matrix.compiler.buildtype }}
+      run:  cmake --build --preset ${{ matrix.compiler.preset }}-${{ matrix.buildtype }}
 
     - name: Test
       shell: bash
-      run: ctest --preset ${{ matrix.compiler.preset }}-${{ matrix.compiler.buildtype }}
+      run: ctest --preset ${{ matrix.compiler.preset }}-${{ matrix.buildtype }}
 
   windows:
     name: ${{ matrix.os }}, ${{ matrix.buildtype }}
@@ -99,12 +99,12 @@ jobs:
       - name: Configure CMake
         # Use a bash shell so we can use the same syntax for environment variable
         shell: bash
-        run: cmake --preset ${{ matrix.compiler }}-${{ matrix.compiler.buildtype }}
+        run: cmake --preset ${{ matrix.compiler }}-${{ matrix.buildtype }}
 
       - name: Build
         shell: bash
-        run:  cmake --build --preset ${{ matrix.compiler.preset }}-${{ matrix.compiler.buildtype }}
+        run:  cmake --build --preset ${{ matrix.compiler.preset }}-${{ matrix.buildtype }}
 
       - name: Test
         shell: bash
-        run: ctest --preset ${{ matrix.compiler }}-${{ matrix.compiler.buildtype }}
+        run: ctest --preset ${{ matrix.compiler }}-${{ matrix.buildtype }}
