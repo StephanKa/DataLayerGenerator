@@ -22,13 +22,15 @@ jobs:
       - name: Build docker-dev image
         shell: bash
         run: cd docker && ./build-dev-image.sh
+
   linux:
-    name: ${{ matrix.os }}, ${{ matrix.compiler.name }}
+    name: ${{ matrix.os }}, ${{ matrix.compiler.name }}, ${{ matrix.compiler.build-type }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false  # 'false' means Don't stop matrix workflows even if some matrix entry fails.
       matrix:
         os: [ubuntu-22.04]
+        build-type: [debug, release]
         compiler: [ {name: 'GCC 10', preset: gcc-10, pkgs: 'gcc-10 g++-10 lib32gcc-10-dev gcc-multilib'},
                     {name: 'GCC 11', preset: gcc-11, pkgs: 'gcc-11 g++-11 lib32gcc-11-dev gcc-multilib'},
                     {name: 'Clang 12', preset: clang-12, pkgs: 'clang-12 llvm-12'},
@@ -49,7 +51,8 @@ jobs:
           ~/.cache/pip
         key: ${{ runner.os }}-${{ env.BUILD_TYPE }}-${{ hashFiles('CMakeLists.txt') }}-${{ hashFiles('cmake/Conan.cmake') }}
 
-    - run:   |
+    - name: Install dependencies
+      run:   |
              sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"
              sudo apt update
              sudo apt install ninja-build ${{ matrix.compiler.pkgs }}
@@ -61,25 +64,20 @@ jobs:
            python3 -m pip install --upgrade pip setuptools conan
            source ~/.profile
 
-    - name: Configure CMake
+    - name: Configure via CMake
       # Use a bash shell so we can use the same syntax for environment variable
       # access regardless of the host operating system
       shell: bash
-
-      run: |
-        source ~/.profile
-        cmake --preset ${{ matrix.compiler.preset }}-debug -DENABLE_SANITIZER_ADDRESS=TRUE -DENABLE_SANITIZER_LEAK=TRUE -DENABLE_SANITIZER_UNDEFINED_BEHAVIOR=TRUE
+      run: cmake --preset ${{ matrix.compiler.preset }}-${{ matrix.compiler.build-type }}
 
     - name: Build
       shell: bash
       # Execute the build.  You can specify a specific target with "--target <NAME>"
-      run:  |
-        source ~/.profile
-        cmake --build --preset ${{ matrix.compiler.preset }}-debug
+      run:  cmake --build --preset ${{ matrix.compiler.preset }}-${{ matrix.compiler.build-type }}
 
     - name: Test
       shell: bash
-      run: ctest --preset ${{ matrix.compiler.preset }}-debug
+      run: ctest --preset ${{ matrix.compiler.preset }}-${{ matrix.compiler.build-type }}
 
   windows:
     name: ${{ matrix.os }}

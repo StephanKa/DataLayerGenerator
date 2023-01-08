@@ -13,7 +13,13 @@
       "binaryDir": "${sourceDir}/build/debug",
       "displayName": "Base preset for debug builds",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug"
+        "CMAKE_BUILD_TYPE": "Debug",
+        "ENABLE_COVERAGE": "ON",
+        "ENABLE_SANITIZER_ADDRESS": "ON",
+        "ENABLE_SANITIZER_LEAK": "ON",
+        "ENABLE_SANITIZER_UNDEFINED_BEHAVIOR": "ON",
+        "ENABLE_SANITIZER_MEMORY": "ON",
+        "ENABLE_FMT": "ON"
       }
     },
     {
@@ -23,7 +29,8 @@
       "binaryDir": "${sourceDir}/build/release",
       "displayName": "Base preset for release builds",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release"
+        "CMAKE_BUILD_TYPE": "Release",
+        "ENABLE_FMT": "ON"
       }
     },
     {
@@ -153,120 +160,120 @@
       }
     }
   ],
-  "buildPresets": [ 
-    { 
-      "name": "clang-12-debug", 
+  "buildPresets": [
+    {
+      "name": "clang-12-debug",
       "configurePreset": "clang-12-debug"
-    }, 
-    { 
-      "name": "clang-12-release", 
-      "configurePreset": "clang-12-release" 
     },
-    { 
-      "name": "clang-13-debug", 
-      "configurePreset": "clang-13-debug" 
-    }, 
-    { 
-      "name": "clang-13-release", 
-      "configurePreset": "clang-13-release" 
+    {
+      "name": "clang-12-release",
+      "configurePreset": "clang-12-release"
     },
-    { 
-      "name": "clang-14-debug", 
-      "configurePreset": "clang-14-debug" 
-    }, 
-    { 
-      "name": "clang-14-release", 
-      "configurePreset": "clang-14-release" 
+    {
+      "name": "clang-13-debug",
+      "configurePreset": "clang-13-debug"
     },
-    { 
-      "name": "clang-15-debug", 
-      "configurePreset": "clang-15-debug" 
-    }, 
-    { 
-      "name": "clang-15-release", 
-      "configurePreset": "clang-15-release" 
+    {
+      "name": "clang-13-release",
+      "configurePreset": "clang-13-release"
     },
-    { 
-      "name": "gcc-10-debug", 
-      "configurePreset": "gcc-10-debug" 
-    }, 
-    { 
-      "name": "gcc-10-release", 
-      "configurePreset": "gcc-10-release" 
+    {
+      "name": "clang-14-debug",
+      "configurePreset": "clang-14-debug"
     },
-    { 
-      "name": "gcc-11-debug", 
-      "configurePreset": "gcc-11-debug" 
-    }, 
-    { 
-      "name": "gcc-11-release", 
-      "configurePreset": "gcc-11-release" 
+    {
+      "name": "clang-14-release",
+      "configurePreset": "clang-14-release"
     },
-    { 
-      "name": "gcc-12-debug", 
-      "configurePreset": "gcc-12-debug" 
-    }, 
-    { 
-      "name": "gcc-12-release", 
-      "configurePreset": "gcc-12-release" 
+    {
+      "name": "clang-15-debug",
+      "configurePreset": "clang-15-debug"
+    },
+    {
+      "name": "clang-15-release",
+      "configurePreset": "clang-15-release"
+    },
+    {
+      "name": "gcc-10-debug",
+      "configurePreset": "gcc-10-debug"
+    },
+    {
+      "name": "gcc-10-release",
+      "configurePreset": "gcc-10-release"
+    },
+    {
+      "name": "gcc-11-debug",
+      "configurePreset": "gcc-11-debug"
+    },
+    {
+      "name": "gcc-11-release",
+      "configurePreset": "gcc-11-release"
+    },
+    {
+      "name": "gcc-12-debug",
+      "configurePreset": "gcc-12-debug"
+    },
+    {
+      "name": "gcc-12-release",
+      "configurePreset": "gcc-12-release"
     }
   ],
-  "testPresets": [ 
-    { 
-      "name": "clang-12-debug", 
+  "testPresets": [
+    {
+      "name": "clang-12-debug",
       "configurePreset": "clang-12-debug"
-    }, 
-    { 
-      "name": "clang-12-release", 
-      "configurePreset": "clang-12-release" 
     },
-    { 
-      "name": "clang-13-debug", 
-      "configurePreset": "clang-13-debug" 
-    }, 
-    { 
-      "name": "clang-13-release", 
-      "configurePreset": "clang-13-release" 
+    {
+      "name": "clang-12-release",
+      "configurePreset": "clang-12-release"
     },
-    { 
-      "name": "clang-14-debug", 
-      "configurePreset": "clang-14-debug" 
-    }, 
-    { 
-      "name": "clang-14-release", 
-      "configurePreset": "clang-14-release" 
+    {
+      "name": "clang-13-debug",
+      "configurePreset": "clang-13-debug"
     },
-    { 
-      "name": "clang-15-debug", 
-      "configurePreset": "clang-15-debug" 
-    }, 
-    { 
-      "name": "clang-15-release", 
-      "configurePreset": "clang-15-release" 
+    {
+      "name": "clang-13-release",
+      "configurePreset": "clang-13-release"
     },
-    { 
-      "name": "gcc-10-debug", 
-      "configurePreset": "gcc-10-debug" 
-    }, 
-    { 
-      "name": "gcc-10-release", 
-      "configurePreset": "gcc-10-release" 
+    {
+      "name": "clang-14-debug",
+      "configurePreset": "clang-14-debug"
     },
-    { 
-      "name": "gcc-11-debug", 
-      "configurePreset": "gcc-11-debug" 
-    }, 
-    { 
-      "name": "gcc-11-release", 
-      "configurePreset": "gcc-11-release" 
+    {
+      "name": "clang-14-release",
+      "configurePreset": "clang-14-release"
     },
-    { 
-      "name": "gcc-12-debug", 
-      "configurePreset": "gcc-12-debug" 
-    }, 
-    { 
-      "name": "gcc-12-release", 
-      "configurePreset": "gcc-12-release" 
+    {
+      "name": "clang-15-debug",
+      "configurePreset": "clang-15-debug"
+    },
+    {
+      "name": "clang-15-release",
+      "configurePreset": "clang-15-release"
+    },
+    {
+      "name": "gcc-10-debug",
+      "configurePreset": "gcc-10-debug"
+    },
+    {
+      "name": "gcc-10-release",
+      "configurePreset": "gcc-10-release"
+    },
+    {
+      "name": "gcc-11-debug",
+      "configurePreset": "gcc-11-debug"
+    },
+    {
+      "name": "gcc-11-release",
+      "configurePreset": "gcc-11-release"
+    },
+    {
+      "name": "gcc-12-debug",
+      "configurePreset": "gcc-12-debug"
+    },
+    {
+      "name": "gcc-12-release",
+      "configurePreset": "gcc-12-release"
     }
   ]
 }
