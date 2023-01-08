@@ -103,7 +103,7 @@ jobs:
 
       - name: Build
         shell: bash
-        run:  cmake --build --preset ${{ matrix.compiler.preset }}-${{ matrix.buildtype }}
+        run:  cmake --build --preset ${{ matrix.compiler }}-${{ matrix.buildtype }}
 
       - name: Test
         shell: bash
