@@ -345,19 +345,23 @@
     },
     {
       "name": "windows-2019-debug",
-      "configurePreset": "windows-2019-debug"
+      "configurePreset": "windows-2019-debug",
+      "configuration": "Debug"
     },
     {
       "name": "windows-2019-release",
-      "configurePreset": "windows-2019-release"
+      "configurePreset": "windows-2019-release",
+      "configuration": "Release"
     },
     {
       "name": "windows-2022-debug",
-      "configurePreset": "windows-2022-debug"
+      "configurePreset": "windows-2022-debug",
+      "configuration": "Debug"
     },
     {
       "name": "windows-2022-release",
-      "configurePreset": "windows-2022-release"
+      "configurePreset": "windows-2022-release",
+      "configuration": "Release"
     }
   ]
 }
