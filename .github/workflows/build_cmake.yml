@@ -85,8 +85,7 @@ jobs:
     strategy:
       fail-fast: false  # 'false' means Don't stop matrix workflows even if some matrix entry fails.
       matrix:
-        os: [windows-latest, windows-2019]
-        compiler: [windows]
+        os: [windows-2022, windows-2019]
         buildtype: [debug, release]
     steps:
       - uses: actions/checkout@v3
@@ -99,12 +98,12 @@ jobs:
       - name: Configure CMake
         # Use a bash shell so we can use the same syntax for environment variable
         shell: bash
-        run: cmake --preset ${{ matrix.compiler }}-${{ matrix.buildtype }}
+        run: cmake --preset ${{ matrix.os }}-${{ matrix.buildtype }}
 
       - name: Build
         shell: bash
-        run:  cmake --build --preset ${{ matrix.compiler }}-${{ matrix.buildtype }}
+        run:  cmake --build --preset ${{ matrix.os }}-${{ matrix.buildtype }}
 
       - name: Test
         shell: bash
-        run: ctest --preset ${{ matrix.compiler }}-${{ matrix.buildtype }}
+        run: ctest --preset ${{ matrix.os }}-${{ matrix.buildtype }}
