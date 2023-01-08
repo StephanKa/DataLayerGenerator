@@ -270,12 +270,20 @@
       "configurePreset": "gcc-12-release"
     },
     {
-      "name": "windows-debug",
-      "configurePreset": "windows-debug"
+      "name": "windows-2019-debug",
+      "configurePreset": "windows-2019-debug"
     },
     {
-      "name": "windows-release",
-      "configurePreset": "windows-release"
+      "name": "windows-2019-release",
+      "configurePreset": "windows-2019-release"
+    },
+    {
+      "name": "windows-2022-debug",
+      "configurePreset": "windows-2022-debug"
+    },
+    {
+      "name": "windows-2022-release",
+      "configurePreset": "windows-2022-release"
     }
   ],
   "testPresets": [
@@ -336,12 +344,20 @@
       "configurePreset": "gcc-12-release"
     },
     {
-      "name": "windows-debug",
-      "configurePreset": "windows-debug"
+      "name": "windows-2019-debug",
+      "configurePreset": "windows-2019-debug"
     },
     {
-      "name": "windows-release",
-      "configurePreset": "windows-release"
+      "name": "windows-2019-release",
+      "configurePreset": "windows-2019-release"
+    },
+    {
+      "name": "windows-2022-debug",
+      "configurePreset": "windows-2022-debug"
+    },
+    {
+      "name": "windows-2022-release",
+      "configurePreset": "windows-2022-release"
     }
   ]
 }
