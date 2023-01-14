@@ -1,6 +1,6 @@
 name: C/C++ CMake CI
 
-on: [push]
+on: [push, pull_request]
 
 env:
   # Conan cache environment variables

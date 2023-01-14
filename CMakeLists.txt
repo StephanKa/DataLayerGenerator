@@ -1,10 +1,16 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 3.15)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.19)
 
 # Set the project name to your project name, my project isn't very descriptive
 PROJECT(DatalayerGenerator
         LANGUAGES CXX
         VERSION 0.0.1)
-SET(CMAKE_CXX_STANDARD 20)
+
+IF(NOT DEFINED CXX_STANDARD)
+    SET(CMAKE_CXX_STANDARD 20)
+ELSE()
+    SET(CMAKE_CXX_STANDARD ${CXX_STANDARD})
+ENDIF()
+MESSAGE("Using C++ standard ${CMAKE_CXX_STANDARD}")
 
 INCLUDE(cmake/Options.cmake)
 INCLUDE(cmake/StandardProjectSettings.cmake)
