@@ -19,7 +19,7 @@ int main()
     DefaultGroup.printDatapoints();
     CyclicGroup.printDatapoints();
 
-    fmt::print("------------------------------------\nGroup: {}\n", DefaultGroupInfo.baseId);
+    fmt::print("------------------------------------\nGroup: {:#06x}\n", DefaultGroupInfo.baseId);
     Testify::test.set(42);
     const auto versionTest = Testify::test.getVersion();
     fmt::print(R"(Datapoints

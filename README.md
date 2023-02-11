@@ -33,6 +33,7 @@ The following example can be found in main.cpp.
 ```c++
 #include "include/version.hpp"
 #include <datalayer.h>
+#include <fmt/format.h>
 #include <formatter.h>
 
 
@@ -51,7 +52,7 @@ int main()
     DefaultGroup.printDatapoints();
     CyclicGroup.printDatapoints();
 
-    fmt::print("------------------------------------\nGroup: {}\n", DefaultGroupInfo.baseId);
+    fmt::print("------------------------------------\nGroup: {:#06x}\n", DefaultGroupInfo.baseId);
     Testify::test.set(42);
     const auto versionTest = Testify::test.getVersion();
     fmt::print(R"(Datapoints
@@ -68,7 +69,7 @@ int main()
       versionTest.minor,
       versionTest.build);
 
-    constexpr Temperature a{ .value = 42.2F, .raw = 1234 };
+    constexpr Temperature a{ .raw = 1234, .value = 42.2F };
     test4.set(a);
     const auto test4Value = test4();
     const auto version4Test = test4.getVersion();
@@ -89,19 +90,13 @@ int main()
     fmt::print("{}", SoftwareVersion{});
     return 0;
 }
+
 ```
 
 The code above will output the following:
 
 ```c++
-Group: DefaultGroup
-test: 16385
-est2: 16386
-test3: 16387
-Group: CyclicGroup
-test4: 20484
-------------------------------------
-Group: 16384
+Group: 0x4000
 Datapoints
     id: 0x4001
     value: 42
@@ -116,12 +111,10 @@ Datapoints
         Major = 1
         Minor = 0
         Build = 1
-Major: 0 Minor: 0 Build: 1 Githash: f36e9a4
+Major: 0 Minor: 0 Build: 1 Githash: 1116df1
 ```
 
 ## To-Do's
 
 - [ ] add coverage
-- [ ] add possibility to deactivate FMT
-- [ ] add possibility to distinguish between MCU and desktop operating systems
 - [ ] add serialization and deserialization

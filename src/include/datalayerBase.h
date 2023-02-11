@@ -30,7 +30,7 @@ template<typename GroupInfo, typename... Datapoints> struct GroupDataPointMappin
     {
 #ifdef USE_FMT
         fmt::print("Group: {}\n", group.name);
-        std::apply([&](const auto &...args) { ((fmt::print("{}: {}\n", args.name, args.getId())), ...); }, datapoints);
+        std::apply([&](const auto &...args) { ((fmt::print("{}: {:#06x}\n", args.name, args.getId())), ...); }, datapoints);
 #endif
     }
 
