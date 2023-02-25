@@ -118,3 +118,4 @@ Major: 0 Minor: 0 Build: 1 Githash: 1116df1
 
 - [ ] add coverage
 - [ ] add serialization and deserialization
+- [ ] add version handling

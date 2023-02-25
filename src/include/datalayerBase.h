@@ -11,7 +11,8 @@ namespace DataLayer {
 enum class Persistance : uint32_t { None, Cyclic, OnWrite };
 
 // group definitions
-template<uint16_t BaseId, FixedString Name, Persistance persistence = Persistance::None, auto Version = Version<0, 0, 0>{}> struct GroupInfo
+template<uint16_t BaseId, FixedString Name, Persistance persistence = Persistance::None, auto Version = Version<0, 0, 0>{}>
+struct GroupInfo
 {
     constexpr static Persistance persist{ persistence };
     constexpr static uint16_t baseId{ BaseId };
@@ -19,12 +20,13 @@ template<uint16_t BaseId, FixedString Name, Persistance persistence = Persistanc
     static constexpr char const *name = Name;
 };
 
-template<typename GroupInfo, typename... Datapoints> struct GroupDataPointMapping
+template<typename GroupInfo, typename... Datapoints>
+struct GroupDataPointMapping
 {
     using ArgsT = std::tuple<Datapoints &...>;
-    const ArgsT datapoints;
+    ArgsT datapoints;
     const GroupInfo &group;
-    constexpr explicit GroupDataPointMapping(GroupInfo &inputGroup, Datapoints &...dps) : datapoints(dps...), group(inputGroup) {}
+    consteval explicit GroupDataPointMapping(GroupInfo &inputGroup, Datapoints &...dps) : datapoints(dps...), group(inputGroup) {}
 
     void printDatapoints() const
     {
@@ -34,7 +36,8 @@ template<typename GroupInfo, typename... Datapoints> struct GroupDataPointMappin
 #endif
     }
 
-    template<typename T> [[nodiscard]] bool setDatapoint(uint32_t dataPointId, const T &value) const
+    template<typename T>
+    [[nodiscard]] bool setDatapoint(uint32_t dataPointId, const T &value) const
     {
 
         return std::apply(
@@ -48,7 +51,8 @@ template<typename GroupInfo, typename... Datapoints> struct GroupDataPointMappin
           datapoints);
     }
 
-    template<typename T> [[nodiscard]] bool getDatapoint(uint32_t dataPointId, T &value) const
+    template<typename T>
+    [[nodiscard]] bool getDatapoint(uint32_t dataPointId, T &value) const
     {
         return std::apply(
           [&](const auto &...args) {
@@ -82,12 +86,13 @@ template<typename GroupInfo, typename... Datapoints> struct GroupDataPointMappin
 };
 
 // data point definition
-template<typename T, GroupInfo group, uint16_t id, typename Access, auto Version = Version<0, 0, 0>{}, FixedString Name = ""> class DataPoint
+template<typename T, GroupInfo group, uint16_t id, typename Access, auto Version = Version<0, 0, 0>{}, FixedString Name = "">
+class DataPoint
 {
   public:
     constexpr static Access TypeAccess{};
-    constexpr DataPoint() = default;
-    constexpr explicit DataPoint(T value) : m_value(value) {}
+    consteval DataPoint() = default;
+    consteval explicit DataPoint(T value) : m_value(value) {}
     static constexpr char const *name = Name;
 
     constexpr static uint16_t getId() { return group.baseId + id; }
