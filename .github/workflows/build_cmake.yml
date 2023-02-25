@@ -62,7 +62,7 @@ jobs:
     - name: Install conan
       shell: bash
       run: |
-           python3 -m pip install --upgrade pip setuptools conan
+           python3 -m pip install --upgrade pip setuptools conan==1.58
            source ~/.profile
 
     - name: Configure via CMake
@@ -94,7 +94,7 @@ jobs:
         shell: bash
         run: |
           python3 -m pip install --upgrade pip setuptools
-          python3 -m pip install conan jsonschema virtualenv ninja
+          python3 -m pip install conan==1.58 jsonschema virtualenv ninja
 
       - name: Configure CMake
         # Use a bash shell so we can use the same syntax for environment variable
