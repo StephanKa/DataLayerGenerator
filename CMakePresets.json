@@ -10,7 +10,7 @@
       "name": "debug-base",
       "hidden": true,
       "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/debug",
+      "binaryDir": "${sourceDir}/build/debug/${presetName}",
       "displayName": "Base preset for debug builds",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
@@ -26,7 +26,7 @@
       "name": "release-base",
       "hidden": true,
       "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/release",
+      "binaryDir": "${sourceDir}/build/release/${presetName}",
       "displayName": "Base preset for release builds",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",

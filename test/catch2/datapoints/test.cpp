@@ -156,3 +156,25 @@ TEST_CASE("Test datapoint 'testWithoutDefaultValue' set via group", "[Datapoints
 
     REQUIRE(!DefaultGroup.setDatapoint(dpId, newData));
 }
+
+TEST_CASE("Test datapoint 'testWithoutDefaultValue' access, write anyway", "[Datapoints]")
+{
+    constexpr auto EPSILON = 0.1;
+    constexpr Temperature testValue{ .raw = 444444, .value = 12345.0 };
+    const auto val = testWithoutDefaultValue.get();
+    static_assert(std::is_same_v<std::remove_cv_t<decltype(testWithoutDefaultValue.TypeAccess)>, Helper::READONLY>);
+    REQUIRE(testWithoutDefaultValue.get().raw != testValue.raw);
+    testWithoutDefaultValue = testValue;
+    REQUIRE(testWithoutDefaultValue.get().raw == testValue.raw);
+    REQUIRE_THAT(testWithoutDefaultValue.get().value, Catch::Matchers::WithinRel(static_cast<double>(testValue.value), EPSILON));
+    testWithoutDefaultValue = val;
+}
+
+TEST_CASE("Test datapoint 'testWithoutDefaultValueWriteOnly' access, read anyway", "[Datapoints]")
+{
+    constexpr auto EPSILON = 0.1;
+    static_assert(std::is_same_v<std::remove_cv_t<decltype(testWithoutDefaultValueWriteOnly.TypeAccess)>, Helper::WRITEONLY>);
+    const auto val = testWithoutDefaultValueWriteOnly();
+    REQUIRE(val.raw == 0);
+    REQUIRE_THAT(val.value, Catch::Matchers::WithinRel(0.0, EPSILON));
+}

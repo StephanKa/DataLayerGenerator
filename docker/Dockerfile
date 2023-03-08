@@ -24,7 +24,7 @@ RUN apt-get update && apt-get -y dist-upgrade && apt-get -y install --fix-missin
 RUN bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"
 RUN apt-get -y install clang-format clang-tidy
 RUN apt-get autoremove -y && apt-get clean
-RUN pip install --user conan Jinja2 jsonschema setuptools
+RUN pip install --user conan==1.58 Jinja2 jsonschema setuptools
 
 
 

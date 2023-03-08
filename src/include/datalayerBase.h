@@ -98,9 +98,16 @@ class DataPoint
     constexpr static uint16_t getId() { return group.baseId + id; }
     constexpr static auto getVersion() { return Version; }
 
-    template<typename A = Access>
-    requires Helper::ReadConcept<A> T operator()() const { return m_value; }
+    // function to read everytime
+    constexpr T operator()() const { return m_value; }
+    // function to write anyway
+    constexpr DataPoint &operator=(const T &value)
+    {
+        m_value = value;
+        return *this;
+    }
 
+    // function that will be restricted by READ and READWRITE access
     template<typename A = Access>
     requires Helper::ReadConcept<A> T &get()
     {
@@ -108,6 +115,7 @@ class DataPoint
         return m_value;
     }
 
+    // function that will be restricted by WRITE and READWRITE access
     template<typename A = Access>
     requires Helper::WriteConcept<A>
     void set(const T &value)
