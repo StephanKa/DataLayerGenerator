@@ -12,21 +12,21 @@ MACRO(RUN_CONAN)
         SET(FMT_LIBRARY fmt/9.1.0)
     ENDIF()
 
-    conan_cmake_configure(REQUIRES  ${CONAN_EXTRA_REQUIRES}
-                                    catch2/3.2.1
-                                    ${FMT_LIBRARY}
-                          OPTIONS	${CONAN_EXTRA_OPTIONS}
-                          SETTINGS  compiler.cppstd=${CMAKE_CXX_STANDARD}
+    CONAN_CMAKE_CONFIGURE(REQUIRES ${CONAN_EXTRA_REQUIRES}
+                          catch2/3.2.1
+                          ${FMT_LIBRARY}
+                          OPTIONS ${CONAN_EXTRA_OPTIONS}
+                          SETTINGS compiler.cppstd=${CMAKE_CXX_STANDARD}
                           GENERATORS cmake
-            )
+                          )
 
-    conan_cmake_autodetect(settings)
+    CONAN_CMAKE_AUTODETECT(settings)
 
-    conan_cmake_install(PATH_OR_REFERENCE .
+    CONAN_CMAKE_INSTALL(PATH_OR_REFERENCE .
                         BUILD missing
                         SETTINGS ${settings}
                         CONF "tools.cmake.cmaketoolchain:generator=${CMAKE_GENERATOR}")
 
-    include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-    conan_basic_setup(TARGETS)
+    INCLUDE(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+    CONAN_BASIC_SETUP(TARGETS)
 ENDMACRO()
