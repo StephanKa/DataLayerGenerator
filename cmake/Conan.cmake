@@ -17,7 +17,6 @@ MACRO(RUN_CONAN)
             ${CONAN_EXTRA_REQUIRES}
             catch2/3.2.1
             ${FMT_LIBRARY}
-            spdlog/1.11.0
             OPTIONS
             ${CONAN_EXTRA_OPTIONS}
             SETTINGS
