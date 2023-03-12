@@ -4,11 +4,17 @@
 #include <formatter.h>
 
 
-template<> struct fmt::formatter<SoftwareVersion>
+template<>
+struct fmt::formatter<SoftwareVersion>
 {
-    template<typename ParseContext> constexpr auto parse(ParseContext &ctx) { return ctx.begin(); }
+    template<typename ParseContext>
+    constexpr auto parse(ParseContext &ctx)
+    {
+        return ctx.begin();
+    }
 
-    template<typename FormatContext> auto format(const SoftwareVersion &version, FormatContext &ctx)
+    template<typename FormatContext>
+    auto format(const SoftwareVersion &version, FormatContext &ctx)
     {
         return format_to(ctx.out(), "Major: {} Minor: {} Build: {} Githash: {}", version.Major, version.Minor, version.Patch, version.GitHash);
     }
@@ -54,6 +60,8 @@ int main()
       version4Test.minor,
       version4Test.build);
 
-    fmt::print("{}", SoftwareVersion{});
+    fmt::print("{}\n", SoftwareVersion{});
+    fmt::print("\nPrint whole structure:\n");
+    Dispatcher.printStructure();
     return 0;
 }

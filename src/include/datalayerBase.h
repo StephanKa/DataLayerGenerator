@@ -26,6 +26,7 @@ struct GroupDataPointMapping
     using ArgsT = std::tuple<Datapoints &...>;
     ArgsT datapoints;
     const GroupInfo &group;
+    consteval GroupDataPointMapping() = default;
     consteval explicit GroupDataPointMapping(GroupInfo &inputGroup, Datapoints &...dps) : datapoints(dps...), group(inputGroup) {}
 
     void printDatapoints() const
@@ -126,6 +127,64 @@ class DataPoint
 
   private:
     T m_value{};
+};
+
+template<typename... GroupInfos>
+struct Dispatcher
+{
+    using ArgsT = std::tuple<GroupInfos &...>;
+    ArgsT groups;
+    consteval explicit Dispatcher(GroupInfos &...groups) : groups(groups...) {}
+
+    void printStructure() const
+    {
+#ifdef USE_FMT
+        fmt::print("Structure:\n");
+        std::apply([&](const auto &...args) { ((args.printDatapoints()), ...); }, groups);
+#endif
+    }
+
+    template<typename T>
+    [[nodiscard]] bool setDatapoint(uint32_t dataPointId, const T &value) const
+    {
+
+        return std::apply(
+          [&](auto &...args) {
+              bool ret = false;
+
+              ((setter(dataPointId, value, args, ret)) || ... || false);
+
+              return ret;
+          },
+          groups);
+    }
+
+    template<typename T>
+    [[nodiscard]] bool getDatapoint(uint32_t dataPointId, T &value) const
+    {
+        return std::apply(
+          [&](const auto &...args) {
+              bool ret = false;
+
+              ((getter(dataPointId, value, args, ret)) || ... || false);
+
+              return ret;
+          },
+          groups);
+    }
+
+  private:
+    constexpr static bool setter(const uint32_t dataPointId, [[maybe_unused]] const auto &value, [[maybe_unused]] auto &args, [[maybe_unused]] bool &ret)
+    {
+        ret = args.setDatapoint(dataPointId, value);
+        return true;
+    }
+
+    constexpr static bool getter(const uint32_t dataPointId, [[maybe_unused]] auto &value, [[maybe_unused]] const auto &args, [[maybe_unused]] bool &ret)
+    {
+        ret = args.getDatapoint(dataPointId, value);
+        return true;
+    }
 };
 
 }// namespace DataLayer

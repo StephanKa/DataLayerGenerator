@@ -52,5 +52,9 @@ DataLayer::DataPoint<{{ dp.type }}, {{ dp.group }}Info, 0x{{ "%0x" | format( dp.
 {% for group in group_data_points_mapping %}
 constexpr DataLayer::GroupDataPointMapping {{ group  }} { {{ group }}Info, {% for parameter in group_data_points_mapping[group] -%}
     {{ parameter }}{% if not loop.last %}, {% endif %}
-    {%- endfor %}};
+    {%- endfor %} };
 {%- endfor %}
+
+constexpr DataLayer::Dispatcher Dispatcher { {% for group in groups -%}
+    {{ group.name }}{% if not loop.last %}, {% endif %}
+{%- endfor %} };
