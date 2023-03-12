@@ -37,11 +37,17 @@ The following example can be found in main.cpp.
 #include <formatter.h>
 
 
-template<> struct fmt::formatter<SoftwareVersion>
+template<>
+struct fmt::formatter<SoftwareVersion>
 {
-    template<typename ParseContext> constexpr auto parse(ParseContext &ctx) { return ctx.begin(); }
+    template<typename ParseContext>
+    constexpr auto parse(ParseContext &ctx)
+    {
+        return ctx.begin();
+    }
 
-    template<typename FormatContext> auto format(const SoftwareVersion &version, FormatContext &ctx)
+    template<typename FormatContext>
+    auto format(const SoftwareVersion &version, FormatContext &ctx)
     {
         return format_to(ctx.out(), "Major: {} Minor: {} Build: {} Githash: {}", version.Major, version.Minor, version.Patch, version.GitHash);
     }
@@ -87,15 +93,23 @@ int main()
       version4Test.minor,
       version4Test.build);
 
-    fmt::print("{}", SoftwareVersion{});
+    fmt::print("{}\n", SoftwareVersion{});
+    fmt::print("\nPrint whole structure:\n");
+    Dispatcher.printStructure();
     return 0;
 }
-
 ```
 
 The code above will output the following:
 
 ```c++
+Group: DefaultGroup
+test: 0x4001
+est2: 0x4002
+test3: 0x4003
+Group: CyclicGroup
+test4: 0x5004
+------------------------------------
 Group: 0x4000
 Datapoints
     id: 0x4001
@@ -106,12 +120,21 @@ Datapoints
         Build = 1
 Datapoints
     id: 0x5004
-    value:  value = 42.2 raw = 1234
+    value:  raw = 1234 value = 42.2
     version:
         Major = 1
         Minor = 0
         Build = 1
-Major: 0 Minor: 0 Build: 1 Githash: 1116df1
+Major: 0 Minor: 0 Build: 1 Githash: a84c11b
+
+Print whole structure:
+Structure:
+Group: DefaultGroup
+test: 0x4001
+est2: 0x4002
+test3: 0x4003
+Group: CyclicGroup
+test4: 0x5004
 ```
 
 ## To-Do's
@@ -120,3 +143,5 @@ Major: 0 Minor: 0 Build: 1 Githash: 1116df1
 - [ ] add serialization and deserialization
 - [ ] add version handling
 - [ ] extend the documentation for using this repository
+- [ ] version schema dynamisch
+- [ ] create mapping with all groups where id will be given
