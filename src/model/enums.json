@@ -14,26 +14,11 @@
       "name": "ErrorStates",
       "type": "uint32_t",
       "values": [
-        {
-          "name": "Info",
-          "value": 1
-        },
-        {
-          "name": "Warn",
-          "value": 4
-        },
-        {
-          "name": "Error",
-          "value": 5
-        },
-        {
-          "name": "Critical",
-          "value": 9
-        },
-        {
-          "name": "Fatal",
-          "value": 10
-        }
+        {"Info" : 1},
+        {"Warn" : 4},
+        {"Error" : 5},
+        {"Critical" : 9},
+        {"Fatal" : 10}
       ],
       "autoId": false
     }

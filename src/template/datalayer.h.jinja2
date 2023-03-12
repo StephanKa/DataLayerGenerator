@@ -3,13 +3,15 @@
 {% for enum in enums -%}
 enum class {{ enum.name }} : {{ enum.type }}
 {
+{%- if enum.autoId%}
 {%- for value in enum["values"] %}
-    {%- if enum.autoId%}
     {{ value }},
-    {%- else %}
-    {{ value.name }} = {{ value.value }},
-    {%- endif %}
 {%- endfor %}
+{%- else %}
+{%- for value in enum["values"] | sort(attribute='value') %}
+    {{ value.name }} = {{ value.value }},
+{%- endfor %}
+{%- endif %}
 };
 
 {% endfor %}
@@ -17,9 +19,9 @@ enum class {{ enum.name }} : {{ enum.type }}
 {%- for struct in structs %}
 struct {{ struct.name }}
 {
-    {% for parameter in struct.parameter | sort(attribute='name') -%}
-    {{ parameter.type }} {{ parameter.name }}{};
-    {% endfor %}
+    {%- for parameter in struct.parameter | sort(attribute='name') %}
+    {{ parameter.value }} {{ parameter.name }};
+    {%- endfor %}
 };
 {%- endfor %}
 

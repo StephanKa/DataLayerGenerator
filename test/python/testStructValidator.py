@@ -11,13 +11,13 @@ class TestStructValidator(unittest.TestCase):
 
     def test_correct_struct(self):
         """Test correct struct definition."""
-        test_data = [{'name': 'Temperature', 'parameter': [{'name': 'value', 'type': 'float'}, {'name': 'raw', 'type': 'uint32_t'}]}]
+        test_data = [{'name': 'Temperature', 'parameter': [{'value': 'float'}, {'raw': 'uint32_t'}]}]
         generator.struct_validator(test_data)
 
     def test_duplicate_struct(self):
         """Test duplicate names for struct."""
-        test_data = [{'name': 'Temperature', 'parameter': [{'name': 'value3', 'type': 'float'}, {'name': 'raw1', 'type': 'uint32_t'}]},
-                     {'name': 'Temperature', 'parameter': [{'name': 'value4', 'type': 'float'}, {'name': 'raw2', 'type': 'uint32_t'}]}]
+        test_data = [{'name': 'Temperature', 'parameter': [{'value3': 'float'}, {'raw1': 'uint32_t'}]},
+                     {'name': 'Temperature', 'parameter': [{'value4': 'float'}, {'raw2': 'uint32_t'}]}]
         self.assertRaises(generator.StructException, generator.struct_validator, test_data)
 
     def test_type_undefined(self):
@@ -28,7 +28,7 @@ class TestStructValidator(unittest.TestCase):
     def test_base_types(self):
         """Test all supported base types."""
         for base_type in generator.BASE_TYPES:
-            test_data = [{'name': 'Temperature', 'parameter': [{'name': 'value', 'type': base_type}]}]
+            test_data = [{'name': 'Temperature', 'parameter': [{'value': base_type}]}]
             generator.struct_validator(test_data)
 
     def test_without_parameters(self):
@@ -38,7 +38,7 @@ class TestStructValidator(unittest.TestCase):
 
     def test_same_name(self):
         """Test same name definitions."""
-        test_data = [{'name': 'Temperature', 'parameter': [{'name': 'raw', 'type': 'uint32_t'}, {'name': 'raw', 'type': 'uint32_t'}]}]
+        test_data = [{'name': 'Temperature', 'parameter': [{'raw': 'uint32_t'}, {'raw': 'uint32_t'}]}]
         self.assertRaises(generator.StructException, generator.struct_validator, test_data)
 
 

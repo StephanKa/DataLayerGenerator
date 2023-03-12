@@ -16,7 +16,7 @@ class TestEnumValidator(unittest.TestCase):
 
     def test_duplicate_enum(self):
         """Test duplicate names."""
-        test_data = [{'name': 'Status', 'type': 'uint32_t', 'values': ['Booting']}, {'name': 'Status', 'type': 'uint32_t', 'values': ['Booting']}]
+        test_data = [{'name': 'Status', 'type': 'uint32_t', 'values': ['Booting'], 'autoId': True}, {'name': 'Status', 'type': 'uint32_t', 'values': ['Booting'], 'autoId': True}]
         self.assertRaises(generator.EnumException, generator.enum_validator, test_data)
 
     def test_type_undefined(self):
@@ -27,7 +27,7 @@ class TestEnumValidator(unittest.TestCase):
     def test_base_types(self):
         """Test all base types."""
         for base_type in generator.BASE_TYPES:
-            test_data = [{'name': 'Status', 'type': base_type, 'values': ['Booting']}]
+            test_data = [{'name': 'Status', 'type': base_type, 'values': ['Booting'], 'autoId': True}]
             generator.enum_validator(test_data)
 
     def test_auto_id_with_value(self):
@@ -43,6 +43,11 @@ class TestEnumValidator(unittest.TestCase):
     def test_auto_id_without_string_value(self):
         """Test auto id without a string as name."""
         test_data = [{'name': 'Status', 'type': 'uint32', 'values': [1], 'autoId': True}]
+        self.assertRaises(generator.EnumException, generator.enum_validator, test_data)
+
+    def test_missing_autoId(self):
+        """Test duplicate names."""
+        test_data = [{'name': 'Status', 'type': 'uint32_t', 'values': ['Booting']}]
         self.assertRaises(generator.EnumException, generator.enum_validator, test_data)
 
 

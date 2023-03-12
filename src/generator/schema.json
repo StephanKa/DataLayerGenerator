@@ -89,39 +89,7 @@
               "type": "string"
             },
             "parameter": {
-              "type": "array",
-              "items": [
-                {
-                  "type": "object",
-                  "properties": {
-                    "name": {
-                      "type": "string"
-                    },
-                    "type": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "name",
-                    "type"
-                  ]
-                },
-                {
-                  "type": "object",
-                  "properties": {
-                    "name": {
-                      "type": "string"
-                    },
-                    "type": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "name",
-                    "type"
-                  ]
-                }
-              ]
+              "type": "array"
             }
           },
           "required": [
@@ -156,23 +124,7 @@
               "type": "string"
             },
             "version": {
-              "type": "object",
-              "properties": {
-                "major": {
-                  "type": "integer"
-                },
-                "minor": {
-                  "type": "integer"
-                },
-                "build": {
-                  "type": "integer"
-                }
-              },
-              "required": [
-                "major",
-                "minor",
-                "build"
-              ]
+              "type": "string"
             }
           },
           "required": [

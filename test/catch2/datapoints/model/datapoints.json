@@ -10,11 +10,7 @@
       "id": 4,
       "name": "test",
       "type": "Temperature",
-      "version": {
-        "build": 22,
-        "major": 1,
-        "minor": 0
-      }
+      "version": "1.0.22"
     },
     {
       "access": "READONLY",
@@ -22,11 +18,7 @@
       "id": 8,
       "name": "testWithoutDefaultValue",
       "type": "Temperature",
-      "version": {
-        "build": 223,
-        "major": 2,
-        "minor": 10
-      }
+      "version": "2.10.223"
     },
     {
       "access": "WRITEONLY",
@@ -34,11 +26,7 @@
       "id": 12,
       "name": "testWithoutDefaultValueWriteOnly",
       "type": "Temperature",
-      "version": {
-        "build": 3,
-        "major": 0,
-        "minor": 2
-      }
+      "version": "0.2.3"
     }
   ]
 }

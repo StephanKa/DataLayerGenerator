@@ -8,11 +8,7 @@
       "default": 4211,
       "access": "READWRITE",
       "namespace": "Testify",
-      "version": {
-        "major": 1,
-        "minor": 0,
-        "build": 1
-      }
+      "version": "1.0.1"
     },
     {
       "name": "est2",
@@ -21,11 +17,7 @@
       "type": "int32_t",
       "access": "READWRITE",
       "namespace": "Testify",
-      "version": {
-        "major": 1,
-        "minor": 0,
-        "build": 1
-      }
+      "version": "1.0.1"
     },
     {
       "name": "test3",
@@ -33,11 +25,7 @@
       "id": 3,
       "type": "int32_t",
       "access": "READWRITE",
-      "version": {
-        "major": 1,
-        "minor": 0,
-        "build": 1
-      }
+      "version": "1.0.1"
     },
     {
       "name": "test4",
@@ -49,11 +37,7 @@
         "raw": 5555
       },
       "access": "READWRITE",
-      "version": {
-        "major": 1,
-        "minor": 0,
-        "build": 1
-      }
+      "version": "1.0.1"
     }
   ]
 }

@@ -4,12 +4,10 @@
       "name": "Temperature",
       "parameter": [
         {
-          "name": "value",
-          "type": "float"
+          "value": "float"
         },
         {
-          "name": "raw",
-          "type": "uint32_t"
+          "raw": "uint32_t"
         }
       ]
     }
