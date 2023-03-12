@@ -35,7 +35,7 @@ def create_group_data_point_dict(dps):
         name = dp['name']
         if group not in temp:
             temp[group] = []
-        if 'namespace' in dp:
+        if 'namespace' in dp and len(dp['namespace']) > 0:
             name = '{}::{}'.format(dp['namespace'], name)
         temp[group].append(name)
     return temp
