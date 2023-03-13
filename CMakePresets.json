@@ -18,7 +18,7 @@
         "ENABLE_SANITIZER_ADDRESS": "ON",
         "ENABLE_SANITIZER_LEAK": "ON",
         "ENABLE_SANITIZER_UNDEFINED_BEHAVIOR": "ON",
-        "ENABLE_SANITIZER_MEMORY": "ON",
+        "ENABLE_SANITIZER_MEMORY": "OFF",
         "ENABLE_FMT": "ON"
       }
     },
@@ -218,35 +218,24 @@
     {
       "name": "win32-gcc-x64-mingw-debug",
       "displayName": "Windows GCC x64 (MinGW Makefiles) Debug",
-      "description": "Using GCC x64 compiler with Ninja generator on Windows - Debug",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/debug/${presetName}",
-      "installDir": "${sourceDir}/install/${presetName}",
+      "inherits": "debug-base",
       "environment": {
         "PATH": "C:/msys64/mingw64/bin;$penv{PATH}"
       },
       "cacheVariables": {
         "CMAKE_C_COMPILER": "gcc.exe",
-        "CMAKE_CXX_COMPILER": "g++.exe",
-        "CMAKE_BUILD_TYPE": "Debug",
-        "ENABLE_FMT": "ON"
+        "CMAKE_CXX_COMPILER": "g++.exe"
       }
     },
     {
       "name": "win32-gcc-x64-mingw-release",
-      "displayName": "Windows GCC x64 (MinGW Makefiles) Release",
-      "description": "Using GCC x64 compiler with Ninja generator on Windows - Release",
-      "generator": "Ninja",
-      "installDir": "${sourceDir}/install/${presetName}",
-      "binaryDir": "${sourceDir}/build/release/${presetName}",
+      "inherits": "release-base",
       "environment": {
         "PATH": "C:/msys64/mingw64/bin;$penv{PATH}"
       },
       "cacheVariables": {
         "CMAKE_C_COMPILER": "gcc.exe",
-        "CMAKE_CXX_COMPILER": "g++.exe",
-        "CMAKE_BUILD_TYPE": "Release",
-        "ENABLE_FMT": "ON"
+        "CMAKE_CXX_COMPILER": "g++.exe"
       }
     }
   ],
