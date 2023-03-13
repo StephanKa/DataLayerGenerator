@@ -134,7 +134,7 @@ struct Dispatcher
 {
     using ArgsT = std::tuple<GroupInfos &...>;
     ArgsT groups;
-    consteval explicit Dispatcher(GroupInfos &...groups) : groups(groups...) {}
+    consteval explicit Dispatcher(GroupInfos &...groupInfos) : groups(groupInfos...) {}
 
     void printStructure() const
     {
