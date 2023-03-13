@@ -51,23 +51,7 @@
               "type": "string"
             },
             "version": {
-              "type": "object",
-              "properties": {
-                "major": {
-                  "type": "integer"
-                },
-                "minor": {
-                  "type": "integer"
-                },
-                "build": {
-                  "type": "integer"
-                }
-              },
-              "required": [
-                "major",
-                "minor",
-                "build"
-              ]
+              "type": "string"
             }
           },
           "required": [

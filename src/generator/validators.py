@@ -72,6 +72,8 @@ def group_validator(group_data):
             raise GroupException(f"Persistence type '{temp_group['persistence']}' is not supported")
         if temp_group['baseId'] in base_id:
             raise GroupException(f"Group baseId '{temp_group['baseId']}' already defined, please check your model")
+        if 'version' in temp_group:
+            temp_group['version'] = Version(temp_group['version'])
         base_id.append(temp_group['baseId'])
     return group_data
 

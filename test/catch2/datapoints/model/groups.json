@@ -4,11 +4,7 @@
       "baseId": "0x4000",
       "name": "DefaultGroup",
       "persistence": "None",
-      "version": {
-        "build": 5,
-        "major": 2,
-        "minor": 4
-      }
+      "version": "2.4.5"
     }
   ]
 }

@@ -4,31 +4,19 @@
       "name": "DefaultGroup",
       "persistence": "None",
       "baseId": "0x4000",
-      "version": {
-        "major": 1,
-        "minor": 2,
-        "build": 3
-      }
+      "version": "1.2.3"
     },
     {
       "name": "DefaultCyclicGroup",
       "persistence": "Cyclic",
       "baseId": "0x5000",
-      "version": {
-        "major": 4,
-        "minor": 5,
-        "build": 6
-      }
+      "version": "4.5.6"
     },
     {
       "name": "DefaultOnWriteGroup",
       "persistence": "OnWrite",
       "baseId": "0x6000",
-      "version": {
-        "major": 7,
-        "minor": 8,
-        "build": 9
-      }
+      "version": "7.8.9"
     }
   ]
 }
