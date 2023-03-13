@@ -132,6 +132,7 @@ jobs:
           pacman --noconfirm -S mingw-w64-x86_64-gcc
           pacman --noconfirm -S mingw-w64-x86_64-cmake
           pacman --noconfirm -S mingw-w64-x86_64-python
+          pacman --noconfirm -S mingw-w64-x86_64-python-pip
           python3 -m pip install --upgrade pip setuptools
           python3 -m pip install conan==1.58 jsonschema virtualenv ninja
 
