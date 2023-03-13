@@ -108,3 +108,37 @@ jobs:
       - name: Test
         shell: bash
         run: ctest --preset ${{ matrix.os }}-${{ matrix.buildtype }}
+
+  windows-mingw:
+    name: ${{ matrix.os }}, ${{ matrix.buildtype }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false  # 'false' means Don't stop matrix workflows even if some matrix entry fails.
+      matrix:
+        os: [windows-2022]
+        buildtype: [debug]
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          install: make
+      - name: Install conan
+        run: |
+          pacman --noconfirm -S mingw-w64-x86_64-ninja
+          pacman --noconfirm -S mingw-w64-x86_64-gcc
+          pacman --noconfirm -S mingw-w64-x86_64-cmake
+          python3 -m pip install --upgrade pip setuptools
+          python3 -m pip install conan==1.58 jsonschema virtualenv ninja
+
+      - name: Configure CMake
+        run: cmake --preset win32-gcc-x64-mingw-${{ matrix.buildtype }}
+
+      - name: Build
+        run:  cmake --build --preset win32-gcc-x64-mingw-${{ matrix.buildtype }}
+
+      - name: Test
+        run: ctest --preset win32-gcc-x64-mingw-${{ matrix.buildtype }}

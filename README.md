@@ -137,6 +137,25 @@ Group: CyclicGroup
 test4: 0x5004
 ```
 
+## Usage
+
+For getting known preset have a look into [CMakePresets.json](CMakePresets.json).
+
+Existing for example
+
+- gcc-12-debug
+- gcc-12-release
+- clang-15-debug
+- clang-15-release
+- windows-2022-debug
+- windows-2022-release
+
+```bash
+cmake --preset <PRESET_NAME>
+cmake --build --preset <PRESET_NAME>
+ctest --preset <PRESET_NAME>
+```
+
 ## To-Do's
 
 - [ ] add coverage

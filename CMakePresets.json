@@ -163,7 +163,7 @@
       "name": "windows-2019-debug",
       "displayName": "Windows x64 Debug",
       "generator": "Visual Studio 16 2019",
-      "binaryDir": "${sourceDir}/build/debug",
+      "binaryDir": "${sourceDir}/build/debug/${presetName}",
       "architecture": {
         "value": "x64",
         "strategy": "external"
@@ -177,7 +177,7 @@
       "name": "windows-2019-release",
       "displayName": "Windows x64 release",
       "generator": "Visual Studio 16 2019",
-      "binaryDir": "${sourceDir}/build/debug",
+      "binaryDir": "${sourceDir}/build/debug/${presetName}",
       "architecture": {
         "value": "x64",
         "strategy": "external"
@@ -191,7 +191,7 @@
       "name": "windows-2022-debug",
       "displayName": "Windows x64 Debug",
       "generator": "Visual Studio 17 2022",
-      "binaryDir": "${sourceDir}/build/debug",
+      "binaryDir": "${sourceDir}/build/debug/${presetName}",
       "architecture": {
         "value": "x64",
         "strategy": "external"
@@ -205,12 +205,46 @@
       "name": "windows-2022-release",
       "displayName": "Windows x64 release",
       "generator": "Visual Studio 17 2022",
-      "binaryDir": "${sourceDir}/build/debug",
+      "binaryDir": "${sourceDir}/build/debug/${presetName}",
       "architecture": {
         "value": "x64",
         "strategy": "external"
       },
       "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "ENABLE_FMT": "ON"
+      }
+    },
+    {
+      "name": "win32-gcc-x64-mingw-debug",
+      "displayName": "Windows GCC x64 (MinGW Makefiles) Debug",
+      "description": "Using GCC x64 compiler with Ninja generator on Windows - Debug",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/debug/${presetName}",
+      "installDir": "${sourceDir}/install/${presetName}",
+      "environment": {
+        "PATH": "C:/msys64/mingw64/bin;$penv{PATH}"
+      },
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "gcc.exe",
+        "CMAKE_CXX_COMPILER": "g++.exe",
+        "CMAKE_BUILD_TYPE": "Debug",
+        "ENABLE_FMT": "ON"
+      }
+    },
+    {
+      "name": "win32-gcc-x64-mingw-release",
+      "displayName": "Windows GCC x64 (MinGW Makefiles) Release",
+      "description": "Using GCC x64 compiler with Ninja generator on Windows - Release",
+      "generator": "Ninja",
+      "installDir": "${sourceDir}/install/${presetName}",
+      "binaryDir": "${sourceDir}/build/release/${presetName}",
+      "environment": {
+        "PATH": "C:/msys64/mingw64/bin;$penv{PATH}"
+      },
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "gcc.exe",
+        "CMAKE_CXX_COMPILER": "g++.exe",
         "CMAKE_BUILD_TYPE": "Release",
         "ENABLE_FMT": "ON"
       }
@@ -288,6 +322,14 @@
     {
       "name": "windows-2022-release",
       "configurePreset": "windows-2022-release"
+    },
+    {
+      "name": "win32-gcc-x64-mingw-debug",
+      "configurePreset": "win32-gcc-x64-mingw-debug"
+    },
+    {
+      "name": "win32-gcc-x64-mingw-release",
+      "configurePreset": "win32-gcc-x64-mingw-release"
     }
   ],
   "testPresets": [
@@ -365,6 +407,16 @@
     {
       "name": "windows-2022-release",
       "configurePreset": "windows-2022-release",
+      "configuration": "Release"
+    },
+    {
+      "name": "win32-gcc-x64-mingw-debug",
+      "configurePreset": "win32-gcc-x64-mingw-debug",
+      "configuration": "Debug"
+    },
+    {
+      "name": "win32-gcc-x64-mingw-release",
+      "configurePreset": "win32-gcc-x64-mingw-release",
       "configuration": "Release"
     }
   ]
