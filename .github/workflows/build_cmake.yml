@@ -110,7 +110,7 @@ jobs:
         run: ctest --preset ${{ matrix.os }}-${{ matrix.buildtype }}
 
   windows-mingw:
-    name: ${{ matrix.os }}, ${{ matrix.buildtype }}
+    name: ${{ matrix.os }}, MinGW ${{ matrix.buildtype }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false  # 'false' means Don't stop matrix workflows even if some matrix entry fails.
@@ -131,6 +131,7 @@ jobs:
           pacman --noconfirm -S mingw-w64-x86_64-ninja
           pacman --noconfirm -S mingw-w64-x86_64-gcc
           pacman --noconfirm -S mingw-w64-x86_64-cmake
+          pacman --noconfirm -S mingw-w64-x86_64-python
           python3 -m pip install --upgrade pip setuptools
           python3 -m pip install conan==1.58 jsonschema virtualenv ninja
 
