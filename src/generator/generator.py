@@ -48,7 +48,7 @@ def get_args():
     :return: parsed args
     """
     parser = argparse.ArgumentParser(description='Generates code from defined model.')
-    parser.add_argument('-s', '--source_dir', required=True, help='Source directory which point to the generator')
+    parser.add_argument('-s', '--model_dir', required=True, help='Model directory for input files.')
     parser.add_argument('-o', '--out_dir', required=True, help='Out directory which point to the folder where the generated files will be saved.')
     parser.add_argument('-t', '--template_dir', required=True, help='Template directory where the jinja2 templates are located.')
     parser.add_argument('-c', '--schema_dir', required=True, help='Scheme directory where the schema.json is located.')
@@ -66,7 +66,7 @@ def read_model_files(args):
     :return: json_data of all JSON files
     """
     json_data = {'Enums': [], 'Groups': [], 'Structs': [], 'Datapoints': []}
-    for root, dirs, files in os.walk(f'{args.source_dir}/model'):
+    for root, dirs, files in os.walk(f'{args.model_dir}'):
         for name in files:
             tmp_dict = None
             if name.endswith('.json'):

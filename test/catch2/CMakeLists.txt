@@ -9,7 +9,7 @@ FOREACH(TEST_NAME datapoints groups enums)
     ADD_EXECUTABLE(${TEST_NAME}_tests ${TEST_NAME}/test.cpp)
     ADD_CUSTOM_TARGET(${TEST_NAME}GenerateDataLayer
                       COMMAND ${Python_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/../../src/generator/generator.py
-                      --source_dir ${CMAKE_CURRENT_SOURCE_DIR}/${TEST_NAME}
+                      --model_dir ${CMAKE_CURRENT_SOURCE_DIR}/${TEST_NAME}/model
                       --out_dir ${CMAKE_CURRENT_BINARY_DIR}/${TEST_NAME}
                       --template_dir ${CMAKE_CURRENT_SOURCE_DIR}/../../src/template
                       --schema_dir ${CMAKE_CURRENT_SOURCE_DIR}/../../src/generator)

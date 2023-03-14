@@ -9,7 +9,7 @@ TARGET_LINK_LIBRARIES(
 
 ADD_CUSTOM_TARGET(GenerateDataLayer
                   COMMAND ${Python_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/generator/generator.py
-                  --source_dir ${CMAKE_CURRENT_SOURCE_DIR}
+                  --model_dir ${CMAKE_CURRENT_SOURCE_DIR}/model
                   --out_dir ${CMAKE_BINARY_DIR}
                   --template_dir ${CMAKE_CURRENT_SOURCE_DIR}/template
                   --schema_dir ${CMAKE_CURRENT_SOURCE_DIR}/generator)
