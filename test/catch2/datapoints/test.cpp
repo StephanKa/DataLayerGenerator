@@ -2,9 +2,14 @@
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 #include <datalayer.h>
 
+namespace {
+constexpr auto EPSILON = 0.1;
+
+constexpr bool operator==(const Temperature &lhs, const Temperature &rhs) { return (lhs.raw == rhs.raw) && (static_cast<double>(std::fabs(lhs.value - rhs.value)) <= EPSILON); }
+}// namespace
+
 TEST_CASE("Test datapoint default values via get() method", "[Datapoints]")
 {
-    constexpr auto EPSILON = 0.1;
     constexpr auto EXPECTED = 123.0;
     REQUIRE(test.get().raw == 4711);
     REQUIRE_THAT(test.get().value, Catch::Matchers::WithinRel(EXPECTED, EPSILON));
@@ -12,7 +17,6 @@ TEST_CASE("Test datapoint default values via get() method", "[Datapoints]")
 
 TEST_CASE("Test datapoint default values with () operator", "[Datapoints]")
 {
-    constexpr auto EPSILON = 0.1;
     constexpr auto EXPECTED = 123.0;
     REQUIRE(test().raw == 4711);
     REQUIRE_THAT(test().value, Catch::Matchers::WithinRel(EXPECTED, EPSILON));
@@ -46,10 +50,8 @@ TEST_CASE("Test datapoint access", "[Datapoints]") { static_assert(std::is_same_
 TEST_CASE("Test datapoint read / write", "[Datapoints]")
 {
     const auto initialValue = test.get();
-    constexpr auto EPSILON = 0.1;
     constexpr auto EXPECTED = 123.0;
-    REQUIRE(initialValue.raw == 4711);
-    REQUIRE_THAT(test.get().value, Catch::Matchers::WithinRel(EXPECTED, EPSILON));
+    REQUIRE((initialValue == Temperature{ 4711, EXPECTED }));
 
     // write new data
     constexpr float newValue{ 123.4f };
@@ -59,8 +61,7 @@ TEST_CASE("Test datapoint read / write", "[Datapoints]")
 
     // verify data
     const auto newlyWrittenValue = test.get();
-    REQUIRE(newlyWrittenValue.raw == newRaw);
-    REQUIRE_THAT(newlyWrittenValue.value, Catch::Matchers::WithinRel(static_cast<double>(newValue), EPSILON));
+    REQUIRE((newlyWrittenValue == Temperature{ newRaw, newValue }));
 }
 
 TEST_CASE("Test datapoint name", "[Datapoints]")
@@ -73,7 +74,6 @@ TEST_CASE("Test datapoint set via group", "[Datapoints]")
 {
     const auto initialValue = test.get();
     constexpr auto dpId = test.getId();
-    constexpr auto EPSILON = 0.1;
     Temperature value{};
     REQUIRE(DefaultGroup.getDatapoint(dpId, value));
     REQUIRE(value.raw == initialValue.raw);
@@ -86,25 +86,12 @@ TEST_CASE("Test datapoint set via group", "[Datapoints]")
     const Temperature newData{ newRaw, newValue };
 
     REQUIRE(DefaultGroup.setDatapoint(dpId, newData));
-    REQUIRE(test().raw == newRaw);
-    REQUIRE_THAT(test().value, Catch::Matchers::WithinRel(static_cast<double>(newValue), EPSILON));
+    REQUIRE((test() == Temperature{ newRaw, newValue }));
 }
 
-TEST_CASE("Test datapoint 'testWithoutDefaultValue' default values via get() method", "[Datapoints]")
-{
-    constexpr auto EPSILON = 0.1;
-    constexpr auto EXPECTED = 0.0;
-    REQUIRE(testWithoutDefaultValue.get().raw == 0);
-    REQUIRE_THAT(testWithoutDefaultValue.get().value, Catch::Matchers::WithinRel(EXPECTED, EPSILON));
-}
+TEST_CASE("Test datapoint 'testWithoutDefaultValue' default values via get() method", "[Datapoints]") { REQUIRE((testWithoutDefaultValue.get() == Temperature{})); }
 
-TEST_CASE("Test datapoint 'testWithoutDefaultValue' default values with () operator", "[Datapoints]")
-{
-    constexpr auto EPSILON = 0.1;
-    constexpr auto EXPECTED = 0.0;
-    REQUIRE(testWithoutDefaultValue().raw == 0);
-    REQUIRE_THAT(testWithoutDefaultValue().value, Catch::Matchers::WithinRel(EXPECTED, EPSILON));
-}
+TEST_CASE("Test datapoint 'testWithoutDefaultValue' default values with () operator", "[Datapoints]") { REQUIRE((testWithoutDefaultValue() == Temperature{})); }
 
 TEST_CASE("Test 'testWithoutDefaultValue' version definition", "[Datapoints]")
 {
@@ -143,11 +130,9 @@ TEST_CASE("Test datapoint 'testWithoutDefaultValue' set via group", "[Datapoints
 {
     const auto initialValue = testWithoutDefaultValue.get();
     constexpr auto dpId = testWithoutDefaultValue.getId();
-    constexpr auto EPSILON = 0.1;
     Temperature value{};
     REQUIRE(DefaultGroup.getDatapoint(dpId, value));
-    REQUIRE(value.raw == initialValue.raw);
-    REQUIRE_THAT(value.value, Catch::Matchers::WithinRel(static_cast<double>(value.value), EPSILON));
+    REQUIRE((value == initialValue));
 
     // write new data
     constexpr float newValue{ 321.4f };
@@ -159,22 +144,69 @@ TEST_CASE("Test datapoint 'testWithoutDefaultValue' set via group", "[Datapoints
 
 TEST_CASE("Test datapoint 'testWithoutDefaultValue' access, write anyway", "[Datapoints]")
 {
-    constexpr auto EPSILON = 0.1;
     constexpr Temperature testValue{ .raw = 444444, .value = 12345.0 };
     const auto val = testWithoutDefaultValue.get();
     static_assert(std::is_same_v<std::remove_cv_t<decltype(testWithoutDefaultValue.TypeAccess)>, Helper::READONLY>);
     REQUIRE(testWithoutDefaultValue.get().raw != testValue.raw);
     testWithoutDefaultValue = testValue;
-    REQUIRE(testWithoutDefaultValue.get().raw == testValue.raw);
-    REQUIRE_THAT(testWithoutDefaultValue.get().value, Catch::Matchers::WithinRel(static_cast<double>(testValue.value), EPSILON));
+    REQUIRE((testWithoutDefaultValue.get() == testValue));
     testWithoutDefaultValue = val;
 }
 
 TEST_CASE("Test datapoint 'testWithoutDefaultValueWriteOnly' access, read anyway", "[Datapoints]")
 {
-    constexpr auto EPSILON = 0.1;
     static_assert(std::is_same_v<std::remove_cv_t<decltype(testWithoutDefaultValueWriteOnly.TypeAccess)>, Helper::WRITEONLY>);
     const auto val = testWithoutDefaultValueWriteOnly();
-    REQUIRE(val.raw == 0);
-    REQUIRE_THAT(val.value, Catch::Matchers::WithinRel(0.0, EPSILON));
+    REQUIRE((val == Temperature{}));
+}
+
+TEST_CASE("Test datapoint dispatcher get() existing", "[Datapoints]")
+{
+    Temperature temperatureTest{ .raw = 1234, .value = 11111.f };
+    REQUIRE(Dispatcher.getDatapoint(testWithoutDefaultValue.getId(), temperatureTest));
+    REQUIRE((testWithoutDefaultValue.get() == temperatureTest));
+}
+
+TEST_CASE("Test datapoint dispatcher get() not existing", "[Datapoints]")
+{
+    constexpr uint32_t dummyId = 42;
+    Temperature temperatureTest{ .raw = 1234, .value = 11111.f };
+    REQUIRE(!Dispatcher.getDatapoint(dummyId, temperatureTest));
+}
+
+TEST_CASE("Test datapoint dispatcher setDatapoint() not existing", "[Datapoints]")
+{
+    constexpr uint32_t dummyId = 42;
+    constexpr Temperature temperatureTest{ .raw = 1234, .value = 11111.f };
+    REQUIRE(!Dispatcher.setDatapoint(dummyId, temperatureTest));
+}
+
+TEST_CASE("Test datapoint dispatcher setDatapoint() existing with READONLY", "[Datapoints]")
+{
+    constexpr Temperature temperatureTest{ .raw = 1234, .value = 11111.f };
+    REQUIRE(!Dispatcher.setDatapoint(testWithoutDefaultValue.getId(), temperatureTest));
+}
+
+TEST_CASE("Test datapoint dispatcher setDatapoint() existing with WRITEONLY", "[Datapoints]")
+{
+    const auto initialValue = testWithoutDefaultValueWriteOnly();
+    constexpr Temperature temperatureTest{ .raw = 1234, .value = 11111.f };
+    Temperature readValue{};
+    REQUIRE(!Dispatcher.getDatapoint(testWithoutDefaultValueWriteOnly.getId(), readValue));
+    REQUIRE(Dispatcher.setDatapoint(testWithoutDefaultValueWriteOnly.getId(), temperatureTest));
+    REQUIRE((testWithoutDefaultValueWriteOnly() == temperatureTest));
+    testWithoutDefaultValueWriteOnly = initialValue;
+}
+
+TEST_CASE("Test datapoint dispatcher setDatapoint() and getDatapoint() existing", "[Datapoints]")
+{
+    const auto initialValue = test();
+    constexpr Temperature temperatureTest{ .raw = 1234, .value = 11111.f };
+    Temperature readValue{};
+    REQUIRE(Dispatcher.getDatapoint(test.getId(), readValue));
+    REQUIRE(Dispatcher.setDatapoint(test.getId(), temperatureTest));
+
+    REQUIRE((test() == temperatureTest));
+
+    test = initialValue;
 }

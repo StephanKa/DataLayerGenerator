@@ -174,16 +174,16 @@ struct Dispatcher
     }
 
   private:
-    constexpr static bool setter(const uint32_t dataPointId, [[maybe_unused]] const auto &value, [[maybe_unused]] auto &args, [[maybe_unused]] bool &ret)
+    constexpr static bool setter(const uint32_t dataPointId, const auto &value, [[maybe_unused]] auto &args, [[maybe_unused]] bool &ret)
     {
-        ret = args.setDatapoint(dataPointId, value);
-        return true;
+        ret |= args.setDatapoint(dataPointId, value);
+        return !ret;
     }
 
-    constexpr static bool getter(const uint32_t dataPointId, [[maybe_unused]] auto &value, [[maybe_unused]] const auto &args, [[maybe_unused]] bool &ret)
+    constexpr static bool getter(const uint32_t dataPointId, auto &value, [[maybe_unused]] const auto &args, [[maybe_unused]] bool &ret)
     {
-        ret = args.getDatapoint(dataPointId, value);
-        return true;
+        ret |= args.getDatapoint(dataPointId, value);
+        return !ret;
     }
 };
 
