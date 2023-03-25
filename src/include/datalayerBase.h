@@ -5,6 +5,7 @@
 #include <fmt/format.h>
 #endif
 #include <helper.h>
+#include <span>
 #include <type_traits>
 
 namespace DataLayer {
@@ -123,8 +124,14 @@ class DataPoint
     template<typename A = Access>
     requires Helper::ReadConcept<A> T &get()
     {
-        // serialize can be done with free function "toBytes()"
         return m_value;
+    }
+
+    template<typename A = Access>
+    requires Helper::ReadConcept<A>
+    auto serialize()
+    {
+        return std::as_bytes(std::span<const T, 1>{ std::addressof(m_value), 1 });
     }
 
     // function that will be restricted by WRITE and READWRITE access
@@ -132,8 +139,14 @@ class DataPoint
     requires Helper::WriteConcept<A>
     void set(const T &value)
     {
-        // deserialize can be done with free function "fromBytes()"
         m_value = value;
+    }
+
+    template<typename A = Access>
+    requires Helper::WriteConcept<A>
+    void deserialize(const auto &value)
+    {
+        std::memcpy(&m_value, value.data(), sizeof(T));
     }
 
   private:

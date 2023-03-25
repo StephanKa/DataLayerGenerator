@@ -221,6 +221,35 @@ TEST_CASE("Test datapoints")
         REQUIRE((test() == temperatureTest));
     }
 
+    SECTION("datapoint serialization")
+    {
+        size_t index = 0;
+        constexpr std::array expected = {
+            std::byte{ 0x67 }, std::byte{ 0x12 }, std::byte{ 0x0 }, std::byte{ 0x0 }, std::byte{ 0x0 }, std::byte{ 0x0 }, std::byte{ 0xf6 }, std::byte{ 0x42 }
+        };
+        const auto serializedDatapoint = test.serialize();
+
+        REQUIRE(serializedDatapoint.size() == expected.size());
+        for (const auto temp : serializedDatapoint) {
+            REQUIRE(temp == expected.at(index));
+            index++;
+        }
+    }
+
+    SECTION("datapoint deserialization")
+    {
+        constexpr Temperature temperatureTest{ .raw = 1234, .value = 11111.F };
+        const auto serializedDatapoint = test.serialize();
+        std::array<std::byte, sizeof(Temperature)> initial{};
+        std::copy(serializedDatapoint.begin(), serializedDatapoint.end(), initial.begin());
+
+        test = temperatureTest;
+        REQUIRE(test.get().raw == temperatureTest.raw);
+
+        test.deserialize(initial);
+        REQUIRE(test.get().raw == initalTestValue.raw);
+    }
+
     test = initalTestValue;
     testWithoutDefaultValue = initalTestWithoutDefaultValueValue;
     testWithoutDefaultValueWriteOnly = initalTestWithoutDefaultValueWriteOnlyValue;
