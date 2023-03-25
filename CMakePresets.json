@@ -106,6 +106,24 @@
       }
     },
     {
+      "name": "clang-16-debug",
+      "inherits": "debug-base",
+      "displayName": "Preset for clang 16 debug build",
+      "environment": {
+        "CXX": "clang++-16",
+        "CC": "clang-16"
+      }
+    },
+    {
+      "name": "clang-16-release",
+      "inherits": "release-base",
+      "displayName": "Preset for clang 16 release build",
+      "environment": {
+        "CXX": "clang++-16",
+        "CC": "clang-16"
+      }
+    },
+    {
       "name": "gcc-10-debug",
       "inherits": "debug-base",
       "displayName": "Preset for gcc 10 debug builds",
@@ -284,6 +302,14 @@
       "configurePreset": "clang-15-release"
     },
     {
+      "name": "clang-16-debug",
+      "configurePreset": "clang-16-debug"
+    },
+    {
+      "name": "clang-16-release",
+      "configurePreset": "clang-16-release"
+    },
+    {
       "name": "gcc-10-debug",
       "configurePreset": "gcc-10-debug"
     },
@@ -364,6 +390,14 @@
     {
       "name": "clang-15-release",
       "configurePreset": "clang-15-release"
+    },
+    {
+      "name": "clang-16-debug",
+      "configurePreset": "clang-16-debug"
+    },
+    {
+      "name": "clang-16-release",
+      "configurePreset": "clang-16-release"
     },
     {
       "name": "gcc-10-debug",
