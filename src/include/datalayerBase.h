@@ -27,7 +27,8 @@ struct GroupDataPointMapping
     ArgsT datapoints;
     const GroupInfo &group;
     consteval GroupDataPointMapping() = default;
-    consteval explicit GroupDataPointMapping(GroupInfo &inputGroup, Datapoints &...dps) : datapoints(dps...), group(inputGroup) {}
+    consteval explicit GroupDataPointMapping(GroupInfo &inputGroup, Datapoints &...dps) : datapoints(dps...), group(inputGroup)
+    {}
 
     void printDatapoints() const
     {
@@ -93,14 +94,24 @@ class DataPoint
   public:
     constexpr static Access TypeAccess{};
     consteval DataPoint() = default;
-    consteval explicit DataPoint(T value) : m_value(value) {}
+    consteval explicit DataPoint(T value) : m_value(value)
+    {}
     static constexpr char const *name = Name;
 
-    constexpr static uint16_t getId() { return group.baseId + id; }
-    constexpr static auto getVersion() { return Version; }
+    constexpr static uint16_t getId()
+    {
+        return group.baseId + id;
+    }
+    constexpr static auto getVersion()
+    {
+        return Version;
+    }
 
     // function to read everytime
-    constexpr T operator()() const { return m_value; }
+    constexpr T operator()() const
+    {
+        return m_value;
+    }
     // function to write anyway
     constexpr DataPoint &operator=(const T &value)
     {
@@ -134,7 +145,8 @@ struct Dispatcher
 {
     using ArgsT = std::tuple<GroupInfos &...>;
     ArgsT groups;
-    consteval explicit Dispatcher(GroupInfos &...groupInfos) : groups(groupInfos...) {}
+    consteval explicit Dispatcher(GroupInfos &...groupInfos) : groups(groupInfos...)
+    {}
 
     void printStructure() const
     {
