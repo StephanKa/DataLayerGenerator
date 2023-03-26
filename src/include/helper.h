@@ -28,22 +28,6 @@ template<unsigned N>
 FixedString(const char (&)[N]) -> FixedString<N - 1>;
 
 namespace Helper {
-// helper functions
-template<typename T>
-constexpr auto bytesTo(const uint8_t *const data)
-{
-    T tmp;
-    memcpy(&tmp, data, sizeof(T));
-    return tmp;
-}
-
-template<typename T>
-constexpr auto toBytes(const T &input, uint8_t *const daten)
-{
-    memcpy(daten, reinterpret_cast<const uint8_t *>(&input), sizeof(T));
-    return sizeof(T);
-}
-
 // helper classes
 struct READONLY
 {
