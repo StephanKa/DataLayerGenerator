@@ -11,7 +11,7 @@ IF(CMAKE_CROSSCOMPILING)
     SET_TARGET_PROPERTIES(${PROJECT_NAME} PROPERTIES SUFFIX ".elf")
     TARGET_LINK_OPTIONS(${PROJECT_NAME}
                         PRIVATE
-                        -T${CMAKE_CURRENT_SOURCE_DIR}/linkerScript/linkerScript.ld
+                        -T${CMAKE_CURRENT_SOURCE_DIR}/linkerscript/linkerScript.ld
                         -Wl,-Map=${PROJECT_NAME}.map
                         )
     ADD_CUSTOM_TARGET(${PROJECT_NAME}.bin ALL
