@@ -160,6 +160,5 @@ ctest --preset <PRESET_NAME>
 ## To-Do's
 
 - [ ] add coverage
-- [ ] add serialization and deserialization
 - [ ] add version handling
 - [ ] version schema dynamisch

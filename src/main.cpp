@@ -1,8 +1,8 @@
-#include "include/version.hpp"
-#include <datalayer.h>
-#include <fmt/format.h>
-#include <formatter.h>
-
+#include "datalayerBase.h"// for DataPoint, GroupDataPointMapping, Dis...
+#include "helper.h"// for Version
+#include "include/version.hpp"// for SoftwareVersion
+#include <datalayer.h>// for Temperature, test, test4, CyclicGroup
+#include <fmt/format.h>// for print, basic_string_view, formatter
 
 template<>
 struct fmt::formatter<SoftwareVersion>
@@ -42,24 +42,19 @@ int main()
       versionTest.minor,
       versionTest.build);
 
-    constexpr Temperature a{ .raw = 1234, .value = 42.2F };
+    /*constexpr Temperature a{ .raw = 1234, .value = 42.2F };
     test4.set(a);
     const auto test4Value = test4();
     const auto version4Test = test4.getVersion();
     fmt::print(R"(Datapoints
     id: {:#06x}
     value: {}
-    version:
-        Major = {}
-        Minor = {}
-        Build = {}
+    version: {}
 )",
       test4.getId(),
       test4Value,
-      version4Test.major,
-      version4Test.minor,
-      version4Test.build);
-
+      version4Test);
+*/
     fmt::print("{}\n", SoftwareVersion{});
     fmt::print("\nPrint whole structure:\n");
     Dispatcher.printStructure();

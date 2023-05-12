@@ -77,16 +77,17 @@ IF(ENABLE_PCH)
             <utility>)
 ENDIF()
 
-# Set up some extra Conan dependencies based on our needs before loading Conan
-SET(CONAN_EXTRA_REQUIRES "")
-SET(CONAN_EXTRA_OPTIONS "")
-
 INCLUDE(cmake/Conan.cmake)
 RUN_CONAN()
+
+ADD_SUBDIRECTORY(src)
+
+IF(CMAKE_CROSSCOMPILING)
+    MESSAGE("Test are not built for GCC ARM toolchain!")
+    RETURN()
+ENDIF()
 
 IF(ENABLE_TESTING)
     ENABLE_TESTING()
     ADD_SUBDIRECTORY(test)
 ENDIF()
-
-ADD_SUBDIRECTORY(src)

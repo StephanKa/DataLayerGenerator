@@ -266,6 +266,55 @@
         "CMAKE_BUILD_TYPE": "Release",
         "ENABLE_FMT": "ON"
       }
+    },
+    {
+      "name": "clang-15-debug-static-analysis",
+      "displayName": "Clang 15 Debug - Static Analysis",
+      "description": "Target Unix-like OS with the Clang 15 compiler, debug build type",
+      "inherits": "clang-15-debug",
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "clang-15",
+        "CMAKE_CXX_COMPILER": "clang++-15",
+        "CMAKE_BUILD_TYPE": "Debug",
+        "ENABLE_CPPCHECK": "ON",
+        "ENABLE_CLANG_TIDY": "ON",
+        "ENABLE_INCLUDE_WHAT_YOU_USE": "ON",
+        "ENABLE_COVERAGE": "OFF",
+        "ENABLE_SANITIZER_ADDRESS": "OFF",
+        "ENABLE_SANITIZER_LEAK": "OFF",
+        "ENABLE_SANITIZER_UNDEFINED_BEHAVIOR": "OFF",
+        "ENABLE_SANITIZER_MEMORY": "OFF"
+      }
+    },
+    {
+      "name": "gcc-arm-debug",
+      "generator": "Ninja",
+      "toolchainFile": "${sourceDir}/cmake/arm-cortex-gnu/ArmCortexM4Gnu.cmake",
+      "binaryDir": "${sourceDir}/build/build/${presetName}",
+      "installDir": "${sourceDir}/build/install/${presetName}",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_SYSTEM_NAME": "Linux",
+        "CONAN_ARCHITECTURE": "armv7",
+        "CMAKE_SYSTEM_PROCESSOR": "arm",
+        "CMAKE_TRY_COMPILE_TARGET_TYPE": "STATIC_LIBRARY",
+        "CMAKE_CROSSCOMPILING": "TRUE"
+      }
+    },
+    {
+      "name": "gcc-arm-release",
+      "generator": "Ninja",
+      "toolchainFile": "${sourceDir}/cmake/arm-cortex-gnu/ArmCortexM4Gnu.cmake",
+      "binaryDir": "${sourceDir}/build/build/${presetName}",
+      "installDir": "${sourceDir}/build/install/${presetName}",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_SYSTEM_NAME": "Linux",
+        "CONAN_ARCHITECTURE": "armv7",
+        "CMAKE_SYSTEM_PROCESSOR": "arm",
+        "CMAKE_TRY_COMPILE_TARGET_TYPE": "STATIC_LIBRARY",
+        "CMAKE_CROSSCOMPILING": "TRUE"
+      }
     }
   ],
   "buildPresets": [
@@ -356,6 +405,18 @@
     {
       "name": "win32-gcc-x64-mingw-release",
       "configurePreset": "win32-gcc-x64-mingw-release"
+    },
+    {
+      "name": "clang-15-debug-static-analysis",
+      "configurePreset": "clang-15-debug-static-analysis"
+    },
+    {
+      "name": "gcc-arm-debug",
+      "configurePreset": "gcc-arm-debug"
+    },
+    {
+      "name": "gcc-arm-release",
+      "configurePreset": "gcc-arm-release"
     }
   ],
   "testPresets": [
