@@ -142,14 +142,31 @@ test4: 0x5004
 For getting known preset have a look into [CMakePresets.json](CMakePresets.json).
 
 Existing presets are for example:
-- gcc-12-debug
-- gcc-12-release
+- clang-12-debug
+- clang-12-release
+- clang-13-debug
+- clang-13-release
+- clang-14-debug
+- clang-14-release
 - clang-15-debug
 - clang-15-release
+- clang-16-debug
+- clang-16-release
+- gcc-10-debug
+- gcc-10-release
+- gcc-11-debug
+- gcc-11-release
+- gcc-12-debug
+- gcc-12-release
+- windows-2019-debug
+- windows-2019-release
 - windows-2022-debug
 - windows-2022-release
 - win32-gcc-x64-mingw-debug
 - win32-gcc-x64-mingw-release
+- clang-15-debug-static-analysis
+- gcc-arm-debug
+- gcc-arm-release
 
 ```bash
 cmake --preset <PRESET_NAME>
@@ -161,4 +178,6 @@ ctest --preset <PRESET_NAME>
 
 - [ ] add coverage
 - [ ] add version handling
+- [ ] add a CMake option for developer to have a default version (e.g. 0.0.0)
 - [ ] version schema dynamisch
+- [ ] add splitting namespaces to separate files (amalgamation or single files)

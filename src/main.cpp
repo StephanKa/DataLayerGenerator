@@ -3,6 +3,7 @@
 #include "include/version.hpp"// for SoftwareVersion
 #include <datalayer.h>// for Temperature, test, test4, CyclicGroup
 #include <fmt/format.h>// for print, basic_string_view, formatter
+#include <formatter.h>
 
 template<>
 struct fmt::formatter<SoftwareVersion>
@@ -42,21 +43,25 @@ int main()
       versionTest.minor,
       versionTest.build);
 
-    /*constexpr Temperature a{ .raw = 1234, .value = 42.2F };
+    constexpr Temperature a{ .raw = 1234, .value = 42.2F };
     test4.set(a);
     const auto test4Value = test4();
-    const auto version4Test = test4.getVersion();
+    // const auto version4Test = test4.getVersion();
     fmt::print(R"(Datapoints
     id: {:#06x}
     value: {}
-    version: {}
 )",
       test4.getId(),
-      test4Value,
-      version4Test);
-*/
+      test4Value);
+
     fmt::print("{}\n", SoftwareVersion{});
     fmt::print("\nPrint whole structure:\n");
     Dispatcher.printStructure();
+
+    fmt::print("arrayTest\n");
+    for (const auto &value : arrayTest.get()) { fmt::print("{}\n", value); }
+
+    fmt::print("arrayTest2\n");
+    for (const auto &value : Testify::arrayTest2.get()) { fmt::print("{}\n", value); }
     return 0;
 }

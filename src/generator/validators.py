@@ -138,5 +138,11 @@ def data_point_validator(data_point_data, struct_list):
             raise DatapointException(f"Datapoint id '{dp_id}' is already registered for group '{group}'")
         if 'version' in temp_dp:
             temp_dp['version'] = Version(temp_dp['version'])
+        if 'arraySize' in temp_dp:
+            dp_array_size = temp_dp['arraySize']
+            if dp_array_size == 0:
+                raise DatapointException(f"Datapoint has arraySize defined but size is '{dp_array_size}'")
+        else:
+            temp_dp['arraySize'] = 0
         group_id[group].append(dp_id)
     return data_point_data

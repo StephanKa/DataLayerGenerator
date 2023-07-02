@@ -27,6 +27,29 @@
       "name": "testWithoutDefaultValueWriteOnly",
       "type": "Temperature",
       "version": "0.2.3"
+    },
+    {
+      "name": "arrayTest",
+      "group": "DefaultGroup",
+      "id": 5,
+      "type": "Temperature",
+      "arraySize": 10,
+      "default": {
+        "value": 123.0,
+        "raw": 5555
+      },
+      "access": "READWRITE",
+      "version": "1.0.1"
+    },
+    {
+      "name": "arrayTest2",
+      "group": "DefaultGroup",
+      "id": 7,
+      "type": "int32_t",
+      "arraySize": 10,
+      "default": 1234,
+      "access": "READWRITE",
+      "version": "1.0.1"
     }
   ]
 }

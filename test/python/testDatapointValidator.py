@@ -71,6 +71,30 @@ class TestDatapointValidator(unittest.TestCase):
                       'version': '1.0.1'}]
         self.assertRaises(generator.DatapointException, generator.data_point_validator, test_data, {'TestStruct'})
 
+    def test_correct_data_point_array_size_custom_struct(self):
+        """Test correct data point with not existing struct type."""
+        test_data = [{'name': 'test', 'group': 'DefaultGroup', 'id': 1, 'type': 'TestStruct', 'access': 'READWRITE', 'namespace': 'Testify',
+                      'version': '1.0.1', 'arraySize': 10}]
+        generator.data_point_validator(test_data, {'TestStruct'})
+
+    def test_incorrect_data_point_array_size_custom_struct(self):
+        """Test correct data point with not existing struct type."""
+        test_data = [{'name': 'test', 'group': 'DefaultGroup', 'id': 1, 'type': 'TestStruct2', 'access': 'READWRITE', 'namespace': 'Testify',
+                      'version': '1.0.1', 'arraySize': 0}]
+        self.assertRaises(generator.DatapointException, generator.data_point_validator, test_data, {'TestStruct'})
+
+    def test_correct_data_point_array_size(self):
+        """Test correct data point with not existing struct type."""
+        test_data = [{'name': 'test', 'group': 'DefaultGroup', 'id': 1, 'type': 'int32_t', 'access': 'READWRITE', 'namespace': 'Testify',
+                      'version': '1.0.1', 'arraySize': 10}]
+        generator.data_point_validator(test_data, {})
+
+    def test_incorrect_data_point_array_size(self):
+        """Test correct data point with not existing struct type."""
+        test_data = [{'name': 'test', 'group': 'DefaultGroup', 'id': 1, 'type': 'int32_t', 'access': 'READWRITE', 'namespace': 'Testify',
+                      'version': '1.0.1', 'arraySize': 0}]
+        self.assertRaises(generator.DatapointException, generator.data_point_validator, test_data, {})
+
 
 if __name__ == '__main__':
     unittest.main()

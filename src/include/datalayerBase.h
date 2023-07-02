@@ -9,6 +9,23 @@
 #include <type_traits>
 
 namespace DataLayer {
+
+namespace Detail {
+    template<typename T, size_t N>
+    constexpr std::array<T, N> make_array(T value)
+    {
+        std::array<T, N> temp{};
+        for (auto &val : temp) { val = value; }
+        return temp;
+    }
+
+    template<typename Type>
+    concept IsArray = requires(Type val)
+    {
+        val.begin();
+    };
+}// namespace Detail
+
 enum class Persistance : uint32_t { None, Cyclic, OnWrite };
 
 // group definitions
@@ -71,7 +88,8 @@ struct GroupDataPointMapping
   private:
     constexpr static bool setter([[maybe_unused]] const auto &value, [[maybe_unused]] auto &args, [[maybe_unused]] bool &ret)
     {
-        if constexpr (Helper::WriteConcept<std::remove_cvref_t<decltype(args.TypeAccess)>>) {
+        if constexpr (Helper::WriteConcept<
+                        std::remove_cvref_t<decltype(args.TypeAccess)>> && (std::is_same_v<std::remove_cvref_t<decltype(args())>, std::remove_cvref_t<decltype(value)>>)) {
             args.set(value);
             ret = true;
         }
@@ -80,7 +98,8 @@ struct GroupDataPointMapping
 
     constexpr static bool getter([[maybe_unused]] auto &value, [[maybe_unused]] const auto &args, [[maybe_unused]] bool &ret)
     {
-        if constexpr (Helper::ReadConcept<std::remove_cvref_t<decltype(args.TypeAccess)>>) {
+        if constexpr (Helper::ReadConcept<
+                        std::remove_cvref_t<decltype(args.TypeAccess)>> && std::is_same_v<std::remove_cvref_t<decltype(args())>, std::remove_cvref_t<decltype(value)>>) {
             value = args();
             ret = true;
         }
@@ -95,8 +114,10 @@ class DataPoint
   public:
     constexpr static Access TypeAccess{};
     consteval DataPoint() = default;
+
     consteval explicit DataPoint(T value) : m_value(value)
     {}
+
     static constexpr char const *name = Name;
 
     constexpr static uint16_t getId()
@@ -127,6 +148,14 @@ class DataPoint
         return m_value;
     }
 
+    // function that will be restricted by READ and READWRITE access
+    template<typename A = Access>
+    requires Helper::ReadConcept<A> && Detail::IsArray<T>
+    constexpr auto &get(size_t index)
+    {
+        return m_value.at(index);
+    }
+
     template<typename A = Access>
     requires Helper::ReadConcept<A>
     auto serialize()
@@ -137,9 +166,17 @@ class DataPoint
     // function that will be restricted by WRITE and READWRITE access
     template<typename A = Access>
     requires Helper::WriteConcept<A>
-    void set(const T &value)
+    constexpr void set(const T &value)
     {
         m_value = value;
+    }
+
+    // function that will be restricted by WRITE and READWRITE access
+    template<typename A = Access>
+    requires Helper::WriteConcept<A> && Detail::IsArray<T>
+    constexpr void set(size_t index, const auto &value)
+    {
+        m_value.at(index) = value;
     }
 
     template<typename A = Access>
@@ -147,6 +184,13 @@ class DataPoint
     void deserialize(const auto &value)
     {
         std::memcpy(&m_value, value.data(), sizeof(T));
+    }
+
+    template<typename Type = T>
+    requires Detail::IsArray<Type>
+    constexpr auto size()
+    {
+        return m_value.size();
     }
 
   private:

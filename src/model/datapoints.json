@@ -38,6 +38,30 @@
       },
       "access": "READWRITE",
       "version": "1.0.1"
+    },
+    {
+      "name": "arrayTest",
+      "group": "CyclicGroup",
+      "id": 5,
+      "type": "Temperature",
+      "arraySize": 10,
+      "default": {
+        "value": 123.0,
+        "raw": 5555
+      },
+      "access": "READWRITE",
+      "version": "1.0.1"
+    },
+    {
+      "name": "arrayTest2",
+      "group": "DefaultGroup",
+      "id": 12,
+      "type": "int32_t",
+      "arraySize": 10,
+      "default": 1234,
+      "access": "READWRITE",
+      "namespace": "Testify",
+      "version": "1.0.1"
     }
   ]
 }
