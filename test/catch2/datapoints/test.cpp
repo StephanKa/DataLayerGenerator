@@ -16,6 +16,7 @@ TEST_CASE("Test datapoints")
     const auto initalTestValue = test();
     const auto initalTestWithoutDefaultValueValue = testWithoutDefaultValue();
     const auto initalTestWithoutDefaultValueWriteOnlyValue = testWithoutDefaultValueWriteOnly();
+    const auto initialArrayTest2 = arrayTest2();
 
     SECTION("datapoint default values via get() method")
     {
@@ -95,7 +96,7 @@ TEST_CASE("Test datapoints")
         // write new data
         constexpr float newValue{ 321.4F };
         constexpr uint32_t newRaw{ 3214U };
-        const Temperature newData{ newRaw, newValue };
+        constexpr Temperature newData{ newRaw, newValue };
 
         REQUIRE(DefaultGroup.setDatapoint(dpId, newData));
         REQUIRE((test() == Temperature{ newRaw, newValue }));
@@ -250,7 +251,136 @@ TEST_CASE("Test datapoints")
         REQUIRE(test.get().raw == initalTestValue.raw);
     }
 
+    SECTION("datapoint 'arrayTest' check correct array initialize")
+    {
+        constexpr Temperature temperatureTest{ .raw = 5555, .value = 123.0F };
+        REQUIRE(arrayTest().size() == 10);
+        for (const auto &temp : arrayTest()) {
+            REQUIRE(temp.raw == temperatureTest.raw);
+            REQUIRE(temp.value == temperatureTest.value);
+        }
+    }
+
+    SECTION("datapoint 'arrayTest2' check correct array initialize")
+    {
+        const auto val = arrayTest2();
+        REQUIRE(val.size() == 10);
+        for (const auto &temp : val) { REQUIRE(temp == 1234); }
+    }
+
+    SECTION("datapoint 'arrayTest2' dispatcher get() existing")
+    {
+        using Return = std::remove_cvref_t<decltype(arrayTest2.get())>;
+        Return temperatureTest;
+
+        REQUIRE(Dispatcher.getDatapoint(arrayTest2.getId(), temperatureTest));
+        REQUIRE((arrayTest2.get() == temperatureTest));
+        REQUIRE(arrayTest2.getId() == 7 + DefaultGroupInfo.baseId);
+    }
+
+    SECTION("datapoint 'arrayTest' dispatcher get() existing")
+    {
+        constexpr Temperature expectedTemperature{ .raw = 5555, .value = 123.0F };
+        using Return = std::remove_cvref_t<decltype(arrayTest.get())>;
+        Return temperatureTest;
+
+        REQUIRE(Dispatcher.getDatapoint(arrayTest.getId(), temperatureTest));
+        REQUIRE((arrayTest.get().size() == temperatureTest.size()));
+        for (const auto &temp : temperatureTest) {
+            REQUIRE(temp.raw == expectedTemperature.raw);
+            REQUIRE_THAT(temp.value, Catch::Matchers::WithinRel(static_cast<double>(expectedTemperature.value), EPSILON));
+        }
+        REQUIRE(arrayTest.getId() == 5 + DefaultGroupInfo.baseId);
+    }
+
+    SECTION("datapoint 'arrayTest2' dispatcher get() existing")
+    {
+        using Return = std::remove_cvref_t<decltype(arrayTest2.get())>;
+        Return valueTest;
+        int32_t index = 0;
+        for (auto &temp : valueTest) {
+            temp = index;
+            ++index;
+        }
+
+        REQUIRE(Dispatcher.setDatapoint(arrayTest2.getId(), valueTest));
+        REQUIRE(valueTest == arrayTest2.get());
+        REQUIRE(arrayTest2.size() == 10);
+    }
+
+    SECTION("datapoint 'arrayTest2' get() by index")
+    {
+        using Return = std::remove_cvref_t<decltype(arrayTest2.get().at(0))>;
+        Return valueTest = arrayTest2.get(1);
+
+        REQUIRE(valueTest == 1234);
+    }
+
+    SECTION("datapoint 'arrayTest' get() by index")
+    {
+        constexpr Temperature expectedTemperature{ .raw = 5555, .value = 123.0F };
+        using Return = std::remove_cvref_t<decltype(arrayTest.get().at(0))>;
+        Return valueTest = arrayTest.get(1);
+
+
+        REQUIRE(valueTest.raw == expectedTemperature.raw);
+        REQUIRE_THAT(valueTest.value, Catch::Matchers::WithinRel(static_cast<double>(expectedTemperature.value), EPSILON));
+    }
+
+    SECTION("datapoint 'arrayTest2' set() by index")
+    {
+        const auto expected = arrayTest2.get();
+        constexpr size_t changedIndex = 5;
+        constexpr int32_t expectedValue = 42;
+
+        arrayTest2.set(changedIndex, expectedValue);
+        REQUIRE(arrayTest2.get(changedIndex) != expected.at(changedIndex));
+        REQUIRE(arrayTest2.get(changedIndex) == expectedValue);
+    }
+
+    SECTION("datapoint array serialization")
+    {
+        size_t index = 0;
+        const auto serializedDatapoint = arrayTest2.serialize();
+        constexpr std::array expected = {
+            // clang-format off
+            std::byte{ 0xD2 }, std::byte{ 0x04 }, std::byte{ 0x0 }, std::byte{ 0x0 }, std::byte{ 0xD2 }, std::byte{ 0x04 }, std::byte{ 0x0 }, std::byte{ 0x0 },
+            std::byte{ 0xD2 }, std::byte{ 0x04 }, std::byte{ 0x0 }, std::byte{ 0x0 }, std::byte{ 0xD2 }, std::byte{ 0x04 }, std::byte{ 0x0 }, std::byte{ 0x0 },
+            std::byte{ 0xD2 }, std::byte{ 0x04 }, std::byte{ 0x0 }, std::byte{ 0x0 }, std::byte{ 0xD2 }, std::byte{ 0x04 }, std::byte{ 0x0 }, std::byte{ 0x0 },
+            std::byte{ 0xD2 }, std::byte{ 0x04 }, std::byte{ 0x0 }, std::byte{ 0x0 }, std::byte{ 0xD2 }, std::byte{ 0x04 }, std::byte{ 0x0 }, std::byte{ 0x0 },
+            std::byte{ 0xD2 }, std::byte{ 0x04 }, std::byte{ 0x0 }, std::byte{ 0x0 }, std::byte{ 0xD2 }, std::byte{ 0x04 }, std::byte{ 0x0 }, std::byte{ 0x0 }
+            // clang-format on
+        };
+
+        REQUIRE(serializedDatapoint.size() == expected.size());
+        for (const auto temp : serializedDatapoint) {
+            REQUIRE(temp == expected.at(index));
+            index++;
+        }
+    }
+
+    SECTION("datapoint array deserialization")
+    {
+        using Return = std::remove_cvref_t<decltype(arrayTest2.get())>;
+        constexpr Return valueTest{};
+        constexpr std::array expected = {
+            // clang-format off
+            std::byte{ 0xD2 }, std::byte{ 0x04 }, std::byte{ 0x0 }, std::byte{ 0x0 }, std::byte{ 0xD2 }, std::byte{ 0x04 }, std::byte{ 0x0 }, std::byte{ 0x0 },
+            std::byte{ 0xD2 }, std::byte{ 0x04 }, std::byte{ 0x0 }, std::byte{ 0x0 }, std::byte{ 0xD2 }, std::byte{ 0x04 }, std::byte{ 0x0 }, std::byte{ 0x0 },
+            std::byte{ 0xD2 }, std::byte{ 0x04 }, std::byte{ 0x0 }, std::byte{ 0x0 }, std::byte{ 0xD2 }, std::byte{ 0x04 }, std::byte{ 0x0 }, std::byte{ 0x0 },
+            std::byte{ 0xD2 }, std::byte{ 0x04 }, std::byte{ 0x0 }, std::byte{ 0x0 }, std::byte{ 0xD2 }, std::byte{ 0x04 }, std::byte{ 0x0 }, std::byte{ 0x0 },
+            std::byte{ 0xD2 }, std::byte{ 0x04 }, std::byte{ 0x0 }, std::byte{ 0x0 }, std::byte{ 0xD2 }, std::byte{ 0x04 }, std::byte{ 0x0 }, std::byte{ 0x0 }
+            // clang-format on
+        };
+
+        arrayTest2.set(valueTest);
+        REQUIRE(arrayTest2.get() == valueTest);
+        arrayTest2.deserialize(expected);
+        REQUIRE(arrayTest2.get() == initialArrayTest2);
+    }
+
     test = initalTestValue;
     testWithoutDefaultValue = initalTestWithoutDefaultValueValue;
     testWithoutDefaultValueWriteOnly = initalTestWithoutDefaultValueWriteOnlyValue;
+    arrayTest2 = initialArrayTest2;
 }
