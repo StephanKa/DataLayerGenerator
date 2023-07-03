@@ -63,5 +63,6 @@ int main()
 
     fmt::print("arrayTest2\n");
     for (const auto &value : Testify::arrayTest2.get()) { fmt::print("{}\n", value); }
+    fmt::print("errorCode: {}\n", errorCode());
     return 0;
 }

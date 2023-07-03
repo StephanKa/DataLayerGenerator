@@ -11,3 +11,34 @@ template<> struct fmt::formatter<{{ struct }}>
     }
 };
 {%- endfor %}
+
+{%- for enum in enums %}
+template<> struct fmt::formatter<{{ enum.name }}>
+{
+    template<typename ParseContext> constexpr auto parse(ParseContext &ctx) { return ctx.begin(); }
+
+    template<typename FormatContext> auto format(const {{ enum.name }}& value, FormatContext &ctx)
+    {
+        switch(value)
+        {
+        {%- for val in enum["values"] -%}
+        {%- if val is string %}
+            case {{ enum.name }}::{{ val }}:
+            {
+                return format_to(ctx.out(), "{{ val }}");
+            }
+        {%- else %}
+            case {{ enum.name }}::{{ val.name }}:
+            {
+                return format_to(ctx.out(), "{{ val.name }}");
+            }
+        {%- endif %}
+        {%- endfor %}
+            default:
+            {
+                return format_to(ctx.out(), "{{ val }}");
+            }
+        }
+    }
+};
+{%- endfor %}

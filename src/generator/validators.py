@@ -105,12 +105,13 @@ def struct_validator(struct_data):
     return struct_data, check_names
 
 
-def data_point_validator(data_point_data, struct_list):
+def data_point_validator(data_point_data, struct_list, enum_list):
     """
     Check the given data point for consistency and if given struct is defined.
 
     :param struct_list: dictionary of all struct definitions
     :param data_point_data: dictionary of all data points definitions
+    :param enum_list: dictionary of available custom-made enumerations
     :return: given data_point_data
     """
     check_names = dict()
@@ -130,7 +131,7 @@ def data_point_validator(data_point_data, struct_list):
         check_names[name] = None
         if access not in BASE_ACCESS:
             raise DatapointException(f"Datapoint access type '{access}' is not supported")
-        if dp_type not in BASE_TYPES and dp_type not in struct_list:
+        if dp_type not in BASE_TYPES and dp_type not in struct_list and dp_type not in [i['name'] for i in enum_list]:
             raise DatapointException(f"Datapoint type '{dp_type}' is not supported")
         if group not in group_id:
             group_id[group] = list()

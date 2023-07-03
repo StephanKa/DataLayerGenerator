@@ -121,7 +121,7 @@ def main(template_file_name, template_formatter_file_name):
     enums = enum_validator(json_data['Enums'])
     groups = group_validator(json_data['Groups'])
     structs, struct_names = struct_validator(json_data['Structs'])
-    data_points = data_point_validator(json_data['Datapoints'], struct_names)
+    data_points = data_point_validator(json_data['Datapoints'], struct_names, enums)
 
     group_data_points_mapping = create_group_data_point_dict(data_points)
 
@@ -137,7 +137,7 @@ def main(template_file_name, template_formatter_file_name):
     struct_types = dict()
     for struct in structs:
         struct_types[struct['name']] = struct['parameter']
-    output = template.render(structs=structs, data_points=data_points, struct_types=struct_types)
+    output = template.render(structs=structs, data_points=data_points, struct_types=struct_types, enums=enums)
     with open(f'{args.out_dir}/generated/formatter.h', 'w') as f:
         f.write(output)
 

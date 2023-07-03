@@ -62,6 +62,25 @@
       "access": "READWRITE",
       "namespace": "Testify",
       "version": "1.0.1"
+    },
+    {
+      "name": "errorCode",
+      "group": "DefaultGroup",
+      "id": 24,
+      "type": "ErrorStates",
+      "default": "None",
+      "access": "READWRITE",
+      "version": "1.0.1"
+    },
+    {
+      "name": "errorCodeArray",
+      "group": "DefaultGroup",
+      "id": 25,
+      "type": "ErrorStates",
+      "arraySize": 5,
+      "default": "None",
+      "access": "READWRITE",
+      "version": "1.0.1"
     }
   ]
 }

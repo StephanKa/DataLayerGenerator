@@ -42,9 +42,10 @@ constexpr DataLayer::GroupInfo<{{ group.baseId }}, "{{ group.name }}", DataLayer
 {%- if dp.namespace|length %}
 {%- if dp.namespace != namespace_name.value %}
 {%- set namespace_name.value = dp.namespace %}
+
 namespace {{ dp.namespace }}
 {
-{%- endif -%}
+{%- endif %}
 DataLayer::DataPoint<
 {%- if dp.arraySize > 0 -%}
         std::array<{{ dp.type }}, {{ dp.arraySize }}>
@@ -58,6 +59,8 @@ DataLayer::DataPoint<
         DataLayer::Detail::make_array<{{ dp.type }}, {{ dp.arraySize }}>(
         {%- if dp.default is number -%}
             {{ dp.default }})
+        {%- elif dp.default is string -%}
+            {{ dp.type }}::{{ dp.default }})
         {%- else -%} {
             {%- for attr in dp.default.keys() | sort() -%}
                 .{{ attr }}={{ dp.default[attr] }}, {% endfor -%} })
@@ -65,6 +68,8 @@ DataLayer::DataPoint<
     {%- else %}
         {%- if dp.default is number -%}
             {{ dp.default }}
+        {%- elif dp.default is string -%}
+            {{ dp.type }}::{{ dp.default }}
         {%- else -%}
             {% for attr in dp.default.keys() | sort() -%}
                 .{{ attr }}={{ dp.default[attr] }}
@@ -92,6 +97,8 @@ DataLayer::DataPoint<
             DataLayer::Detail::make_array<{{ dp.type }}, {{ dp.arraySize }}>(
              {%- if dp.default is number -%}
                 {{ dp.default }})
+            {%- elif dp.default is string -%}
+                {{ dp.type }}::{{ dp.default }})
             {%- else -%} {
                 {%- for attr in dp.default.keys() | sort() -%}
                     .{{ attr }}={{ dp.default[attr] }}, {% endfor -%} })
@@ -99,6 +106,8 @@ DataLayer::DataPoint<
         {%- else %}
             {%- if dp.default is number -%}
                 {{ dp.default }}
+            {%- elif dp.default is string -%}
+                {{ dp.type }}::{{ dp.default }}
             {%- else -%}
                 {{ dp.type }}{
                 {%- for attr in dp.default.keys() | sort() -%}
