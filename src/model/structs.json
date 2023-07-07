@@ -10,6 +10,17 @@
           "raw": "uint32_t"
         }
       ]
+    },
+    {
+      "name": "Environment",
+      "parameter": [
+        {
+          "internal": "Temperature"
+        },
+        {
+          "external": "Temperature"
+        }
+      ]
     }
   ]
 }

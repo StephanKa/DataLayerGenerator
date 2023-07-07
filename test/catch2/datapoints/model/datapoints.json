@@ -50,6 +50,24 @@
       "default": 1234,
       "access": "READWRITE",
       "version": "1.0.1"
+    },
+    {
+      "name": "structInStructType",
+      "group": "DefaultGroup",
+      "id": 42,
+      "type": "Environment",
+      "access": "READWRITE",
+      "version": "1.0.1",
+      "default": {
+        "internal": {
+          "value": 111.1,
+          "raw": 111
+        },
+        "external": {
+          "value": 222.2,
+          "raw": 222
+        }
+      }
     }
   ]
 }

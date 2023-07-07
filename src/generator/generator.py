@@ -8,6 +8,8 @@ from yaml.loader import SafeLoader
 
 import yaml
 from jinja2 import Environment, FileSystemLoader
+
+from constants import PREFIX_MAP
 from validators import enum_validator, struct_validator, group_validator, data_point_validator
 
 
@@ -49,13 +51,16 @@ def get_args():
     """
     parser = argparse.ArgumentParser(description='Generates code from defined model.')
     parser.add_argument('-s', '--model_dir', required=True, help='Model directory for input files.')
-    parser.add_argument('-o', '--out_dir', required=True, help='Out directory which point to the folder where the generated files will be saved.')
-    parser.add_argument('-t', '--template_dir', required=True, help='Template directory where the jinja2 templates are located.')
+    parser.add_argument('-o', '--out_dir', required=True,
+                        help='Out directory which point to the folder where the generated files will be saved.')
+    parser.add_argument('-t', '--template_dir', required=True,
+                        help='Template directory where the jinja2 templates are located.')
     parser.add_argument('-c', '--schema_dir', required=True, help='Scheme directory where the schema.json is located.')
     if sys.version_info < (3, 9):
         parser.add_argument('-x', '--convert', action='store_true', help='flag for converting json to yaml')
     else:
-        parser.add_argument('-x', '--convert', action=argparse.BooleanOptionalAction, help='flag for converting json to yaml')
+        parser.add_argument('-x', '--convert', action=argparse.BooleanOptionalAction,
+                            help='flag for converting json to yaml')
     return parser.parse_args()
 
 
@@ -129,7 +134,8 @@ def main(template_file_name, template_formatter_file_name):
         os.makedirs(f'{args.out_dir}/generated')
 
     template = env.get_template(template_file_name)
-    output = template.render(enums=enums, groups=groups, structs=structs, data_points=data_points, group_data_points_mapping=group_data_points_mapping)
+    output = template.render(enums=enums, groups=groups, structs=structs, data_points=data_points,
+                             group_data_points_mapping=group_data_points_mapping, prefix_map=PREFIX_MAP)
     with open(f'{args.out_dir}/generated/datalayer.h', 'w') as f:
         f.write(output)
 

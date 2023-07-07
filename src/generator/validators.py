@@ -1,10 +1,36 @@
 """This module whols all defined validators for enum, group, struct and data points."""
-from constants import BASE_ACCESS, BASE_TYPES, SUPPORTED_PERSISTENCE
+from constants import BASE_ACCESS, BASE_TYPES, SUPPORTED_PERSISTENCE, PREFIX_MAP
 from validatorException import EnumException, StructException, GroupException, DatapointException
 
 
+class ParameterList:
+    """Class for collecting and nesting parameter."""
+
+    def __init__(self, default_dict):
+        """Collect list of parameter.
+
+        :param default_dict: dictionary with default parameter definitions
+        """
+        self.params = list()
+        for param in sorted(default_dict):
+            if isinstance(default_dict[param], dict):
+                self.params.append(ParameterList(default_dict[param]))
+                continue
+            self.params.append(Parameter({param: default_dict[param]}))
+
+    def __str__(self):
+        """Concatenate parameter in recursive manner.
+
+        :return concatenated string for all parameter in list
+        """
+        return_str = '{'
+        return_str += ', '.join([str(i) for i in self.params])
+        return_str += '}'
+        return return_str
+
+
 class Parameter:
-    """Intermedoate class for parsing json data to struct for jinja."""
+    """Intermediate class for parsing json data to struct for jinja."""
 
     def __init__(self, value):
         """Split to name and value.
@@ -14,6 +40,23 @@ class Parameter:
         key, val = zip(*value.items())
         self.name = key[0]
         self.value = val[0]
+        self.prefix = ''
+
+        self.structBegin = ''
+        self.endBegin = ''
+        if isinstance(self.value, dict):
+            self.value = Parameter(self.value)
+            self.structBegin = '{'
+            self.endBegin = '}'
+        elif isinstance(self.value, float):
+            self.prefix = PREFIX_MAP['float']
+
+    def __str__(self):
+        """Create string for structs and value assignment, including prefix.
+
+        :return concatenated current parameter
+        """
+        return f'.{self.name}={self.structBegin}{self.value}{self.prefix}{self.endBegin}'
 
 
 class Version:
@@ -86,6 +129,7 @@ def struct_validator(struct_data):
     :return: given struct_data
     """
     check_names = dict()
+    struct_type_names = [i['name'] for i in struct_data]
     for temp_group in struct_data:
         if temp_group['name'] in check_names:
             raise StructException(f"Struct name '{temp_group['name']}' already defined, please check your model")
@@ -99,18 +143,29 @@ def struct_validator(struct_data):
             if temp.name in parameter_names:
                 raise StructException(f"Struct name '{temp_group['name']}' already defined, please check your model")
             parameter_names.append(temp.name)
-            if temp.value not in BASE_TYPES:
+            if temp.value not in BASE_TYPES and temp.value not in struct_type_names:
                 raise StructException(f"Parameter type '{temp.value}' is not supported")
             temp_group['parameter'][index] = temp
     return struct_data, check_names
+
+
+def validate_data_default_struct(default=None):
+    """
+    Check nested structures in defined datapoint.
+
+    :param default: defines information about default initialization
+    """
+    if default is None or default == 'None' or not isinstance(default, dict):
+        return
+    default['string'] = str(ParameterList(default))
 
 
 def data_point_validator(data_point_data, struct_list, enum_list):
     """
     Check the given data point for consistency and if given struct is defined.
 
-    :param struct_list: dictionary of all struct definitions
     :param data_point_data: dictionary of all data points definitions
+    :param struct_list: dictionary of all struct definitions
     :param enum_list: dictionary of available custom-made enumerations
     :return: given data_point_data
     """
@@ -133,6 +188,8 @@ def data_point_validator(data_point_data, struct_list, enum_list):
             raise DatapointException(f"Datapoint access type '{access}' is not supported")
         if dp_type not in BASE_TYPES and dp_type not in struct_list and dp_type not in [i['name'] for i in enum_list]:
             raise DatapointException(f"Datapoint type '{dp_type}' is not supported")
+        if 'default' in temp_dp:
+            validate_data_default_struct(temp_dp['default'])
         if group not in group_id:
             group_id[group] = list()
         if group in group_id and dp_id in group_id[group]:

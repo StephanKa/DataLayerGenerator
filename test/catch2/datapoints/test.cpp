@@ -17,6 +17,7 @@ TEST_CASE("Test datapoints")
     const auto initalTestWithoutDefaultValueValue = testWithoutDefaultValue();
     const auto initalTestWithoutDefaultValueWriteOnlyValue = testWithoutDefaultValueWriteOnly();
     const auto initialArrayTest2 = arrayTest2();
+    const auto initialStructInStructType = structInStructType();
 
     SECTION("datapoint default values via get() method")
     {
@@ -379,8 +380,35 @@ TEST_CASE("Test datapoints")
         REQUIRE(arrayTest2.get() == initialArrayTest2);
     }
 
+    SECTION("datapoint 'structInStructType' with nested structs")
+    {
+        constexpr Temperature internalTempTest{ .raw = 111, .value = 111.1F };
+        constexpr Temperature externalTempTest{ .raw = 222, .value = 222.2F };
+        const auto valueTest = structInStructType.get();
+        REQUIRE(internalTempTest.raw == valueTest.internal.raw);
+        REQUIRE_THAT(internalTempTest.value, Catch::Matchers::WithinRel(static_cast<double>(valueTest.internal.value), EPSILON));
+
+        REQUIRE(externalTempTest.raw == valueTest.external.raw);
+        REQUIRE_THAT(externalTempTest.value, Catch::Matchers::WithinRel(static_cast<double>(valueTest.external.value), EPSILON));
+    }
+
+    SECTION("set datapoint 'structInStructType' with nested structs")
+    {
+        constexpr Environment expectedValue{};
+
+        REQUIRE(Dispatcher.setDatapoint(structInStructType.getId(), expectedValue));
+
+        const auto valueTest = structInStructType.get();
+        REQUIRE(expectedValue.internal.raw == valueTest.internal.raw);
+        REQUIRE_THAT(expectedValue.internal.value, Catch::Matchers::WithinRel(static_cast<double>(valueTest.internal.value), EPSILON));
+
+        REQUIRE(expectedValue.external.raw == valueTest.external.raw);
+        REQUIRE_THAT(expectedValue.external.value, Catch::Matchers::WithinRel(static_cast<double>(valueTest.external.value), EPSILON));
+    }
+
     test = initalTestValue;
     testWithoutDefaultValue = initalTestWithoutDefaultValueValue;
     testWithoutDefaultValueWriteOnly = initalTestWithoutDefaultValueWriteOnlyValue;
     arrayTest2 = initialArrayTest2;
+    structInStructType = initialStructInStructType;
 }
