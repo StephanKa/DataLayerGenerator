@@ -4,11 +4,9 @@ import os
 import sys
 import jsonschema
 import argparse
-from yaml.loader import SafeLoader
-
 import yaml
+from yaml.loader import SafeLoader
 from jinja2 import Environment, FileSystemLoader
-
 from constants import PREFIX_MAP
 from validators import enum_validator, struct_validator, group_validator, data_point_validator
 

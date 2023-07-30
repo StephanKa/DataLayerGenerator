@@ -251,6 +251,9 @@ ctest --preset <PRESET_NAME>
 | **std::array**  |               |                   | dynamic bytes                     |
 | **structs**     |               |                   | dynamic bytes                     |
 
+## Compiler Explorer Example
+
+[Clang 15.0.0](https://godbolt.org/z/EGG4YrMhG)
 
 ## To-Do's
 - [ ] add coverage
