@@ -28,7 +28,7 @@
         {%- else -%}
             {{ dp.type }}
         {%- endif -%}
-        , {{ dp.group }}Info, 0x{{ "%0x" | format( dp.id | int) }}, Helper::{{ dp.access }}, Version<{{ dp.version.major }}, {{ dp.version.minor }}, {{ dp.version.build }}>{}, "{{ dp.name }}"> {{ dp.name }}
+        , {{ dp.group }}Info, 0x{{ "%0x" | format( dp.id | int) }}, Helper::{{ dp.access }}, Version{ {{ dp.version.major }}, {{ dp.version.minor }}, {{ dp.version.build }} }, "{{ dp.name }}", {{ dp.allowUpgrade }}> {{ dp.name }}
         {%- if 'default' in dp -%}
         ({{ datapoint(dp) }})
     {%- endif %};
@@ -68,7 +68,7 @@ struct {{ struct.name }}
 // defines all existing groups
 {% endif -%}
 {% for group in groups -%}
-constexpr DataLayer::GroupInfo<{{ group.baseId }}, "{{ group.name }}", DataLayer::Persistance::{{ group.persistence }}, Version<{{ group.version.major }}, {{ group.version.minor }}, {{ group.version.build }}>{}> {{ group.name }}Info;
+constexpr DataLayer::GroupInfo<{{ group.baseId }}, "{{ group.name }}", {{ group.allowUpgrade }}, DataLayer::Persistance::{{ group.persistence }}, Version{ {{ group.version.major }}, {{ group.version.minor }}, {{ group.version.build }} }> {{ group.name }}Info;
 {% endfor %}
 
 {%- set namespace_name = namespace(value="") %}

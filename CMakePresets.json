@@ -19,7 +19,8 @@
         "ENABLE_SANITIZER_LEAK": "ON",
         "ENABLE_SANITIZER_UNDEFINED_BEHAVIOR": "ON",
         "ENABLE_SANITIZER_MEMORY": "OFF",
-        "ENABLE_FMT": "ON"
+        "ENABLE_FMT": "ON",
+        "ENABLE_FILE_PERSISTENCE": "ON"
       }
     },
     {
@@ -30,7 +31,8 @@
       "displayName": "Base preset for release builds",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
-        "ENABLE_FMT": "ON"
+        "ENABLE_FMT": "ON",
+        "ENABLE_FILE_PERSISTENCE": "ON"
       }
     },
     {
@@ -188,7 +190,8 @@
       },
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
-        "ENABLE_FMT": "ON"
+        "ENABLE_FMT": "ON",
+        "ENABLE_FILE_PERSISTENCE": "ON"
       }
     },
     {
@@ -202,7 +205,8 @@
       },
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
-        "ENABLE_FMT": "ON"
+        "ENABLE_FMT": "ON",
+        "ENABLE_FILE_PERSISTENCE": "ON"
       }
     },
     {
@@ -216,7 +220,8 @@
       },
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
-        "ENABLE_FMT": "ON"
+        "ENABLE_FMT": "ON",
+        "ENABLE_FILE_PERSISTENCE": "ON"
       }
     },
     {
@@ -230,7 +235,8 @@
       },
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
-        "ENABLE_FMT": "ON"
+        "ENABLE_FMT": "ON",
+        "ENABLE_FILE_PERSISTENCE": "ON"
       }
     },
     {
@@ -247,7 +253,8 @@
         "CMAKE_C_COMPILER": "gcc.exe",
         "CMAKE_CXX_COMPILER": "g++.exe",
         "CMAKE_BUILD_TYPE": "Debug",
-        "ENABLE_FMT": "ON"
+        "ENABLE_FMT": "ON",
+        "ENABLE_FILE_PERSISTENCE": "ON"
       }
     },
     {
@@ -264,7 +271,8 @@
         "CMAKE_C_COMPILER": "gcc.exe",
         "CMAKE_CXX_COMPILER": "g++.exe",
         "CMAKE_BUILD_TYPE": "Release",
-        "ENABLE_FMT": "ON"
+        "ENABLE_FMT": "ON",
+        "ENABLE_FILE_PERSISTENCE": "ON"
       }
     },
     {

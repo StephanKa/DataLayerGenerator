@@ -7,6 +7,9 @@
 #include <helper.h>
 #include <span>
 #include <type_traits>
+#ifdef USE_FILE_PERSISTENCE
+#include <serialization.h>
+#endif
 
 namespace DataLayer {
 
@@ -15,7 +18,9 @@ namespace Detail {
     constexpr std::array<T, N> make_array(T value)
     {
         std::array<T, N> temp{};
-        for (auto &val : temp) { val = value; }
+        for (auto &val : temp) {
+            val = value;
+        }
         return temp;
     }
 
@@ -26,16 +31,22 @@ namespace Detail {
     };
 }// namespace Detail
 
-enum class Persistance : uint32_t { None, Cyclic, OnWrite };
+enum class Persistance : uint32_t
+{
+    None,
+    Cyclic,
+    OnWrite
+};
 
 // group definitions
-template<uint16_t BaseId, FixedString Name, Persistance persistence = Persistance::None, auto Version = Version<0, 0, 0>{}>
+template<uint16_t BaseId, FixedString Name, bool AllowUpgrade, Persistance persistence = Persistance::None, auto Version = Version{ 0, 0, 0 }>
 struct GroupInfo
 {
     constexpr static Persistance persist{ persistence };
     constexpr static uint16_t baseId{ BaseId };
     constexpr static auto version{ Version };
     static constexpr char const *name = Name;
+    constexpr static bool allowUpgrade = AllowUpgrade;
 };
 
 template<typename GroupInfo, typename... Datapoints>
@@ -85,6 +96,20 @@ struct GroupDataPointMapping
           datapoints);
     }
 
+#ifdef USE_FILE_PERSISTENCE
+    [[nodiscard]] SerializationStatus serializeGroup(std::string_view path) const
+    {
+        Serialization value(group.version, path, datapoints);
+        return value.write();
+    }
+
+    [[nodiscard]] SerializationStatus deserializeGroup(std::string_view path) const
+    {
+        Deserialization value(group.version, path, datapoints, group.allowUpgrade);
+        return value.read();
+    }
+#endif
+
   private:
     constexpr static bool setter([[maybe_unused]] const auto &value, [[maybe_unused]] auto &args, [[maybe_unused]] bool &ret)
     {
@@ -108,7 +133,7 @@ struct GroupDataPointMapping
 };
 
 // data point definition
-template<typename T, GroupInfo group, uint16_t id, typename Access, auto Version = Version<0, 0, 0>{}, FixedString Name = "">
+template<typename T, GroupInfo group, uint16_t id, typename Access, auto Version = Version{ 0, 0, 0 }, FixedString Name = "", bool AllowUpgrade = false>
 class DataPoint
 {
   public:
@@ -134,6 +159,7 @@ class DataPoint
     {
         return m_value;
     }
+
     // function to write anyway
     constexpr DataPoint &operator=(const T &value)
     {
@@ -191,6 +217,11 @@ class DataPoint
     constexpr auto size()
     {
         return m_value.size();
+    }
+
+    constexpr bool getIsUpgradeAllowed()
+    {
+        return AllowUpgrade;
     }
 
   private:

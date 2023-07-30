@@ -2,13 +2,24 @@
 #include <array>
 #include <cstring>
 
-template<uint32_t Major, uint32_t Minor, uint32_t Build>
 struct Version
 {
-    consteval Version() = default;
-    constexpr static uint32_t major{ Major };
-    constexpr static uint32_t minor{ Minor };
-    constexpr static uint32_t build{ Build };
+    constexpr Version(uint32_t Major, uint32_t Minor, uint32_t Build) : major(Major), minor(Minor), build(Build)
+    {}
+    constexpr Version() = default;
+    const uint32_t major{};
+    const uint32_t minor{};
+    const uint32_t build{};
+
+    constexpr bool operator!=(const Version &rhs) const
+    {
+        return rhs.major != major || rhs.minor != minor || rhs.build != build;
+    }
+
+    constexpr bool operator>(const Version &rhs) const
+    {
+        return rhs.major > major || rhs.minor > minor || rhs.build > build;
+    }
 };
 
 template<unsigned N>
@@ -17,7 +28,9 @@ struct FixedString
     std::array<char, N + 1> buf{};
     consteval FixedString(char const *input)
     {
-        for (unsigned i = 0; i != N; ++i) { buf[i] = input[i]; }
+        for (unsigned i = 0; i != N; ++i) {
+            buf[i] = input[i];
+        }
     }
     constexpr operator char const *() const
     {

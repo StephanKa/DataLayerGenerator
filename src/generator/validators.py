@@ -117,6 +117,12 @@ def group_validator(group_data):
             raise GroupException(f"Group baseId '{temp_group['baseId']}' already defined, please check your model")
         if 'version' in temp_group:
             temp_group['version'] = Version(temp_group['version'])
+        if 'allowUpgrade' not in temp_group:
+            temp_group['allowUpgrade'] = 'false'
+        elif temp_group['allowUpgrade']:
+            temp_group['allowUpgrade'] = 'true'
+        else:
+            temp_group['allowUpgrade'] = 'false'
         base_id.append(temp_group['baseId'])
     return group_data
 
@@ -202,5 +208,11 @@ def data_point_validator(data_point_data, struct_list, enum_list):
                 raise DatapointException(f"Datapoint has arraySize defined but size is '{dp_array_size}'")
         else:
             temp_dp['arraySize'] = 0
+        if 'allowUpgrade' not in temp_dp:
+            temp_dp['allowUpgrade'] = 'false'
+        elif temp_dp['allowUpgrade']:
+            temp_dp['allowUpgrade'] = 'true'
+        else:
+            temp_dp['allowUpgrade'] = 'false'
         group_id[group].append(dp_id)
     return data_point_data

@@ -101,12 +101,14 @@ struct Temperature
 
 The following properties are allowed.
 
-| name        | required | description                                                                                                                                                                                         |
-|-------------|----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| name        | yes      | the name of the structs                                                                                                                                                                             |
-| persistence | yes      | the persistence can be described with following<br/>**None - no persistence used<br/>Cyclic - group will be persisted in cyclic manner<br/>OnWrite - will only be persisted if it will be changed** |
-| baseId      | yes      | describes the base id for all datapoints below                                                                                                                                                      |
-| version     | yes      | describes the version where it was created or updated. It is defined as string **\<MAJOR>.\<MINOR>.\<BUILD>**                                                                                       |
+| name          | required | description                                                                                                                                                                                         |
+|---------------|----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| name          | yes      | the name of the structs                                                                                                                                                                             |
+| persistence   | yes      | the persistence can be described with following<br/>**None - no persistence used<br/>Cyclic - group will be persisted in cyclic manner<br/>OnWrite - will only be persisted if it will be changed** |
+| baseId        | yes      | describes the base id for all datapoints below                                                                                                                                                      |
+| version       | yes      | describes the version where it was created or updated. It is defined as string **\<MAJOR>.\<MINOR>.\<BUILD>**                                                                                       |
+| allowUpgrade  | no       | describes if serialized data can be override group values given the version is higher                                                                                                               |
+
 
 ```json
 {
@@ -125,17 +127,18 @@ The following properties are allowed.
 
 The following properties are allowed.
 
-| name      | required | description                                                                                                    |
-|-----------|----------|----------------------------------------------------------------------------------------------------------------|
-| name      | yes      | the name of the datapoint                                                                                      |
-| group     | yes      | name of the group where the datapoint will be registered                                                       |
-| id        | yes      | id of the datapoint. **NOTE**: that's the id without the offset of the group itself.                           |
-| type      | yes      | defines the datatype for normal values or this can also be a self defined struct                               |
-| default   | no       | defines the initial value of the datapoint, structures can also be defaulted                                   |
-| access    | yes      | describes the access to the datapoint:**<br/>READWRITE<br/>READONLY<br/>WRITEONLY**                            |
-| namespace | no       | each datapoint can be moved in separate namespaces otherwise the datapoint will be visible without a namespace |
-| version   | yes      | describes the version where it was created or updated. It is defined as string **\<MAJOR>.\<MINOR>.\<BUILD>**  |
-| arraySize | no       | describes if the defined type is a std::array, it will define the size of the std::array with defined type     |
+| name         | required | description                                                                                                    |
+|--------------|----------|----------------------------------------------------------------------------------------------------------------|
+| name         | yes      | the name of the datapoint                                                                                      |
+| group        | yes      | name of the group where the datapoint will be registered                                                       |
+| id           | yes      | id of the datapoint. **NOTE**: that's the id without the offset of the group itself.                           |
+| type         | yes      | defines the datatype for normal values or this can also be a self defined struct                               |
+| default      | no       | defines the initial value of the datapoint, structures can also be defaulted                                   |
+| access       | yes      | describes the access to the datapoint:**<br/>READWRITE<br/>READONLY<br/>WRITEONLY**                            |
+| namespace    | no       | each datapoint can be moved in separate namespaces otherwise the datapoint will be visible without a namespace |
+| version      | yes      | describes the version where it was created or updated. It is defined as string **\<MAJOR>.\<MINOR>.\<BUILD>**  |
+| arraySize    | no       | describes if the defined type is a std::array, it will define the size of the std::array with defined type     |
+| allowUpgrade | no       | describes if serialized data can be override DP value given the version is higher                              |
 
 ```json
 {

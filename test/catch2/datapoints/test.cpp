@@ -266,7 +266,9 @@ TEST_CASE("Test datapoints")
     {
         const auto val = arrayTest2();
         REQUIRE(val.size() == 10);
-        for (const auto &temp : val) { REQUIRE(temp == 1234); }
+        for (const auto &temp : val) {
+            REQUIRE(temp == 1234);
+        }
     }
 
     SECTION("datapoint 'arrayTest2' dispatcher get() existing")
@@ -404,6 +406,140 @@ TEST_CASE("Test datapoints")
 
         REQUIRE(expectedValue.external.raw == valueTest.external.raw);
         REQUIRE_THAT(expectedValue.external.value, Catch::Matchers::WithinRel(static_cast<double>(valueTest.external.value), EPSILON));
+    }
+
+    SECTION("group file serialization")
+    {
+        constexpr size_t expectedSize = 244;
+        using namespace std::string_view_literals;
+        const auto writeStatus = DefaultGroup.serializeGroup("sample.bin"sv);
+        REQUIRE(writeStatus.size == expectedSize);
+        REQUIRE(writeStatus.result);
+        REQUIRE(writeStatus.errorCode == SerializationError::None);
+        REQUIRE(std::filesystem::file_size("sample.bin"sv) == expectedSize);
+    }
+
+    SECTION("group file deserialization")
+    {
+        constexpr size_t expectedSize = 244;
+        using namespace std::string_view_literals;
+        const auto writeStatus = DefaultGroup.serializeGroup("sample.bin"sv);
+        REQUIRE(writeStatus.size == expectedSize);
+        REQUIRE(writeStatus.result);
+        REQUIRE(writeStatus.errorCode == SerializationError::None);
+
+        const auto readStatus = DefaultGroup.serializeGroup("sample.bin"sv);
+        REQUIRE(readStatus.size == expectedSize);
+        REQUIRE(readStatus.result);
+        REQUIRE(readStatus.errorCode == SerializationError::None);
+    }
+
+    SECTION("read serialized file to restore saved datapoint data")
+    {
+        using namespace std::string_view_literals;
+
+        constexpr size_t expectedSize = 244;
+        const auto writeStatus = DefaultGroup.serializeGroup("sample.bin"sv);
+        REQUIRE(writeStatus.size == expectedSize);
+        REQUIRE(writeStatus.result);
+        REQUIRE(writeStatus.errorCode == SerializationError::None);
+
+        // write new data
+        constexpr Temperature newData{ 1234U, 123.4F };
+        test.set(newData);
+        REQUIRE((test() == newData));
+
+        constexpr Temperature testValue{ .raw = 444444, .value = 12345.0 };
+        testWithoutDefaultValue = testValue;
+        REQUIRE((testWithoutDefaultValue() == testValue));
+
+        const auto readStatus = DefaultGroup.deserializeGroup("sample.bin"sv);
+        REQUIRE(readStatus.size == expectedSize);
+        REQUIRE(readStatus.result);
+        REQUIRE(readStatus.errorCode == SerializationError::None);
+
+        REQUIRE(test().raw == initalTestValue.raw);
+        REQUIRE(testWithoutDefaultValue().raw == initalTestWithoutDefaultValueValue.raw);
+    }
+
+    SECTION("deserialization with other datapoint versions")
+    {
+        using namespace std::string_view_literals;
+
+        constexpr size_t expectedSize = 244;
+        const auto writeStatus = DefaultGroup.serializeGroup("sample.bin"sv);
+        REQUIRE(writeStatus.size == expectedSize);
+        REQUIRE(writeStatus.result);
+        REQUIRE(writeStatus.errorCode == SerializationError::None);
+
+        const auto readStatus = SecondGroup.deserializeGroup("sample.bin"sv);
+        REQUIRE(readStatus.size == expectedSize);
+        REQUIRE_FALSE(readStatus.result);
+        REQUIRE(readStatus.errorCode == SerializationError::DatapointVersion);
+    }
+
+    SECTION("test for error in different group version")
+    {
+        using namespace std::string_view_literals;
+
+        constexpr size_t expectedSize = 32;
+        const auto writeStatus = OldGroup.serializeGroup("oldGroupSample.bin"sv);
+        REQUIRE(writeStatus.size == expectedSize);
+        REQUIRE(writeStatus.result);
+        REQUIRE(writeStatus.errorCode == SerializationError::None);
+
+        const auto readStatus = NewerGroup.deserializeGroup("oldGroupSample.bin"sv);
+        REQUIRE(readStatus.size == expectedSize);
+        REQUIRE(readStatus.result);
+        REQUIRE(readStatus.errorCode == SerializationError::GroupVersion);
+    }
+
+    SECTION("test for error in different group and datapoint versions")
+    {
+        using namespace std::string_view_literals;
+
+        constexpr size_t expectedSize = 32;
+        const auto writeStatus = OldGroup.serializeGroup("oldGroupSample.bin"sv);
+        REQUIRE(writeStatus.size == expectedSize);
+        REQUIRE(writeStatus.result);
+        REQUIRE(writeStatus.errorCode == SerializationError::None);
+
+        const auto readStatus = NewerGroupAndDatapoint.deserializeGroup("oldGroupSample.bin"sv);
+        REQUIRE(readStatus.size == expectedSize);
+        REQUIRE_FALSE(readStatus.result);
+        REQUIRE(readStatus.errorCode == SerializationError::GroupAndDatapointVersion);
+    }
+
+    SECTION("test for none error after update")
+    {
+        using namespace std::string_view_literals;
+
+        constexpr size_t expectedSize = 32;
+        const auto writeStatus = OldGroup.serializeGroup("oldGroupSample.bin"sv);
+        REQUIRE(writeStatus.size == expectedSize);
+        REQUIRE(writeStatus.result);
+        REQUIRE(writeStatus.errorCode == SerializationError::None);
+
+        const auto readStatus = AllowUpgradeGroup.deserializeGroup("oldGroupSample.bin"sv);
+        REQUIRE(readStatus.size == expectedSize);
+        REQUIRE(readStatus.result);
+        REQUIRE(readStatus.errorCode == SerializationError::None);
+    }
+
+    SECTION("test for not read all bytes")
+    {
+        using namespace std::string_view_literals;
+
+        constexpr size_t expectedSize = 52;
+        const auto writeStatus = OldGroupMultipleDatapoint.serializeGroup("OldGroupMultipleDatapoint.bin"sv);
+        REQUIRE(writeStatus.size == expectedSize);
+        REQUIRE(writeStatus.result);
+        REQUIRE(writeStatus.errorCode == SerializationError::None);
+
+        const auto readStatus = NewerGroup.deserializeGroup("OldGroupMultipleDatapoint.bin"sv);
+        REQUIRE(readStatus.size < expectedSize);
+        REQUIRE(readStatus.result);
+        REQUIRE(readStatus.errorCode == SerializationError::NotAllBytesRead);
     }
 
     test = initalTestValue;

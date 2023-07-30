@@ -68,6 +68,126 @@
           "raw": 222
         }
       }
+    },
+    {
+      "access": "READWRITE",
+      "default": {
+        "raw": 4711,
+        "value": 123.0
+      },
+      "group": "SecondGroup",
+      "id": 4,
+      "name": "testSecond",
+      "type": "Temperature",
+      "version": "2.0.22"
+    },
+    {
+      "access": "READONLY",
+      "group": "SecondGroup",
+      "id": 8,
+      "name": "testWithoutDefaultValueSecond",
+      "type": "Temperature",
+      "version": "3.10.223"
+    },
+    {
+      "access": "WRITEONLY",
+      "group": "SecondGroup",
+      "id": 12,
+      "name": "testWithoutDefaultValueWriteOnlySecond",
+      "type": "Temperature",
+      "version": "0.2.5"
+    },
+    {
+      "name": "arrayTestSecond",
+      "group": "SecondGroup",
+      "id": 5,
+      "type": "Temperature",
+      "arraySize": 10,
+      "default": {
+        "value": 123.0,
+        "raw": 5555
+      },
+      "access": "READWRITE",
+      "version": "1.0.2"
+    },
+    {
+      "name": "arrayTest2Second",
+      "group": "SecondGroup",
+      "id": 7,
+      "type": "int32_t",
+      "arraySize": 10,
+      "default": 1234,
+      "access": "READWRITE",
+      "version": "1.0.3"
+    },
+    {
+      "name": "structInStructTypeSecond",
+      "group": "SecondGroup",
+      "id": 42,
+      "type": "Environment",
+      "access": "READWRITE",
+      "version": "1.0.1",
+      "default": {
+        "internal": {
+          "value": 111.1,
+          "raw": 111
+        },
+        "external": {
+          "value": 222.2,
+          "raw": 222
+        }
+      }
+    },
+    {
+      "access": "READWRITE",
+      "group": "OldGroup",
+      "id": 4,
+      "name": "OldGroupDatapoint",
+      "type": "Temperature",
+      "version": "1.0.22"
+    },
+    {
+      "access": "READWRITE",
+      "group": "NewerGroup",
+      "id": 4,
+      "name": "NewGroupDatapoint",
+      "type": "Temperature",
+      "version": "1.0.22"
+    },
+    {
+      "access": "READWRITE",
+      "group": "NewerGroupAndDatapoint",
+      "id": 4,
+      "name": "NewerGroupDatapoint",
+      "type": "Temperature",
+      "version": "2.0.0"
+    },
+    {
+      "access": "READWRITE",
+      "group": "AllowUpgradeGroup",
+      "id": 4,
+      "name": "UpgradableDatapoint",
+      "type": "Temperature",
+      "version": "2.0.0",
+      "allowUpgrade": true
+    },
+    {
+      "access": "READWRITE",
+      "group": "OldGroupMultipleDatapoint",
+      "id": 1,
+      "name": "Dp1",
+      "type": "Temperature",
+      "version": "1.0.22",
+      "allowUpgrade": true
+    },
+    {
+      "access": "READWRITE",
+      "group": "OldGroupMultipleDatapoint",
+      "id": 2,
+      "name": "Dp2",
+      "type": "Temperature",
+      "version": "1.0.22",
+      "allowUpgrade": true
     }
   ]
 }

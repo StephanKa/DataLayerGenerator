@@ -5,6 +5,42 @@
       "name": "DefaultGroup",
       "persistence": "None",
       "version": "2.4.5"
+    },
+    {
+      "baseId": "0x5000",
+      "name": "SecondGroup",
+      "persistence": "None",
+      "version": "2.4.5"
+    },
+    {
+      "baseId": "0x1000",
+      "name": "OldGroup",
+      "persistence": "None",
+      "version": "1.0.0"
+    },
+    {
+      "baseId": "0x2000",
+      "name": "NewerGroup",
+      "persistence": "None",
+      "version": "2.0.0"
+    },
+    {
+      "baseId": "0x0000",
+      "name": "NewerGroupAndDatapoint",
+      "persistence": "None",
+      "version": "2.0.0"
+    },
+    {
+      "baseId": "0x9000",
+      "name": "AllowUpgradeGroup",
+      "persistence": "None",
+      "version": "1.0.0"
+    },
+    {
+      "baseId": "0x8000",
+      "name": "OldGroupMultipleDatapoint",
+      "persistence": "None",
+      "version": "2.0.0"
     }
   ]
 }
