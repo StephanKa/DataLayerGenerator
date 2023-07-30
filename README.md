@@ -31,11 +31,14 @@ There are two different [docker images](docker). One image for CI and building a
 The following example can be found in main.cpp.
 
 ```c++
+#include "datalayerBase.h"
+#include "helper.h"
 #include "include/version.hpp"
 #include <datalayer.h>
 #include <fmt/format.h>
 #include <formatter.h>
 
+using namespace std::string_view_literals;
 
 template<>
 struct fmt::formatter<SoftwareVersion>
@@ -50,6 +53,22 @@ struct fmt::formatter<SoftwareVersion>
     auto format(const SoftwareVersion &version, FormatContext &ctx)
     {
         return format_to(ctx.out(), "Major: {} Minor: {} Build: {} Githash: {}", version.Major, version.Minor, version.Patch, version.GitHash);
+    }
+};
+
+template<>
+struct fmt::formatter<Version>
+{
+    template<typename ParseContext>
+    constexpr auto parse(ParseContext &ctx)
+    {
+        return ctx.begin();
+    }
+
+    template<typename FormatContext>
+    auto format(const Version &version, FormatContext &ctx)
+    {
+        return format_to(ctx.out(), "Major: {} Minor: {} Build: {}", version.major, version.minor, version.build);
     }
 };
 
@@ -78,25 +97,41 @@ int main()
     constexpr Temperature a{ .raw = 1234, .value = 42.2F };
     test4.set(a);
     const auto test4Value = test4();
-    const auto version4Test = test4.getVersion();
+    constexpr auto version4Test = test4.getVersion();
+    fmt::print("Test4 version: {}\n", version4Test);
     fmt::print(R"(Datapoints
     id: {:#06x}
     value: {}
-    version:
-        Major = {}
-        Minor = {}
-        Build = {}
 )",
       test4.getId(),
-      test4Value,
-      version4Test.major,
-      version4Test.minor,
-      version4Test.build);
+      test4Value);
 
     fmt::print("{}\n", SoftwareVersion{});
     fmt::print("\nPrint whole structure:\n");
     Dispatcher.printStructure();
+
+    fmt::print("arrayTest\n");
+    for (const auto &value : arrayTest.get()) {
+        fmt::print("{}\n", value);
+    }
+
+    fmt::print("arrayTest2\n");
+    for (const auto &value : Testify::arrayTest2.get()) {
+        fmt::print("{}\n", value);
+    }
+    fmt::print("errorCode: {}\n", errorCode());
+
+#ifdef USE_FILE_PERSISTENCE
+    const auto writeStatus = CyclicGroup.serializeGroup("sample.bin"sv);
+    test4.set({ .raw = 1111, .value = 12.345f });
+    const auto readStatus = CyclicGroup.deserializeGroup("sample.bin"sv);
+    fmt::print("writeStatus: {}\nreadStatus: {}\n", writeStatus.size, readStatus.size);
+    const bool result = test4().raw == a.raw;
+    fmt::print("test4.raw: {}\n", test4().raw);
+    return result && (writeStatus.size == readStatus.size) ? 0 : 1;
+#else
     return 0;
+#endif
 }
 ```
 
@@ -107,8 +142,13 @@ Group: DefaultGroup
 test: 0x4001
 est2: 0x4002
 test3: 0x4003
+arrayTest2: 0x400c
+errorCode: 0x4018
+errorCodeArray: 0x4019
+structInStructType: 0x402a
 Group: CyclicGroup
 test4: 0x5004
+arrayTest: 0x5005
 ------------------------------------
 Group: 0x4000
 Datapoints
@@ -118,14 +158,11 @@ Datapoints
         Major = 1
         Minor = 0
         Build = 1
+Test4 version: Major: 1 Minor: 0 Build: 1
 Datapoints
     id: 0x5004
     value:  raw = 1234 value = 42.2
-    version:
-        Major = 1
-        Minor = 0
-        Build = 1
-Major: 0 Minor: 0 Build: 1 Githash: a84c11b
+Major: 0 Minor: 0 Build: 1 Githash: c9ee00d
 
 Print whole structure:
 Structure:
@@ -133,8 +170,39 @@ Group: DefaultGroup
 test: 0x4001
 est2: 0x4002
 test3: 0x4003
+arrayTest2: 0x400c
+errorCode: 0x4018
+errorCodeArray: 0x4019
+structInStructType: 0x402a
 Group: CyclicGroup
 test4: 0x5004
+arrayTest: 0x5005
+arrayTest
+ raw = 5555 value = 123
+ raw = 5555 value = 123
+ raw = 5555 value = 123
+ raw = 5555 value = 123
+ raw = 5555 value = 123
+ raw = 5555 value = 123
+ raw = 5555 value = 123
+ raw = 5555 value = 123
+ raw = 5555 value = 123
+ raw = 5555 value = 123
+arrayTest2
+1234
+1234
+1234
+1234
+1234
+1234
+1234
+1234
+1234
+1234
+errorCode: None
+writeStatus: 124
+readStatus: 124
+test4.raw: 1234
 ```
 
 ## Usage
@@ -174,10 +242,18 @@ cmake --build --preset <PRESET_NAME>
 ctest --preset <PRESET_NAME>
 ```
 
-## To-Do's
+## Serialization
 
+| data type       | Group version | Datapoint version | Container persistence description |
+|-----------------|---------------|-------------------|-----------------------------------|
+|                 | 12 Byte       | 12 Byte           |                                   |
+| **std::string** |               |                   | 4 Byte (size) + dynamic bytes     |
+| **std::array**  |               |                   | dynamic bytes                     |
+| **structs**     |               |                   | dynamic bytes                     |
+
+
+## To-Do's
 - [ ] add coverage
-- [ ] add version handling
 - [ ] add a CMake option for developer to have a default version (e.g. 0.0.0)
 - [ ] version schema dynamisch
 - [ ] add splitting namespaces to separate files (amalgamation or single files)
