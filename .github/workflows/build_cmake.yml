@@ -52,13 +52,18 @@ jobs:
           ~/.cache/pip
         key: ${{ runner.os }}-${{ env.BUILD_TYPE }}-${{ hashFiles('CMakeLists.txt') }}-${{ hashFiles('cmake/Conan.cmake') }}
 
-    - name: Install dependencies
+    - name: Install LLVM dependencies
+      if: startsWith(matrix.compiler.name, Clang)
       run:   |
              sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"
+      shell: bash
+
+
+   - name: Install dependencies
+      run:   |
              sudo apt update
              sudo apt install ninja-build ${{ matrix.compiler.pkgs }}
       shell: bash
-
     - name: Install conan
       shell: bash
       run: |
