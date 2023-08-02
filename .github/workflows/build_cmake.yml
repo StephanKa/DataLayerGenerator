@@ -58,12 +58,12 @@ jobs:
              sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"
       shell: bash
 
-
-   - name: Install dependencies
+    - name: Install dependencies
       run:   |
              sudo apt update
              sudo apt install ninja-build ${{ matrix.compiler.pkgs }}
       shell: bash
+
     - name: Install conan
       shell: bash
       run: |
