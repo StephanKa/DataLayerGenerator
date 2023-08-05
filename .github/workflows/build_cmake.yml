@@ -55,7 +55,7 @@ jobs:
     - name: Install LLVM dependencies
       if: ${{ startsWith(matrix.compiler.name, 'Clang') }}
       run:   |
-             sudo apt-get purge --auto-remove llvm python3-lldb-14 llvm-14 # https://github.com/llvm/llvm-project/issues/64182             
+             sudo apt-get purge --auto-remove llvm python3-lldb-14 llvm-14 # https://github.com/llvm/llvm-project/issues/64182
              sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"
       shell: bash
 
@@ -139,8 +139,9 @@ jobs:
           pacman --noconfirm -S mingw-w64-x86_64-cmake
           pacman --noconfirm -S mingw-w64-x86_64-python
           pacman --noconfirm -S mingw-w64-x86_64-python-pip
+          pacman --noconfirm -S mingw-w64-x86_64-rust
           python3 -m pip install --upgrade pip setuptools
-          python3 -m pip install conan==1.59 jsonschema virtualenv ninja
+          python3 -m pip install PyYAML==5.3.1 conan==1.59 jsonschema virtualenv ninja
 
       - name: Configure CMake
         run: cmake --preset win32-gcc-x64-mingw-${{ matrix.buildtype }}
