@@ -101,12 +101,13 @@ def read_model_files(args):
     return json_data
 
 
-def main(template_file_name, template_formatter_file_name):
+def main(template_file_name, template_formatter_file_name, python_binding_file_name):
     """
     Execute all work for parsing and validating.
 
     :param template_formatter_file_name: defines the template for the fmt formatter
     :param template_file_name: defines the file that shall be rendered.
+    :param python_binding_file_name: defines the python binding template
     """
     args = get_args()
     with open(f'{args.schema_dir}/schema.json') as f:
@@ -145,6 +146,12 @@ def main(template_file_name, template_formatter_file_name):
     with open(f'{args.out_dir}/generated/formatter.h', 'w') as f:
         f.write(output)
 
+    template = env.get_template(python_binding_file_name)
+    output = template.render(enums=enums, groups=groups, structs=structs, data_points=data_points,
+                             group_data_points_mapping=group_data_points_mapping, prefix_map=PREFIX_MAP)
+    with open(f'{args.out_dir}/generated/pythonBinding.cpp', 'w') as f:
+        f.write(output)
+
 
 if __name__ == '__main__':
-    main('datalayer.h.jinja2', 'customFormatter.h.jinja2')
+    main('datalayer.h.jinja2', 'customFormatter.h.jinja2', 'pythonBinding.jinja2')

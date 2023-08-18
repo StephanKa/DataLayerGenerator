@@ -1,5 +1,9 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.19)
 
+ENABLE_LANGUAGE(CXX)
+
+INCLUDE(cmake/Conan.cmake)
+
 # Set the project name to your project name, my project isn't very descriptive
 PROJECT(DatalayerGenerator
         LANGUAGES CXX
@@ -81,9 +85,6 @@ IF(ENABLE_PCH)
             <map>
             <utility>)
 ENDIF()
-
-INCLUDE(cmake/Conan.cmake)
-RUN_CONAN()
 
 ADD_SUBDIRECTORY(src)
 

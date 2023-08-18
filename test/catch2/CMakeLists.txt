@@ -1,10 +1,6 @@
 INCLUDE(CTest)
 INCLUDE(Catch)
 
-ADD_LIBRARY(catch_main STATIC catch_main.cpp)
-TARGET_LINK_LIBRARIES(catch_main PUBLIC CONAN_PKG::catch2)
-TARGET_LINK_LIBRARIES(catch_main PRIVATE project_options)
-
 FOREACH(TEST_NAME datapoints groups enums)
     ADD_EXECUTABLE(${TEST_NAME}_tests ${TEST_NAME}/test.cpp)
     ADD_CUSTOM_TARGET(${TEST_NAME}GenerateDataLayer
@@ -15,7 +11,7 @@ FOREACH(TEST_NAME datapoints groups enums)
                       --schema_dir ${CMAKE_CURRENT_SOURCE_DIR}/../../src/generator)
 
     TARGET_INCLUDE_DIRECTORIES(${TEST_NAME}_tests PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/${TEST_NAME}/generated ${CMAKE_CURRENT_SOURCE_DIR}/../../src/include)
-    TARGET_LINK_LIBRARIES(${TEST_NAME}_tests PRIVATE project_warnings project_options catch_main CONAN_PKG::fmt)
+    TARGET_LINK_LIBRARIES(${TEST_NAME}_tests PRIVATE project_warnings project_options Catch2::Catch2WithMain fmt::fmt)
 
     ADD_DEPENDENCIES(${TEST_NAME}_tests ${TEST_NAME}GenerateDataLayer)
 

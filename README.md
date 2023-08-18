@@ -257,6 +257,5 @@ ctest --preset <PRESET_NAME>
 
 ## To-Do's
 - [ ] add coverage
-- [ ] add a CMake option for developer to have a default version (e.g. 0.0.0)
 - [ ] version schema dynamisch
 - [ ] add splitting namespaces to separate files (amalgamation or single files)

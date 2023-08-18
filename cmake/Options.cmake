@@ -7,6 +7,7 @@ OPTION(ENABLE_FMT "Enable fmt formatting" OFF)
 OPTION(BUILD_SHARED_LIBS "Enable compilation of shared libraries" OFF)
 OPTION(ENABLE_TESTING "Enable Test Builds" ON)
 OPTION(ENABLE_FUZZING "Enable Fuzzing Builds" OFF)
+OPTION(ENABLE_PYBIND11 "Enable pybind11 binding generation" OFF)
 
 # sanitizer options
 OPTION(ENABLE_SANITIZER_ADDRESS "Enable address sanitizer" FALSE)

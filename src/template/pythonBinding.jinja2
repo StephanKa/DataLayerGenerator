@@ -1,0 +1,58 @@
+#include <datalayer.h>
+#include <pybind11/pybind11.h>
+
+void dispatcherStructure()
+{
+    Dispatcher.printStructure();
+}
+
+{% for dp in data_points|sort(attribute='name')|sort(attribute='namespace') -%}
+struct {{ dp.name | title }}
+{
+    static {% if dp.arraySize > 0 -%}std::array<{{ dp.type }}, {{ dp.arraySize }}>{% else %}{{ dp.type }}{% endif %} get() { return {% if dp.namespace|length %}{{ dp.namespace }}::{% endif %}{{ dp.name}}(); }
+    static void set(const {% if dp.arraySize > 0 -%}std::array<{{ dp.type }}, {{ dp.arraySize }}>{% else %}{{ dp.type }}{% endif %}& value) { {% if dp.namespace|length %}{{ dp.namespace }}::{% endif %}{{ dp.name}} = value; }
+};
+
+{% endfor %}
+
+PYBIND11_MODULE(conan_pybind11, m)
+{
+    {% if structs | length > 0 -%}
+    // defines all custom made structures
+    {% for struct in structs -%}
+    pybind11::class_<{{ struct.name }}>(m, "{{ struct.name }}")
+        .def(pybind11::init<{% for parameter in struct.parameter | sort(attribute='name') %}{{ parameter.value }}{% if not loop.last %},{% endif %} {% endfor -%}>())
+        {%- for parameter in struct.parameter | sort(attribute='name') %}
+        .def_readwrite("{{ parameter.name }}", &{{ struct.name }}::{{ parameter.name }}){% if loop.last %};{% endif %}
+        {%- endfor %}
+        // TODO .def("__str__", [](const {{ struct.name }} &value) { return {% for parameter in struct.parameter | sort(attribute='name') %}"{{ parameter.name }}=" + std::to_string(value.{{ parameter.name }}){% if not loop.last %} + " " + {% endif %} {% endfor -%} });
+
+    {% endfor %}
+    {% endif -%}
+
+    m.doc() = R"pbdoc(
+        Pybind11 example plugin
+        -----------------------
+        .. currentmodule:: pybind11_test
+        .. autosummary::
+           :toctree: _generate
+           add
+           subtract
+    )pbdoc";
+
+    {% for dp in data_points|sort(attribute='name')|sort(attribute='namespace') -%}
+    m.def("get{{ dp.name | title }}", &{{ dp.name | title }}::get, R"pbdoc(
+        get {{ dp.name }} data
+    )pbdoc");
+
+    m.def("set{{ dp.name | title }}", &{{ dp.name | title }}::set, R"pbdoc(
+        set {{ dp.name }} data
+    )pbdoc");
+
+    {% endfor %}
+#ifdef VERSION_INFO
+    m.attr("__version__") = VERSION_INFO;
+#else
+    m.attr("__version__") = "dev";
+#endif
+}

@@ -68,7 +68,7 @@ jobs:
     - name: Install conan
       shell: bash
       run: |
-           python3 -m pip install --upgrade pip setuptools conan==1.58
+           python3 -m pip install --upgrade pip setuptools conan
            source ~/.profile
 
     - name: Configure via CMake
@@ -86,34 +86,34 @@ jobs:
       shell: bash
       run: ctest --preset ${{ matrix.compiler.preset }}-${{ matrix.buildtype }}
 
-  #windows:
-  #  name: ${{ matrix.os }}, ${{ matrix.buildtype }}
-  #  runs-on: ${{ matrix.os }}
-  #  strategy:
-  #    fail-fast: false  # 'false' means Don't stop matrix workflows even if some matrix entry fails.
-  #    matrix:
-  #      os: [windows-2022, windows-2019]
-  #      buildtype: [debug]
-  #  steps:
-  #    - uses: actions/checkout@v3
-  #    - name: Install conan
-  #      shell: bash
-  #      run: |
-  #        python3 -m pip install --upgrade pip setuptools
-  #        python3 -m pip install conan==1.58 jsonschema virtualenv ninja
+  windows:
+    name: ${{ matrix.os }}, ${{ matrix.buildtype }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false  # 'false' means Don't stop matrix workflows even if some matrix entry fails.
+      matrix:
+        os: [windows-2022, windows-2019]
+        buildtype: [debug]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install conan
+        shell: bash
+        run: |
+          python3 -m pip install --upgrade pip setuptools
+          python3 -m pip install conan jsonschema virtualenv ninja
 
-  #    - name: Configure CMake
-  #      # Use a bash shell so we can use the same syntax for environment variable
-  #      shell: bash
-  #      run: cmake --preset ${{ matrix.os }}-${{ matrix.buildtype }}
+      - name: Configure CMake
+        # Use a bash shell so we can use the same syntax for environment variable
+        shell: bash
+        run: cmake --preset ${{ matrix.os }}-${{ matrix.buildtype }}
 
-  #    - name: Build
-  #      shell: bash
-  #      run:  cmake --build --preset ${{ matrix.os }}-${{ matrix.buildtype }}
+      - name: Build
+        shell: bash
+        run:  cmake --build --preset ${{ matrix.os }}-${{ matrix.buildtype }}
 
-  #    - name: Test
-  #      shell: bash
-  #      run: ctest --preset ${{ matrix.os }}-${{ matrix.buildtype }}
+      - name: Test
+        shell: bash
+        run: ctest --preset ${{ matrix.os }}-${{ matrix.buildtype }}
 
   #windows-mingw:
   #  name: ${{ matrix.os }}, MinGW ${{ matrix.buildtype }}
@@ -142,7 +142,7 @@ jobs:
   #        pacman --noconfirm -S mingw-w64-x86_64-python-pip
   #        pacman --noconfirm -S mingw-w64-x86_64-rust
   #        python3 -m pip install --upgrade pip setuptools
-  #        python3 -m pip install PyYAML==5.3.1 conan==1.59 jsonschema virtualenv ninja
+  #        python3 -m pip install PyYAML==5.3.1 conan jsonschema virtualenv ninja
 
   #    - name: Configure CMake
   #      run: cmake --preset win32-gcc-x64-mingw-${{ matrix.buildtype }}
@@ -179,7 +179,7 @@ jobs:
     - name: Install conan
       shell: bash
       run: |
-        python3 -m pip install --upgrade pip setuptools conan==1.59
+        python3 -m pip install --upgrade pip setuptools conan
         source ~/.profile
 
     - name: Install dependencies
@@ -235,7 +235,7 @@ jobs:
     - name: Install conan
       shell: bash
       run: |
-        python3 -m pip install --upgrade pip setuptools conan==1.59
+        python3 -m pip install --upgrade pip setuptools conan
         source ~/.profile
 
     - name: Install dependencies
