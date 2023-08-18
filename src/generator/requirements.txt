@@ -1,4 +1,4 @@
-conan==1.59
+conan
 Jinja2
 jsonschema
 setuptools
