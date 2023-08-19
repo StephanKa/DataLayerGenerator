@@ -19,13 +19,13 @@ IF(CMAKE_CROSSCOMPILING)
 
     ADD_CUSTOM_TARGET(${PROJECT_NAME}.bin ALL
                       DEPENDS ${PROJECT_NAME}
-                      COMMAND ${CMAKE_OBJCOPY} -Obinary ${CMAKE_BINARY_DIR}/bin/${PROJECT_NAME}.elf ${CMAKE_BINARY_DIR}/bin/${PROJECT_NAME}.bin
-                      COMMAND ${CMAKE_OBJCOPY} -Oihex ${CMAKE_BINARY_DIR}/bin/${PROJECT_NAME}.elf ${CMAKE_BINARY_DIR}/bin/${PROJECT_NAME}.hex
+                      COMMAND ${CMAKE_OBJCOPY} -Obinary ${CMAKE_BINARY_DIR}/src/${PROJECT_NAME}.elf ${CMAKE_BINARY_DIR}/install/${PROJECT_NAME}.bin
+                      COMMAND ${CMAKE_OBJCOPY} -Oihex ${CMAKE_BINARY_DIR}/src/${PROJECT_NAME}.elf ${CMAKE_BINARY_DIR}/install/${PROJECT_NAME}.hex
     )
 
-    ADD_CUSTOM_COMMAND(TARGET ${PROJECT_NAME}.bin POST_BUILD
-                       COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_BINARY_DIR}/bin ${CMAKE_BINARY_DIR}/install/bin)
 ELSE()
+    FIND_PACKAGE(fmt REQUIRED)
+
     ADD_EXECUTABLE(${PROJECT_NAME} main.cpp)
     TARGET_LINK_LIBRARIES(
             ${PROJECT_NAME}
@@ -40,16 +40,15 @@ ELSE()
                        COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_BINARY_DIR}/generated ${CMAKE_BINARY_DIR}/install/generated)
     IF(ENABLE_PYBIND11)
         LIST(APPEND CMAKE_PREFIX_PATH "${CMAKE_BINARY_DIR}")
+        FIND_PACKAGE(Python COMPONENTS Interpreter Development REQUIRED)
         FIND_PACKAGE(pybind11 REQUIRED)
 
-        FIND_PACKAGE(PythonLibs 3.6)
         SET_SOURCE_FILES_PROPERTIES(${CMAKE_BINARY_DIR}/generated/pythonBinding.cpp PROPERTIES GENERATED TRUE)
         PYBIND11_ADD_MODULE(conan_pybind11 ${CMAKE_BINARY_DIR}/generated/pythonBinding.cpp)
-        TARGET_LINK_LIBRARIES(
-                conan_pybind11
-                PRIVATE
-                project_warnings
-                fmt::fmt)
+        TARGET_LINK_LIBRARIES(conan_pybind11
+                              PRIVATE
+                              project_warnings
+                              fmt::fmt)
         TARGET_INCLUDE_DIRECTORIES(conan_pybind11 PRIVATE ${CMAKE_BINARY_DIR}/generated ${CMAKE_CURRENT_SOURCE_DIR}/include)
         ADD_DEPENDENCIES(conan_pybind11 GenerateDataLayer)
         ADD_CUSTOM_COMMAND(TARGET conan_pybind11 POST_BUILD

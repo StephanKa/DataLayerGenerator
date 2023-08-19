@@ -11,7 +11,6 @@
       "hidden": true,
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/debug/${presetName}",
-      "installDir": "${sourceDir}/build/debug/install/${presetName}",
       "displayName": "Base preset for debug builds",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
@@ -30,7 +29,6 @@
       "hidden": true,
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/release/${presetName}",
-      "installDir": "${sourceDir}/build/release/install/${presetName}",
       "displayName": "Base preset for release builds",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
@@ -188,7 +186,6 @@
       "displayName": "Windows x64 Debug",
       "generator": "Visual Studio 16 2019",
       "binaryDir": "${sourceDir}/build/debug/${presetName}",
-      "installDir": "${sourceDir}/build/debug/install/${presetName}",
       "architecture": {
         "value": "x64",
         "strategy": "external"
@@ -205,7 +202,6 @@
       "displayName": "Windows x64 release",
       "generator": "Visual Studio 16 2019",
       "binaryDir": "${sourceDir}/build/release/${presetName}",
-      "installDir": "${sourceDir}/build/release/install/${presetName}",
       "architecture": {
         "value": "x64",
         "strategy": "external"
@@ -222,7 +218,6 @@
       "displayName": "Windows x64 Debug",
       "generator": "Visual Studio 17 2022",
       "binaryDir": "${sourceDir}/build/debug/${presetName}",
-      "installDir": "${sourceDir}/build/debug/install/${presetName}",
       "architecture": {
         "value": "x64",
         "strategy": "external"
@@ -239,7 +234,6 @@
       "displayName": "Windows x64 release",
       "generator": "Visual Studio 17 2022",
       "binaryDir": "${sourceDir}/build/release/${presetName}",
-      "installDir": "${sourceDir}/build/release/install/${presetName}",
       "architecture": {
         "value": "x64",
         "strategy": "external"
@@ -257,7 +251,6 @@
       "description": "Using GCC x64 compiler with Ninja generator on Windows - Debug",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/debug/${presetName}",
-      "installDir": "${sourceDir}/build/debug/install/${presetName}",
       "environment": {
         "PATH": "C:/msys64/mingw64/bin;$penv{PATH}"
       },
@@ -276,7 +269,6 @@
       "description": "Using GCC x64 compiler with Ninja generator on Windows - Release",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/release/${presetName}",
-      "installDir": "${sourceDir}/build/release/install/${presetName}",
       "environment": {
         "PATH": "C:/msys64/mingw64/bin;$penv{PATH}"
       },
@@ -313,7 +305,6 @@
       "generator": "Ninja",
       "toolchainFile": "${sourceDir}/cmake/arm-cortex-gnu/ArmCortexM4Gnu.cmake",
       "binaryDir": "${sourceDir}/build/debug/${presetName}",
-      "installDir": "${sourceDir}/build/debug/install/${presetName}",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_SYSTEM_NAME": "Linux",
@@ -328,7 +319,6 @@
       "generator": "Ninja",
       "toolchainFile": "${sourceDir}/cmake/arm-cortex-gnu/ArmCortexM4Gnu.cmake",
       "binaryDir": "${sourceDir}/build/release/${presetName}",
-      "installDir": "${sourceDir}/build/release/install/${presetName}",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
         "CMAKE_SYSTEM_NAME": "Linux",

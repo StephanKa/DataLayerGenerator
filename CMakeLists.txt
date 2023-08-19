@@ -1,7 +1,5 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.19)
 
-ENABLE_LANGUAGE(CXX)
-
 INCLUDE(cmake/Conan.cmake)
 
 # Set the project name to your project name, my project isn't very descriptive
@@ -85,9 +83,6 @@ IF(ENABLE_PCH)
             <map>
             <utility>)
 ENDIF()
-
-FIND_PACKAGE(fmt REQUIRED)
-FIND_PACKAGE(Catch2 REQUIRED)
 
 ADD_SUBDIRECTORY(src)
 
