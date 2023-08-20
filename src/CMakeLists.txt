@@ -31,7 +31,7 @@ ELSE()
             ${PROJECT_NAME}
             PRIVATE project_options
             project_warnings
-            fmt::fmt)
+            fmt::fmt-header-only)
 
     ADD_CUSTOM_COMMAND(TARGET ${PROJECT_NAME} POST_BUILD
                        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${PROJECT_NAME}> ${CMAKE_BINARY_DIR}/install/bin/$<TARGET_FILE_NAME:${PROJECT_NAME}>)
@@ -48,7 +48,7 @@ ELSE()
         TARGET_LINK_LIBRARIES(conan_pybind11
                               PRIVATE
                               project_warnings
-                              fmt::fmt)
+                              fmt::fmt-header-only)
         TARGET_INCLUDE_DIRECTORIES(conan_pybind11 PRIVATE ${CMAKE_BINARY_DIR}/generated ${CMAKE_CURRENT_SOURCE_DIR}/include)
         ADD_DEPENDENCIES(conan_pybind11 GenerateDataLayer)
         ADD_CUSTOM_COMMAND(TARGET conan_pybind11 POST_BUILD

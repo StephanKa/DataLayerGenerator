@@ -14,7 +14,7 @@ FOREACH(TEST_NAME datapoints groups enums)
                       --schema_dir ${CMAKE_CURRENT_SOURCE_DIR}/../../src/generator)
 
     TARGET_INCLUDE_DIRECTORIES(${TEST_NAME}_tests PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/${TEST_NAME}/generated ${CMAKE_CURRENT_SOURCE_DIR}/../../src/include)
-    TARGET_LINK_LIBRARIES(${TEST_NAME}_tests PRIVATE project_warnings project_options Catch2::Catch2WithMain fmt::fmt)
+    TARGET_LINK_LIBRARIES(${TEST_NAME}_tests PRIVATE project_warnings project_options Catch2::Catch2WithMain fmt::fmt-header-only)
 
     ADD_DEPENDENCIES(${TEST_NAME}_tests ${TEST_NAME}GenerateDataLayer)
 
