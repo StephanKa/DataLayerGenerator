@@ -6,6 +6,7 @@ pybind11/2.10.4
 
 [generators]
 CMakeDeps
+CMakeToolchain
 
 [options]
 fmt/*:header_only=True
