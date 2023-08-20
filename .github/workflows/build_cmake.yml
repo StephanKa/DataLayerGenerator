@@ -241,7 +241,7 @@ jobs:
     - name: Install dependencies
       run:   |
              sudo apt update
-             sudo apt install ninja-build wget
+             sudo apt install ninja-build wget ccache
       shell: bash
 
     - name: Install GCC ARM
