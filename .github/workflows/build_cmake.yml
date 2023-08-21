@@ -93,7 +93,7 @@ jobs:
       fail-fast: false  # 'false' means Don't stop matrix workflows even if some matrix entry fails.
       matrix:
         os: [windows-2022, windows-2019]
-        buildtype: [debug]
+        buildtype: [release]
     steps:
       - uses: actions/checkout@v3
       - name: Install conan
