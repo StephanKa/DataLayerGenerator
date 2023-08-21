@@ -32,4 +32,7 @@ FOREACH(TEST_NAME datapoints groups enums)
             "${TEST_NAME}."
             OUTPUT_SUFFIX
             .xml)
+
+    ADD_CUSTOM_COMMAND(TARGET ${TEST_NAME}_tests POST_BUILD
+                       COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${TEST_NAME}_tests> ${CMAKE_BINARY_DIR}/install/test/$<TARGET_FILE_NAME:${TEST_NAME}_tests>)
 ENDFOREACH()
