@@ -43,8 +43,8 @@ ELSE()
         FIND_PACKAGE(Python COMPONENTS Interpreter Development REQUIRED)
         FIND_PACKAGE(pybind11 REQUIRED)
 
-        SET_SOURCE_FILES_PROPERTIES(${CMAKE_BINARY_DIR}/generated/pythonBinding.cpp PROPERTIES GENERATED TRUE)
-        PYBIND11_ADD_MODULE(conan_pybind11 ${CMAKE_BINARY_DIR}/generated/pythonBinding.cpp)
+        SET_SOURCE_FILES_PROPERTIES(${CMAKE_BINARY_DIR}/generated/python/pythonBinding.cpp PROPERTIES GENERATED TRUE)
+        PYBIND11_ADD_MODULE(conan_pybind11 ${CMAKE_BINARY_DIR}/generated/python/pythonBinding.cpp)
         TARGET_LINK_LIBRARIES(conan_pybind11
                               PRIVATE
                               project_warnings
