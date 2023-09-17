@@ -1,6 +1,6 @@
 #include <catch2/catch_all.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
-#include <datalayer.h>
+#include <include/datalayer.h>
 
 namespace {
 constexpr auto EPSILON = 0.1;

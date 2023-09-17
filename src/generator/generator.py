@@ -9,6 +9,12 @@ from yaml.loader import SafeLoader
 from jinja2 import Environment, FileSystemLoader
 from constants import PREFIX_MAP
 from validators import enum_validator, struct_validator, group_validator, data_point_validator
+from umlGenerator import generate_uml
+from overviewGenerator import generate_overview
+
+GENERATED_FOLDER = '/generated/include'
+DOC_FOLDER = '/generated/doc'
+PYTHON_FOLDER = '/generated/python'
 
 
 def validate_json(model_data, schema):
@@ -129,13 +135,16 @@ def main(template_file_name, template_formatter_file_name, python_binding_file_n
 
     group_data_points_mapping = create_group_data_point_dict(data_points)
 
-    if not os.path.exists(f'{args.out_dir}/generated'):
-        os.makedirs(f'{args.out_dir}/generated')
+    for path in [f'{args.out_dir}{GENERATED_FOLDER}',
+                 f'{args.out_dir}{DOC_FOLDER}',
+                 f'{args.out_dir}{PYTHON_FOLDER}']:
+        if not os.path.exists(path):
+            os.makedirs(path)
 
     template = env.get_template(template_file_name)
     output = template.render(enums=enums, groups=groups, structs=structs, data_points=data_points,
                              group_data_points_mapping=group_data_points_mapping, prefix_map=PREFIX_MAP)
-    with open(f'{args.out_dir}/generated/datalayer.h', 'w') as f:
+    with open(f'{args.out_dir}{GENERATED_FOLDER}/datalayer.h', 'w') as f:
         f.write(output)
 
     template = env.get_template(template_formatter_file_name)
@@ -143,14 +152,23 @@ def main(template_file_name, template_formatter_file_name, python_binding_file_n
     for struct in structs:
         struct_types[struct['name']] = struct['parameter']
     output = template.render(structs=structs, data_points=data_points, struct_types=struct_types, enums=enums)
-    with open(f'{args.out_dir}/generated/formatter.h', 'w') as f:
+    with open(f'{args.out_dir}{GENERATED_FOLDER}/formatter.h', 'w') as f:
         f.write(output)
 
     template = env.get_template(python_binding_file_name)
     output = template.render(enums=enums, groups=groups, structs=structs, data_points=data_points,
                              group_data_points_mapping=group_data_points_mapping, prefix_map=PREFIX_MAP)
-    with open(f'{args.out_dir}/generated/pythonBinding.cpp', 'w') as f:
+    with open(f'{args.out_dir}{PYTHON_FOLDER}/pythonBinding.cpp', 'w') as f:
         f.write(output)
+
+    generate_uml(enums=json_data['Enums'], structs=json_data['Structs'], datapoint=json_data['Datapoints'],
+                 out_dir=f'{args.out_dir}/{DOC_FOLDER}')
+
+    group_ids = dict()
+    for group in groups:
+        group_ids[group['name']] = int(group['baseId'], 0)
+
+    generate_overview(path=f'{args.out_dir}/{DOC_FOLDER}', group_ids=group_ids, data_point_id=json_data['Datapoints'])
 
 
 if __name__ == '__main__':

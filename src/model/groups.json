@@ -4,13 +4,15 @@
       "name": "DefaultGroup",
       "persistence": "None",
       "baseId": "0x4000",
-      "version": "1.0.1"
+      "version": "1.0.1",
+      "description": "Default group which can always be used and has no purpose."
     },
     {
       "name": "CyclicGroup",
       "persistence": "Cyclic",
       "baseId": "0x5000",
-      "version": "2.0.0"
+      "version": "2.0.0",
+      "description": "A group which can be used for cyclic persist data on external memories."
     }
   ]
 }

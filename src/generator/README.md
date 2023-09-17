@@ -139,6 +139,7 @@ The following properties are allowed.
 | version      | yes      | describes the version where it was created or updated. It is defined as string **\<MAJOR>.\<MINOR>.\<BUILD>**  |
 | arraySize    | no       | describes if the defined type is a std::array, it will define the size of the std::array with defined type     |
 | allowUpgrade | no       | describes if serialized data can be override DP value given the version is higher                              |
+| description  | no       | description of the datapoint can be written in this field                                                      |
 
 ```json
 {

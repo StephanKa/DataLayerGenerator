@@ -42,12 +42,12 @@ class Parameter:
         self.value = val[0]
         self.prefix = ''
 
-        self.structBegin = ''
-        self.endBegin = ''
+        self.struct_begin = ''
+        self.struct_ned = ''
         if isinstance(self.value, dict):
             self.value = Parameter(self.value)
-            self.structBegin = '{'
-            self.endBegin = '}'
+            self.struct_begin = '{'
+            self.struct_ned = '}'
         elif isinstance(self.value, float):
             self.prefix = PREFIX_MAP['float']
 
@@ -56,7 +56,7 @@ class Parameter:
 
         :return concatenated current parameter
         """
-        return f'.{self.name}={self.structBegin}{self.value}{self.prefix}{self.endBegin}'
+        return f'.{self.name}={self.struct_begin}{self.value}{self.prefix}{self.struct_ned}'
 
 
 class Version:
@@ -111,6 +111,8 @@ def group_validator(group_data):
         if temp_group['name'] in check_names:
             raise GroupException(f"Group name '{temp_group['name']}' already defined, please check your model")
         check_names[temp_group['name']] = None
+        if 'description' not in temp_group:
+            temp_group['description'] = None
         if temp_group['persistence'] not in SUPPORTED_PERSISTENCE:
             raise GroupException(f"Persistence type '{temp_group['persistence']}' is not supported")
         if temp_group['baseId'] in base_id:
@@ -187,6 +189,8 @@ def data_point_validator(data_point_data, struct_list, enum_list):
             name = '{}::{}'.format(temp_dp['namespace'], name)
         else:
             temp_dp['namespace'] = ''
+        if 'description' not in temp_dp:
+            temp_dp['description'] = None
         if name in check_names:
             raise DatapointException(f"Datapoint name '{name}' already defined, please check your model")
         check_names[name] = None

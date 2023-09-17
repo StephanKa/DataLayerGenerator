@@ -259,3 +259,4 @@ ctest --preset <PRESET_NAME>
 - [ ] add coverage
 - [ ] version schema dynamisch
 - [ ] add splitting namespaces to separate files (amalgamation or single files)
+- [ ] add MPS project for generating JSON files

@@ -1,9 +1,9 @@
 #include "datalayerBase.h"// for DataPoint, GroupDataPointMapping, Dis...
 #include "helper.h"// for Version
-#include "include/version.hpp"// for SoftwareVersion
-#include <datalayer.h>// for Temperature, test, test4, CyclicGroup
 #include <fmt/format.h>// for print, basic_string_view, formatter
-#include <formatter.h>
+#include <include/datalayer.h>// for Temperature, test, test4, CyclicGroup
+#include <include/formatter.h>
+#include <include/version.hpp>// for SoftwareVersion
 
 using namespace std::string_view_literals;
 

@@ -22,17 +22,22 @@
 {%- endmacro %}
 
 {% macro datapointTypeDefinition(dp) -%}
-    DataLayer::DataPoint<
-    {%- if dp.arraySize > 0 -%}
-            std::array<{{ dp.type }}, {{ dp.arraySize }}>
-        {%- else -%}
-            {{ dp.type }}
-        {%- endif -%}
-        , {{ dp.group }}Info, 0x{{ "%0x" | format( dp.id | int) }}, Helper::{{ dp.access }}, Version{ {{ dp.version.major }}, {{ dp.version.minor }}, {{ dp.version.build }} }, "{{ dp.name }}", {{ dp.allowUpgrade }}> {{ dp.name }}
-        {%- if 'default' in dp -%}
-        ({{ datapoint(dp) }})
-    {%- endif %};
-{%- endmacro %}
+{% if dp.description %}
+/**
+* {{ dp.description }}
+*/
+{% endif -%}
+DataLayer::DataPoint<
+{%- if dp.arraySize > 0 -%}
+        std::array<{{ dp.type }}, {{ dp.arraySize }}>
+    {%- else -%}
+        {{ dp.type }}
+    {%- endif -%}
+    , {{ dp.group }}Info, 0x{{ "%0x" | format( dp.id | int) }}, Helper::{{ dp.access }}, Version{ {{ dp.version.major }}, {{ dp.version.minor }}, {{ dp.version.build }} }, "{{ dp.name }}", {{ dp.allowUpgrade }}> {{ dp.name }}
+    {%- if 'default' in dp -%}
+    ({{ datapoint(dp) }})
+{%- endif %};
+{%- endmacro -%}
 
 {% if enums | length > 0 -%}
 // defines all enumeration
@@ -40,7 +45,7 @@
 {% for enum in enums -%}
 enum class {{ enum.name }} : {{ enum.type }}
 {
-{%- if enum.autoId%}
+{%- if enum.autoId %}
 {%- for value in enum["values"] %}
     {{ value }},
 {%- endfor %}
@@ -62,12 +67,17 @@ struct {{ struct.name }}
     {{ parameter.value }} {{ parameter.name }};
     {%- endfor %}
 };
-{%- endfor %}
+{% endfor %}
 
 {% if groups | length > 0 -%}
 // defines all existing groups
 {% endif -%}
 {% for group in groups -%}
+{% if group.description %}
+/**
+* {{ group.description }}
+*/
+{% endif -%}
 constexpr DataLayer::GroupInfo<{{ group.baseId }}, "{{ group.name }}", {{ group.allowUpgrade }}, DataLayer::Persistance::{{ group.persistence }}, Version{ {{ group.version.major }}, {{ group.version.minor }}, {{ group.version.build }} }> {{ group.name }}Info;
 {% endfor %}
 
