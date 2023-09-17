@@ -101,5 +101,5 @@ def generate_uml(enums, structs, datapoint, out_dir):
     :param out_dir: path for the generated output
     """
     d = UML(enums, structs, datapoint)
-    with open(f'{out_dir}/datapoint_overview.plantuml', 'w') as e:
+    with open(f'{out_dir}/overview.plantuml', 'w') as e:
         e.write(str(d))

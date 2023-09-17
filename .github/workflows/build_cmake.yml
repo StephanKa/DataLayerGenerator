@@ -92,7 +92,7 @@ jobs:
     strategy:
       fail-fast: false  # 'false' means Don't stop matrix workflows even if some matrix entry fails.
       matrix:
-        os: [windows-2022, windows-2019]
+        os: [windows-2022]
         buildtype: [release]
     steps:
       - uses: actions/checkout@v3
