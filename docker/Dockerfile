@@ -2,7 +2,7 @@
 # Build and test environment for CI
 # =================================
 
-FROM ubuntu:22.10 as cpp-docker-common
+FROM ubuntu:23.04 as cpp-docker-common
 
 ARG DEBIAN_FRONTEND=noninteractive
 ARG CLANG_COMPILER_VERSION=15
