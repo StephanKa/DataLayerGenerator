@@ -96,5 +96,5 @@ RUN groupadd -f -g 1000 ${CI_USER} && \
 
 COPY ccache.conf /etc/.
 USER ${CI_USER}
-RUN pip install conan
+RUN pip install --user conan
 WORKDIR /home/${CI_USER}
