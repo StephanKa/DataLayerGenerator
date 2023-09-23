@@ -128,6 +128,24 @@
       }
     },
     {
+      "name": "clang-17-debug",
+      "inherits": "debug-base",
+      "displayName": "Preset for clang 17 debug build",
+      "environment": {
+        "CXX": "clang++-17",
+        "CC": "clang-17"
+      }
+    },
+    {
+      "name": "clang-17-release",
+      "inherits": "release-base",
+      "displayName": "Preset for clang 17 release build",
+      "environment": {
+        "CXX": "clang++-17",
+        "CC": "clang-17"
+      }
+    },
+    {
       "name": "gcc-10-debug",
       "inherits": "debug-base",
       "displayName": "Preset for gcc 10 debug builds",
