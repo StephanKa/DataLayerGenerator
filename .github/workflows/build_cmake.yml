@@ -37,7 +37,9 @@ jobs:
                     {name: 'Clang 12', preset: clang-12, pkgs: 'clang-12 llvm-12'},
                     {name: 'Clang 13', preset: clang-13, pkgs: 'clang-13 llvm-13'},
                     {name: 'Clang 14', preset: clang-14, pkgs: 'clang-14 llvm-14'},
-                    {name: 'Clang 15', preset: clang-15, pkgs: 'clang-15 llvm-15'}
+                    {name: 'Clang 15', preset: clang-15, pkgs: 'clang-15 llvm-15'},
+                    {name: 'Clang 16', preset: clang-16, pkgs: 'clang-16 llvm-16'},
+                    {name: 'Clang 17', preset: clang-17, pkgs: 'clang-17 llvm-17'}
                   ]
     steps:
     - uses: actions/checkout@v3
@@ -115,43 +117,43 @@ jobs:
         shell: bash
         run: ctest --preset ${{ matrix.os }}-${{ matrix.buildtype }}
 
-  #windows-mingw:
-  #  name: ${{ matrix.os }}, MinGW ${{ matrix.buildtype }}
-  #  runs-on: ${{ matrix.os }}
-  #  strategy:
-  #    fail-fast: false  # 'false' means Don't stop matrix workflows even if some matrix entry fails.
-  #    matrix:
-  #      os: [windows-2022]
-  #      buildtype: [debug]
-  #  defaults:
-  #    run:
-  #      shell: msys2 {0}
-  #  steps:
-  #    - uses: actions/checkout@v3
-  #    - uses: msys2/setup-msys2@v2
-  #      with:
-  #        msystem: MINGW64
-  #        install: make
-  #    - name: Install conan
-  #      run: |
-  #        pacman --noconfirm -S mingw-w64-x86_64-ninja
-  #        pacman --noconfirm -U https://repo.msys2.org/mingw/mingw64/mingw-w64-x86_64-gcc-libs-12.2.0-9-any.pkg.tar.zst
-  #        pacman --noconfirm -U https://repo.msys2.org/mingw/mingw64/mingw-w64-x86_64-gcc-12.2.0-9-any.pkg.tar.zst
-  #        pacman --noconfirm -S mingw-w64-x86_64-cmake
-  #        pacman --noconfirm -S mingw-w64-x86_64-python
-  #        pacman --noconfirm -S mingw-w64-x86_64-python-pip
-  #        pacman --noconfirm -S mingw-w64-x86_64-rust
-  #        python3 -m pip install --upgrade pip setuptools
-  #        python3 -m pip install PyYAML==5.3.1 conan jsonschema virtualenv ninja
+  windows-mingw:
+    name: ${{ matrix.os }}, MinGW ${{ matrix.buildtype }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false  # 'false' means Don't stop matrix workflows even if some matrix entry fails.
+      matrix:
+        os: [windows-2022]
+        buildtype: [debug]
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          install: make
+      - name: Install conan
+        run: |
+          pacman --noconfirm -S mingw-w64-x86_64-ninja
+          pacman --noconfirm -U https://repo.msys2.org/mingw/mingw64/mingw-w64-x86_64-gcc-libs-12.2.0-9-any.pkg.tar.zst
+          pacman --noconfirm -U https://repo.msys2.org/mingw/mingw64/mingw-w64-x86_64-gcc-12.2.0-9-any.pkg.tar.zst
+          pacman --noconfirm -S mingw-w64-x86_64-cmake
+          pacman --noconfirm -S mingw-w64-x86_64-python
+          pacman --noconfirm -S mingw-w64-x86_64-python-pip
+          pacman --noconfirm -S mingw-w64-x86_64-rust
+          python3 -m pip install --upgrade pip setuptools
+          python3 -m pip install PyYAML==5.3.1 conan jsonschema virtualenv ninja
 
-  #    - name: Configure CMake
-  #      run: cmake --preset win32-gcc-x64-mingw-${{ matrix.buildtype }}
+      - name: Configure CMake
+        run: cmake --preset win32-gcc-x64-mingw-${{ matrix.buildtype }}
 
-  #    - name: Build
-  #      run:  cmake --build --preset win32-gcc-x64-mingw-${{ matrix.buildtype }}
+      - name: Build
+        run:  cmake --build --preset win32-gcc-x64-mingw-${{ matrix.buildtype }}
 
-  #    - name: Test
-  #      run: ctest --preset win32-gcc-x64-mingw-${{ matrix.buildtype }}
+      - name: Test
+        run: ctest --preset win32-gcc-x64-mingw-${{ matrix.buildtype }}
 
   linux-static_analysis:
     name: Static Analysis, ${{ matrix.os }}, ${{ matrix.compiler.name }}, ${{ matrix.buildtype }}
