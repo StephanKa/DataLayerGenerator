@@ -387,6 +387,14 @@
       "configurePreset": "clang-16-release"
     },
     {
+      "name": "clang-17-debug",
+      "configurePreset": "clang-17-debug"
+    },
+    {
+      "name": "clang-17-release",
+      "configurePreset": "clang-17-release"
+    },
+    {
       "name": "gcc-10-debug",
       "configurePreset": "gcc-10-debug"
     },
@@ -487,6 +495,14 @@
     {
       "name": "clang-16-release",
       "configurePreset": "clang-16-release"
+    },
+    {
+      "name": "clang-17-debug",
+      "configurePreset": "clang-17-debug"
+    },
+    {
+      "name": "clang-17-release",
+      "configurePreset": "clang-17-release"
     },
     {
       "name": "gcc-10-debug",
