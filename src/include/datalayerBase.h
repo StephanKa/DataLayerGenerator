@@ -111,7 +111,7 @@ struct GroupDataPointMapping
 #endif
 
   private:
-    [[nodiscard]] constexpr static bool setter([[maybe_unused]] const auto &value, [[maybe_unused]] auto &args, [[maybe_unused]] bool &ret)
+    constexpr static bool setter([[maybe_unused]] const auto &value, [[maybe_unused]] auto &args, [[maybe_unused]] bool &ret)
     {
         if constexpr (Helper::WriteConcept<
                         std::remove_cvref_t<decltype(args.TypeAccess)>> && (std::is_same_v<std::remove_cvref_t<decltype(args())>, std::remove_cvref_t<decltype(value)>>)) {
@@ -121,7 +121,7 @@ struct GroupDataPointMapping
         return true;
     }
 
-    [[nodiscard]] constexpr static bool getter([[maybe_unused]] auto &value, [[maybe_unused]] const auto &args, [[maybe_unused]] bool &ret)
+    constexpr static bool getter([[maybe_unused]] auto &value, [[maybe_unused]] const auto &args, [[maybe_unused]] bool &ret)
     {
         if constexpr (Helper::ReadConcept<
                         std::remove_cvref_t<decltype(args.TypeAccess)>> && std::is_same_v<std::remove_cvref_t<decltype(args())>, std::remove_cvref_t<decltype(value)>>) {
@@ -161,7 +161,7 @@ class DataPoint
     }
 
     // function to write anyway
-    [[nodiscard]] constexpr DataPoint &operator=(const T &value)
+    constexpr DataPoint &operator=(const T &value)
     {
         m_value = value;
         return *this;
@@ -274,13 +274,13 @@ struct Dispatcher
     }
 
   private:
-    [[nodiscard]] constexpr static bool setter(const uint32_t dataPointId, const auto &value, [[maybe_unused]] auto &args, [[maybe_unused]] bool &ret)
+    constexpr static bool setter(const uint32_t dataPointId, const auto &value, [[maybe_unused]] auto &args, [[maybe_unused]] bool &ret)
     {
         ret |= args.setDatapoint(dataPointId, value);
         return !ret;
     }
 
-    [[nodiscard]] constexpr static bool getter(const uint32_t dataPointId, auto &value, [[maybe_unused]] const auto &args, [[maybe_unused]] bool &ret)
+    constexpr static bool getter(const uint32_t dataPointId, auto &value, [[maybe_unused]] const auto &args, [[maybe_unused]] bool &ret)
     {
         ret |= args.getDatapoint(dataPointId, value);
         return !ret;

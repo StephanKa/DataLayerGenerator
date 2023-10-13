@@ -77,7 +77,7 @@ struct Serialization
     }
 
   private:
-    [[nodiscard]] bool static writeImpl(std::ofstream &ofile, auto &val, bool &ret, size_t &size)
+    bool static writeImpl(std::ofstream &ofile, auto &val, bool &ret, size_t &size)
     {
         ret = !ofile.fail();
         if (ofile.fail()) {
