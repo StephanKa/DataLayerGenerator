@@ -15,7 +15,7 @@ namespace DataLayer {
 
 namespace Detail {
     template<typename T, size_t N>
-    constexpr std::array<T, N> make_array(T value)
+    [[nodiscard]] constexpr std::array<T, N> make_array(T value)
     {
         std::array<T, N> temp{};
         for (auto &val : temp) {
@@ -111,7 +111,7 @@ struct GroupDataPointMapping
 #endif
 
   private:
-    constexpr static bool setter([[maybe_unused]] const auto &value, [[maybe_unused]] auto &args, [[maybe_unused]] bool &ret)
+    [[nodiscard]] constexpr static bool setter([[maybe_unused]] const auto &value, [[maybe_unused]] auto &args, [[maybe_unused]] bool &ret)
     {
         if constexpr (Helper::WriteConcept<
                         std::remove_cvref_t<decltype(args.TypeAccess)>> && (std::is_same_v<std::remove_cvref_t<decltype(args())>, std::remove_cvref_t<decltype(value)>>)) {
@@ -121,7 +121,7 @@ struct GroupDataPointMapping
         return true;
     }
 
-    constexpr static bool getter([[maybe_unused]] auto &value, [[maybe_unused]] const auto &args, [[maybe_unused]] bool &ret)
+    [[nodiscard]] constexpr static bool getter([[maybe_unused]] auto &value, [[maybe_unused]] const auto &args, [[maybe_unused]] bool &ret)
     {
         if constexpr (Helper::ReadConcept<
                         std::remove_cvref_t<decltype(args.TypeAccess)>> && std::is_same_v<std::remove_cvref_t<decltype(args())>, std::remove_cvref_t<decltype(value)>>) {
@@ -145,23 +145,23 @@ class DataPoint
 
     static constexpr char const *name = Name;
 
-    constexpr static uint16_t getId()
+    [[nodiscard]] constexpr static uint16_t getId()
     {
         return group.baseId + id;
     }
-    constexpr static auto getVersion()
+    [[nodiscard]] constexpr static auto getVersion()
     {
         return Version;
     }
 
     // function to read everytime
-    constexpr T operator()() const
+    [[nodiscard]] constexpr T operator()() const
     {
         return m_value;
     }
 
     // function to write anyway
-    constexpr DataPoint &operator=(const T &value)
+    [[nodiscard]] constexpr DataPoint &operator=(const T &value)
     {
         m_value = value;
         return *this;
@@ -177,14 +177,14 @@ class DataPoint
     // function that will be restricted by READ and READWRITE access
     template<typename A = Access>
     requires Helper::ReadConcept<A> && Detail::IsArray<T>
-    constexpr auto &get(size_t index)
+    [[nodiscard]] constexpr auto &get(size_t index)
     {
         return m_value.at(index);
     }
 
     template<typename A = Access>
     requires Helper::ReadConcept<A>
-    auto serialize()
+    [[nodiscard]] auto serialize()
     {
         return std::as_bytes(std::span<const T, 1>{ std::addressof(m_value), 1 });
     }
@@ -214,7 +214,7 @@ class DataPoint
 
     template<typename Type = T>
     requires Detail::IsArray<Type>
-    constexpr auto size()
+    [[nodiscard]] constexpr auto size()
     {
         return m_value.size();
     }
@@ -274,13 +274,13 @@ struct Dispatcher
     }
 
   private:
-    constexpr static bool setter(const uint32_t dataPointId, const auto &value, [[maybe_unused]] auto &args, [[maybe_unused]] bool &ret)
+    [[nodiscard]] constexpr static bool setter(const uint32_t dataPointId, const auto &value, [[maybe_unused]] auto &args, [[maybe_unused]] bool &ret)
     {
         ret |= args.setDatapoint(dataPointId, value);
         return !ret;
     }
 
-    constexpr static bool getter(const uint32_t dataPointId, auto &value, [[maybe_unused]] const auto &args, [[maybe_unused]] bool &ret)
+    [[nodiscard]] constexpr static bool getter(const uint32_t dataPointId, auto &value, [[maybe_unused]] const auto &args, [[maybe_unused]] bool &ret)
     {
         ret |= args.getDatapoint(dataPointId, value);
         return !ret;

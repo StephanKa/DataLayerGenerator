@@ -31,6 +31,7 @@ IF(ENABLE_IPO)
         MESSAGE(SEND_ERROR "IPO is not supported: ${output}")
     ENDIF()
 ENDIF()
+
 IF(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
     ADD_COMPILE_OPTIONS(-fcolor-diagnostics)
 ELSEIF(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")

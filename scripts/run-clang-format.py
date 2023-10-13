@@ -16,13 +16,7 @@ import os
 import subprocess
 import sys
 import threading
-
-is_py2 = sys.version[0] == '2'
-
-if is_py2:
-    import Queue as queue
-else:
-    import queue as queue
+import queue as queue
 
 
 def find_compilation_database(path):
@@ -60,7 +54,8 @@ def run_format(args, _, queue, lock, failed_files):
     """Take filenames out of queue and runs clang-format on them."""
     while True:
         name = queue.get()
-        invocation = get_format_invocation(name, args.clang_format_binary, args.fix, args.warnings_as_errors, args.quiet)
+        invocation = get_format_invocation(name, args.clang_format_binary, args.fix, args.warnings_as_errors,
+                                           args.quiet)
 
         proc = subprocess.Popen(invocation, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         output, err = proc.communicate()
@@ -78,11 +73,13 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Runs clang-format over all files '
                                                  'in a compilation database. Requires '
                                                  'clang-format in $PATH.')
-    parser.add_argument('-clang-format-binary', metavar='PATH', default='clang-format', help='path to clang-format binary')
+    parser.add_argument('-clang-format-binary', metavar='PATH', default='clang-format',
+                        help='path to clang-format binary')
     parser.add_argument('-p', dest='build_path', help='Path used to read a compile command database.')
     parser.add_argument('-j', type=int, default=0, help='number of tidy instances to be run in parallel.')
     parser.add_argument('-fix', action='store_true', help='reformat files')
-    parser.add_argument('-warnings-as-errors', action='store_true', help='Let the clang-tidy process return != 0 if a check failed.')
+    parser.add_argument('-warnings-as-errors', action='store_true',
+                        help='Let the clang-tidy process return != 0 if a check failed.')
     parser.add_argument('-quiet', action='store_true', help='Run clang-format in quiet mode')
     args = parser.parse_args()
 

@@ -14,5 +14,5 @@ Checks: "*,
         -cppcoreguidelines-non-private-member-variables-in-classes,
         -misc-non-private-member-variables-in-classes,
 "
-HeaderFilterRegex: ''
+HeaderFilterRegex: '^.*generated.*$|^.*catch2\/internal.*$'
 FormatStyle:     none

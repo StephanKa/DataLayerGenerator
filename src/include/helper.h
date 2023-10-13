@@ -32,7 +32,7 @@ struct FixedString
             buf[i] = input[i];
         }
     }
-    constexpr operator char const *() const
+    [[nodiscard]] constexpr operator char const *() const
     {
         return buf.data();
     }
