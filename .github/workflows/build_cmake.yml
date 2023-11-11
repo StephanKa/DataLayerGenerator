@@ -61,7 +61,6 @@ jobs:
              wget https://apt.llvm.org/llvm.sh
              sudo chmod -x llvm.sh
              sudo bash llvm.sh ${{ matrix.compiler.version }}
-             sudo apt update
              sudo apt install ninja-build
       shell: bash
 
