@@ -60,7 +60,7 @@ jobs:
              sudo apt-get purge --auto-remove llvm python3-lldb-14 llvm-14 # https://github.com/llvm/llvm-project/issues/64182
              wget https://apt.llvm.org/llvm.sh
              chmod -x llvm.sh
-             sudo ./llvm.sh {{ matrix.compiler.version }}
+             sudo bash -c "$(./llvm.sh {{ matrix.compiler.version }} )"
       shell: bash
 
     - name: Install dependencies
