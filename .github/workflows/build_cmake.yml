@@ -57,11 +57,12 @@ jobs:
     - name: Install LLVM dependencies
       if: ${{ startsWith(matrix.compiler.name, 'Clang') }}
       run:   |
+             sudo apt update
+             sudo apt install ninja-build             
              sudo apt-get purge --auto-remove llvm python3-lldb-14 llvm-14 # https://github.com/llvm/llvm-project/issues/64182
              wget https://apt.llvm.org/llvm.sh
              sudo chmod -x llvm.sh
              sudo bash llvm.sh ${{ matrix.compiler.version }}
-             sudo apt install ninja-build
       shell: bash
 
     - name: Install dependencies
