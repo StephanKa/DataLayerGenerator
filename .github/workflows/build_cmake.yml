@@ -34,9 +34,6 @@ jobs:
         compiler: [ {name: 'GCC 10', preset: gcc-10, pkgs: 'gcc-10 g++-10 lib32gcc-10-dev gcc-multilib'},
                     {name: 'GCC 11', preset: gcc-11, pkgs: 'gcc-11 g++-11 lib32gcc-11-dev gcc-multilib'},
                     {name: 'GCC 12', preset: gcc-12, pkgs: 'gcc-12 g++-12 lib32gcc-12-dev gcc-multilib'},
-                    {name: 'Clang 12', preset: clang-12, version: '12'},
-                    {name: 'Clang 13', preset: clang-13, version: '13'},
-                    {name: 'Clang 14', preset: clang-14, version: '14'},
                     {name: 'Clang 15', preset: clang-15, version: '15'},
                     {name: 'Clang 16', preset: clang-16, version: '16'},
                     {name: 'Clang 17', preset: clang-17, version: '17'}
@@ -58,7 +55,7 @@ jobs:
       if: ${{ startsWith(matrix.compiler.name, 'Clang') }}
       run:   |
              sudo apt update
-             sudo apt install ninja-build             
+             sudo apt install ninja-build
              sudo apt-get purge --auto-remove llvm python3-lldb-14 llvm-14 # https://github.com/llvm/llvm-project/issues/64182
              wget https://apt.llvm.org/llvm.sh
              sudo chmod -x llvm.sh
@@ -66,7 +63,7 @@ jobs:
       shell: bash
 
     - name: Install dependencies
-      if: ${{ startsWith(matrix.compiler.name, 'GCC') }}   
+      if: ${{ startsWith(matrix.compiler.name, 'GCC') }}
       run:   |
              sudo apt update
              sudo apt install ninja-build ${{ matrix.compiler.pkgs }}
