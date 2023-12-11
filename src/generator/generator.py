@@ -8,7 +8,7 @@ import yaml
 from yaml.loader import SafeLoader
 from jinja2 import Environment, FileSystemLoader
 from constants import PREFIX_MAP
-from validators import enum_validator, struct_validator, group_validator, data_point_validator
+from validators import enum_validator, struct_validator, group_validator, data_point_validator, type_validator
 from umlGenerator import generate_uml
 from overviewGenerator import generate_overview
 
@@ -74,7 +74,7 @@ def read_model_files(args):
 
     :return: json_data of all JSON files
     """
-    json_data = {'Enums': [], 'Groups': [], 'Structs': [], 'Datapoints': []}
+    json_data = {'Enums': [], 'Groups': [], 'Structs': [], 'Datapoints': [], 'Types': []}
     for root, dirs, files in os.walk(f'{args.model_dir}'):
         for name in files:
             tmp_dict = None
@@ -104,6 +104,8 @@ def read_model_files(args):
                 json_data['Structs'].extend(tmp_dict['Structs'])
             if 'Datapoints' in tmp_dict:
                 json_data['Datapoints'].extend(tmp_dict['Datapoints'])
+            if 'Types' in tmp_dict:
+                json_data['Types'].extend(tmp_dict['Types'])
     return json_data
 
 
@@ -128,10 +130,12 @@ def main(template_file_name, template_formatter_file_name, python_binding_file_n
     validate_json(json_data, datalayer_schema)
 
     # validate all defined sections
+
     enums = enum_validator(json_data['Enums'])
+    types = type_validator(json_data['Types'])
     groups = group_validator(json_data['Groups'])
     structs, struct_names = struct_validator(json_data['Structs'])
-    data_points = data_point_validator(json_data['Datapoints'], struct_names, enums)
+    data_points = data_point_validator(json_data['Datapoints'], struct_names, enums, types)
 
     group_data_points_mapping = create_group_data_point_dict(data_points)
 
@@ -143,7 +147,7 @@ def main(template_file_name, template_formatter_file_name, python_binding_file_n
 
     template = env.get_template(template_file_name)
     output = template.render(enums=enums, groups=groups, structs=structs, data_points=data_points,
-                             group_data_points_mapping=group_data_points_mapping, prefix_map=PREFIX_MAP)
+                             group_data_points_mapping=group_data_points_mapping, prefix_map=PREFIX_MAP, types=types)
     with open(f'{args.out_dir}{GENERATED_FOLDER}/datalayer.h', 'w') as f:
         f.write(output)
 

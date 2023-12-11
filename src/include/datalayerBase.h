@@ -29,6 +29,39 @@ namespace Detail {
     {
         val.begin();
     };
+
+    struct BaseType
+    {
+    };
+
+    enum class RangeCheck : std::uint8_t
+    {
+        underflow,
+        overflow,
+        ok,
+        notChecked
+    };
+
+    struct CheckResult
+    {
+        bool success{ false };
+        RangeCheck check{ RangeCheck::notChecked };
+    };
+
+    template<typename T>
+    [[nodiscard]] auto checkValue(T value)
+    {
+        using Type = std::remove_cvref_t<T>;
+        if constexpr (std::is_base_of_v<BaseType, Type>) {
+            if (value() < Type::Minimum) {
+                return RangeCheck::underflow;
+            }
+            if (value() > Type::Maximum) {
+                return RangeCheck::overflow;
+            }
+        }
+        return RangeCheck::ok;
+    }
 }// namespace Detail
 
 enum class Persistance : uint32_t
@@ -68,16 +101,16 @@ struct GroupDataPointMapping
     }
 
     template<typename T>
-    [[nodiscard]] bool setDatapoint(uint32_t dataPointId, const T &value) const
+    [[nodiscard]] Detail::CheckResult setDatapoint(uint32_t dataPointId, const T &value) const
     {
-
         return std::apply(
           [&](auto &...args) {
               bool ret = false;
+              auto check{ Detail::RangeCheck::notChecked };
 
-              (((dataPointId == args.getId()) && (setter(value, args, ret))) || ... || false);
+              (((dataPointId == args.getId()) && (setter(value, args, ret, check))) || ... || false);
 
-              return ret;
+              return Detail::CheckResult{ ret, check };
           },
           datapoints);
     }
@@ -111,11 +144,11 @@ struct GroupDataPointMapping
 #endif
 
   private:
-    constexpr static bool setter([[maybe_unused]] const auto &value, [[maybe_unused]] auto &args, [[maybe_unused]] bool &ret)
+    constexpr static bool setter([[maybe_unused]] const auto &value, [[maybe_unused]] auto &args, [[maybe_unused]] bool &ret, Detail::RangeCheck &check)
     {
         if constexpr (Helper::WriteConcept<
                         std::remove_cvref_t<decltype(args.TypeAccess)>> && (std::is_same_v<std::remove_cvref_t<decltype(args())>, std::remove_cvref_t<decltype(value)>>)) {
-            args.set(value);
+            check = args.set(value);
             ret = true;
         }
         return true;
@@ -163,7 +196,7 @@ class DataPoint
     // function to write anyway
     constexpr DataPoint &operator=(const T &value)
     {
-        m_value = value;
+        setValue(value);
         return *this;
     }
 
@@ -192,9 +225,9 @@ class DataPoint
     // function that will be restricted by WRITE and READWRITE access
     template<typename A = Access>
     requires Helper::WriteConcept<A>
-    constexpr void set(const T &value)
+    [[nodiscard]] constexpr auto set(const T &value)
     {
-        m_value = value;
+        return setValue(value);
     }
 
     // function that will be restricted by WRITE and READWRITE access
@@ -225,6 +258,15 @@ class DataPoint
     }
 
   private:
+    constexpr auto setValue(const T &value)
+    {
+        const auto checkValue = Detail::checkValue(value);
+        if (checkValue == Detail::RangeCheck::ok) {
+            m_value = value;
+        }
+        return checkValue;
+    }
+
     T m_value{};
 };
 
@@ -251,10 +293,11 @@ struct Dispatcher
         return std::apply(
           [&](auto &...args) {
               bool ret = false;
+              auto check{ Detail::RangeCheck::notChecked };
 
-              ((setter(dataPointId, value, args, ret)) || ... || false);
+              ((setter(dataPointId, value, args, ret, check)) || ... || false);
 
-              return ret;
+              return Detail::CheckResult{ ret, check };
           },
           groups);
     }
@@ -274,9 +317,11 @@ struct Dispatcher
     }
 
   private:
-    constexpr static bool setter(const uint32_t dataPointId, const auto &value, [[maybe_unused]] auto &args, [[maybe_unused]] bool &ret)
+    constexpr static bool setter(const uint32_t dataPointId, const auto &value, [[maybe_unused]] auto &args, [[maybe_unused]] bool &ret, Detail::RangeCheck &check)
     {
-        ret |= args.setDatapoint(dataPointId, value);
+        const auto returnCheck = args.setDatapoint(dataPointId, value);
+        check = returnCheck.check;
+        ret |= returnCheck.success;
         return !ret;
     }
 

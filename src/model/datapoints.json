@@ -74,6 +74,14 @@
       "version": "1.0.1"
     },
     {
+      "name": "TestAlias",
+      "group": "DefaultGroup",
+      "id": 28,
+      "type": "AliasTypeUint32t",
+      "access": "READWRITE",
+      "version": "1.0.1"
+    },
+    {
       "name": "errorCodeArray",
       "group": "DefaultGroup",
       "id": 25,

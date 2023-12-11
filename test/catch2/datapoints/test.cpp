@@ -71,7 +71,7 @@ TEST_CASE("Test datapoints")
         constexpr float newValue{ 123.4F };
         constexpr uint32_t newRaw{ 1234U };
         const Temperature newData{ newRaw, newValue };
-        test.set(newData);
+        std::ignore = test.set(newData);
 
         // verify data
         const auto newlyWrittenValue = test.get();
@@ -99,7 +99,9 @@ TEST_CASE("Test datapoints")
         constexpr uint32_t newRaw{ 3214U };
         constexpr Temperature newData{ newRaw, newValue };
 
-        REQUIRE(DefaultGroup.setDatapoint(dpId, newData));
+        const auto check = DefaultGroup.setDatapoint(dpId, newData);
+        REQUIRE(check.success);
+        REQUIRE(check.check == DataLayer::Detail::RangeCheck::ok);
         REQUIRE((test() == Temperature{ newRaw, newValue }));
     }
 
@@ -158,8 +160,9 @@ TEST_CASE("Test datapoints")
         constexpr float newValue{ 321.4F };
         constexpr uint32_t newRaw{ 3214U };
         const Temperature newData{ newRaw, newValue };
-
-        REQUIRE(!DefaultGroup.setDatapoint(dpId, newData));
+        const auto ret = DefaultGroup.setDatapoint(dpId, newData);
+        REQUIRE(!ret.success);
+        REQUIRE(ret.check == DataLayer::Detail::RangeCheck::notChecked);
     }
 
     SECTION("datapoint 'testWithoutDefaultValue' access, write anyway")
@@ -196,13 +199,18 @@ TEST_CASE("Test datapoints")
     {
         constexpr uint32_t dummyId = 42;
         constexpr Temperature temperatureTest{ .raw = 1234, .value = 11111.F };
-        REQUIRE(!Dispatcher.setDatapoint(dummyId, temperatureTest));
+
+        const auto ret = DefaultGroup.setDatapoint(dummyId, temperatureTest);
+        REQUIRE(!ret.success);
+        REQUIRE(ret.check == DataLayer::Detail::RangeCheck::notChecked);
     }
 
     SECTION("datapoint dispatcher setDatapoint() existing with READONLY")
     {
         constexpr Temperature temperatureTest{ .raw = 1234, .value = 11111.F };
-        REQUIRE(!Dispatcher.setDatapoint(testWithoutDefaultValue.getId(), temperatureTest));
+        const auto ret = DefaultGroup.setDatapoint(testWithoutDefaultValue.getId(), temperatureTest);
+        REQUIRE(!ret.success);
+        REQUIRE(ret.check == DataLayer::Detail::RangeCheck::notChecked);
     }
 
     SECTION("datapoint dispatcher setDatapoint() existing with WRITEONLY")
@@ -210,7 +218,10 @@ TEST_CASE("Test datapoints")
         constexpr Temperature temperatureTest{ .raw = 1234, .value = 11111.F };
         Temperature readValue{};
         REQUIRE(!Dispatcher.getDatapoint(testWithoutDefaultValueWriteOnly.getId(), readValue));
-        REQUIRE(Dispatcher.setDatapoint(testWithoutDefaultValueWriteOnly.getId(), temperatureTest));
+
+        const auto ret = DefaultGroup.setDatapoint(testWithoutDefaultValueWriteOnly.getId(), temperatureTest);
+        REQUIRE(ret.success);
+        REQUIRE(ret.check == DataLayer::Detail::RangeCheck::ok);
         REQUIRE((testWithoutDefaultValueWriteOnly() == temperatureTest));
     }
 
@@ -219,7 +230,9 @@ TEST_CASE("Test datapoints")
         constexpr Temperature temperatureTest{ .raw = 1234, .value = 11111.F };
         Temperature readValue{};
         REQUIRE(Dispatcher.getDatapoint(test.getId(), readValue));
-        REQUIRE(Dispatcher.setDatapoint(test.getId(), temperatureTest));
+        const auto ret = DefaultGroup.setDatapoint(test.getId(), temperatureTest);
+        REQUIRE(ret.success);
+        REQUIRE(ret.check == DataLayer::Detail::RangeCheck::ok);
         REQUIRE((test() == temperatureTest));
     }
 
@@ -306,7 +319,9 @@ TEST_CASE("Test datapoints")
             ++index;
         }
 
-        REQUIRE(Dispatcher.setDatapoint(arrayTest2.getId(), valueTest));
+        const auto ret = DefaultGroup.setDatapoint(arrayTest2.getId(), valueTest);
+        REQUIRE(ret.success);
+        REQUIRE(ret.check == DataLayer::Detail::RangeCheck::ok);
         REQUIRE(valueTest == arrayTest2.get());
         REQUIRE(arrayTest2.size() == 10);
     }
@@ -376,7 +391,7 @@ TEST_CASE("Test datapoints")
             // clang-format on
         };
 
-        arrayTest2.set(valueTest);
+        std::ignore = arrayTest2.set(valueTest);
         REQUIRE(arrayTest2.get() == valueTest);
         arrayTest2.deserialize(expected);
         REQUIRE(arrayTest2.get() == initialArrayTest2);
@@ -397,8 +412,9 @@ TEST_CASE("Test datapoints")
     SECTION("set datapoint 'structInStructType' with nested structs")
     {
         constexpr Environment expectedValue{};
-
-        REQUIRE(Dispatcher.setDatapoint(structInStructType.getId(), expectedValue));
+        const auto ret = DefaultGroup.setDatapoint(structInStructType.getId(), expectedValue);
+        REQUIRE(ret.success);
+        REQUIRE(ret.check == DataLayer::Detail::RangeCheck::ok);
 
         const auto valueTest = structInStructType.get();
         REQUIRE(expectedValue.internal.raw == valueTest.internal.raw);
@@ -446,7 +462,7 @@ TEST_CASE("Test datapoints")
 
         // write new data
         constexpr Temperature newData{ 1234U, 123.4F };
-        test.set(newData);
+        std::ignore = test.set(newData);
         REQUIRE((test() == newData));
 
         constexpr Temperature testValue{ .raw = 444444, .value = 12345.0 };

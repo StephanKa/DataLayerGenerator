@@ -23,3 +23,9 @@ class DatapointException(Exception):
     """User defined exception for faulty data points definitions."""
 
     pass
+
+
+class TypeException(Exception):
+    """User defined exception for faulty type definitions."""
+
+    pass

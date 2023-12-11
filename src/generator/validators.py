@@ -1,6 +1,6 @@
 """This module whols all defined validators for enum, group, struct and data points."""
 from constants import BASE_ACCESS, BASE_TYPES, SUPPORTED_PERSISTENCE, PREFIX_MAP
-from validatorException import EnumException, StructException, GroupException, DatapointException
+from validatorException import EnumException, StructException, GroupException, DatapointException, TypeException
 
 
 class ParameterList:
@@ -168,13 +168,14 @@ def validate_data_default_struct(default=None):
     default['string'] = str(ParameterList(default))
 
 
-def data_point_validator(data_point_data, struct_list, enum_list):
+def data_point_validator(data_point_data, struct_list, enum_list, custom_type):
     """
     Check the given data point for consistency and if given struct is defined.
 
     :param data_point_data: dictionary of all data points definitions
     :param struct_list: dictionary of all struct definitions
     :param enum_list: dictionary of available custom-made enumerations
+    :param custom_type: dictionary of available custom-made types
     :return: given data_point_data
     """
     check_names = dict()
@@ -196,7 +197,8 @@ def data_point_validator(data_point_data, struct_list, enum_list):
         check_names[name] = None
         if access not in BASE_ACCESS:
             raise DatapointException(f"Datapoint access type '{access}' is not supported")
-        if dp_type not in BASE_TYPES and dp_type not in struct_list and dp_type not in [i['name'] for i in enum_list]:
+        if (dp_type not in BASE_TYPES and dp_type not in struct_list and dp_type not in [i['name'] for i in enum_list]
+                and dp_type not in [i['name'] for i in custom_type]):
             raise DatapointException(f"Datapoint type '{dp_type}' is not supported")
         if 'default' in temp_dp:
             validate_data_default_struct(temp_dp['default'])
@@ -220,3 +222,31 @@ def data_point_validator(data_point_data, struct_list, enum_list):
             temp_dp['allowUpgrade'] = 'false'
         group_id[group].append(dp_id)
     return data_point_data
+
+
+def type_validator(type_data):
+    """
+    Check the given type data for consistency and duplication.
+
+    :param type_data: dictionary of all type definitions
+    :return: given type_data
+    """
+    check_names = dict()
+    for temp_group in type_data:
+        if temp_group['name'] in check_names:
+            raise TypeException(f"Type name '{temp_group['name']}' already defined, please check your model")
+        check_names[temp_group['name']] = None
+        if 'type' not in temp_group:
+            raise TypeException(f"Typed definition is missing 'type', please check your model")
+        if temp_group['type'] not in BASE_TYPES:
+            raise TypeException(f"Type '{temp_group['type']}' is not defined in base types")
+        if 'min' not in temp_group:
+            temp_group['min'] = None
+        if 'max' not in temp_group:
+            temp_group['max'] = None
+        if 'min' in temp_group and 'max' in temp_group and temp_group['min'] is not None and temp_group['max'] is not None:
+            if temp_group['min'] == temp_group['max']:
+                raise TypeException(f"Min and Max are equal! max({temp_group['max']}) and min({temp_group['min']})")
+            elif temp_group['min'] > temp_group['max']:
+                raise TypeException(f"For min and max wrong: max({temp_group['max']}) and min({temp_group['min']})")
+    return type_data

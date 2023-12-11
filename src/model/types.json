@@ -1,0 +1,14 @@
+{
+  "Types": [
+    {
+      "name": "AliasTypeUint32t",
+      "type": "uint32_t",
+      "min": 100,
+      "max": 200
+    },
+    {
+      "name": "AliasTypeFloat",
+      "type": "float"
+    }
+  ]
+}

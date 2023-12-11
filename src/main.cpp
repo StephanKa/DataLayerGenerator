@@ -45,7 +45,7 @@ int main()
     CyclicGroup.printDatapoints();
 
     fmt::print("------------------------------------\nGroup: {:#06x}\n", DefaultGroupInfo.baseId);
-    Testify::test.set(42);
+    std::ignore = Testify::test.set(42);
     const auto versionTest = Testify::test.getVersion();
     fmt::print(R"(Datapoints
     id: {:#06x}
@@ -62,7 +62,7 @@ int main()
       versionTest.build);
 
     constexpr Temperature a{ .raw = 1234, .value = 42.2F };
-    test4.set(a);
+    std::ignore = test4.set(a);
     const auto test4Value = test4();
     constexpr auto version4Test = test4.getVersion();
     fmt::print("Test4 version: {}\n", version4Test);
@@ -88,9 +88,33 @@ int main()
     }
     fmt::print("errorCode: {}\n", errorCode());
 
+    fmt::print("TestAlias test under/overflow\n");
+    const auto checkMin = TestAlias.set(42);
+    switch (checkMin) {
+    case DataLayer::Detail::RangeCheck::underflow:
+        fmt::print("Value underflow\n");
+        break;
+    case DataLayer::Detail::RangeCheck::overflow:
+        fmt::print("Value overflow\n");
+        break;
+    default:
+        break;
+    }
+    const auto checkMax = TestAlias.set(222);
+    switch (checkMax) {
+    case DataLayer::Detail::RangeCheck::underflow:
+        fmt::print("Value underflow\n");
+        break;
+    case DataLayer::Detail::RangeCheck::overflow:
+        fmt::print("Value overflow\n");
+        break;
+    default:
+        break;
+    }
+
 #ifdef USE_FILE_PERSISTENCE
     const auto writeStatus = CyclicGroup.serializeGroup("sample.bin"sv);
-    test4.set({ .raw = 1111, .value = 12.345f });
+    std::ignore = test4.set({ .raw = 1111, .value = 12.345f });
     const auto readStatus = CyclicGroup.deserializeGroup("sample.bin"sv);
     fmt::print("writeStatus: {}\nreadStatus: {}\n", writeStatus.size, readStatus.size);
     const bool result = test4().raw == a.raw;

@@ -1,6 +1,6 @@
 ADD_CUSTOM_TARGET(python_tests COMMAND ${CMAKE_CTEST_COMMAND})
 
-FOREACH(TEST_NAME testEnumValidator testStructValidator testGroupValidator testDatapointValidator)
+FOREACH(TEST_NAME testEnumValidator testStructValidator testGroupValidator testDatapointValidator testTypesValidator)
     ADD_TEST(NAME python-${TEST_NAME}
              COMMAND ${Python_EXECUTABLE} ${TEST_NAME}.py
              WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/test/python)
