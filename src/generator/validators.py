@@ -60,7 +60,7 @@ class Parameter:
 
 
 class Version:
-    """Intermedoate class for parsing json data to struct for jinja."""
+    """Intermediate class for parsing json data to struct for jinja."""
 
     def __init__(self, version_str):
         """Split to major, minor and build version information.
