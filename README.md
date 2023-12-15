@@ -31,7 +31,7 @@ There are two different [docker images](docker). One image for CI and building a
 The following example can be found in main.cpp.
 
 ```c++
-#include "datalayerBase.h"
+#include "dispatcher.h"
 #include "helper.h"
 #include "include/version.hpp"
 #include <datalayer.h>

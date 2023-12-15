@@ -1,5 +1,5 @@
 #pragma once
-#include <datalayerBase.h>
+#include <dispatcher.h>
 #include <limits>
 
 {% macro datapoint(dp) -%}
@@ -44,25 +44,13 @@ DataLayer::DataPoint<
 {% if types | length > 0 -%}
 // defines all custom data types
 {% for type in types -%}
-struct {{ type.name }} : DataLayer::Detail::BaseType
+struct {{ type.name }} : DataLayer::Detail::BaseType<{{ type.type }}>
 {
     using Type = {{ type.type }};
     static constexpr Type Minimum{ {% if type.min %}{{ type.min }}{% else %}std::numeric_limits<Type>::min(){% endif %} };
     static constexpr Type Maximum{ {% if type.max %}{{ type.max }}{% else %}std::numeric_limits<Type>::max(){% endif %} };
 
-
-    constexpr {{ type.name }}() = default;
-    constexpr {{ type.name }}(const {{ type.type }}& val)
-    {
-        value = val;
-    }
-
-    constexpr auto operator()()
-    {
-        return value;
-    }
-
-    Type value{};
+    using BaseType<Type>::BaseType;
 };
 
 {% endfor %}
