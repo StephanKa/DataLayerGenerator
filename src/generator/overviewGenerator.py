@@ -8,14 +8,21 @@ class Overview:
         """Initialize overview class."""
         self.group_ids = group_ids
         self.datapoint_id = datapoint_id
-        self.data = [f'Name;Group;Id']
+        self.data = [f'Name;Group;Id;Namespace;Type;Version;Description']
         self.__generate_data()
 
     def __generate_data(self):
         """Create data list with datapoint, id and group name."""
         for dp in self.datapoint_id:
             temp_id = self.group_ids[dp['group']] + dp['id']
-            self.data.append(f'{dp["name"]};{dp["group"]};{temp_id:#x}')
+            description = ''
+            namespace = ''
+            if 'description' in dp and dp['description'] is not None:
+                description = dp['description']
+            if 'namespace' in dp:
+                namespace = dp['namespace']
+            self.data.append(f'{dp["name"]};{dp["group"]};{temp_id:#x};{namespace};{dp["type"]};{dp["version"]};'
+                             f'{description}')
 
     def __str__(self):
         """Return a string of UML content."""

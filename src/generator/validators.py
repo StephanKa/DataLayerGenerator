@@ -69,6 +69,13 @@ class Version:
         """
         self.major, self.minor, self.build = version_str.split('.')
 
+    def __str__(self):
+        """Create string for version information.
+
+        :return concatenated current version
+        """
+        return f'{self.major}.{self.minor}.{self.build}'
+
 
 def enum_validator(enum_data):
     """Check the given enum data for consistency, duplicated and autoId.
