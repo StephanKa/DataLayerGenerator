@@ -2,7 +2,9 @@
 
 #include <cstdint>
 #include <detail.h>
+#ifdef USE_FILE_PERSISTENCE
 #include <serialization.h>
+#endif
 #include <tuple>
 
 namespace DataLayer {
