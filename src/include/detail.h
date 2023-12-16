@@ -1,6 +1,8 @@
 #pragma once
 
 #include <array>
+#include <cstdint>
+#include <helper.h>
 
 namespace DataLayer::Detail {
 template<typename T, size_t N>
