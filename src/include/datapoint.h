@@ -16,7 +16,7 @@ class DataPoint
     consteval explicit DataPoint(T value) : m_value(value)
     {}
 
-    static constexpr char const *name = Name;
+    static constexpr std::string_view name{ Name };
 
     [[nodiscard]] constexpr static uint16_t getId()
     {

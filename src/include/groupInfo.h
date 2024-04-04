@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <helper.h>
+#include <string_view>
 
 namespace DataLayer {
 // group definitions
@@ -11,7 +12,7 @@ struct GroupInfo
     constexpr static Persistance persist{ persistence };
     constexpr static uint16_t baseId{ BaseId };
     constexpr static auto version{ Version };
-    static constexpr char const *name = Name;
-    constexpr static bool allowUpgrade = AllowUpgrade;
+    constexpr static std::string_view name{ Name };
+    constexpr static bool allowUpgrade{ AllowUpgrade };
 };
 }// namespace DataLayer

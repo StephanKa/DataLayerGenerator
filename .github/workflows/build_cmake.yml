@@ -13,7 +13,7 @@ jobs:
     name: Test docker images
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Build docker-ci image
         shell: bash
@@ -39,10 +39,10 @@ jobs:
                     {name: 'Clang 17', preset: clang-17, version: '17'}
                   ]
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Cache
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       env:
         cache-name: cache-conan-modules
       with:
@@ -99,7 +99,7 @@ jobs:
         os: [windows-2022]
         buildtype: [release]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install conan
         shell: bash
         run: |
@@ -131,7 +131,7 @@ jobs:
       run:
         shell: msys2 {0}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: msys2/setup-msys2@v2
         with:
           msystem: MINGW64
@@ -168,10 +168,10 @@ jobs:
         compiler: [{name: 'Clang 15', preset: clang-15, pkgs: 'clang-15 llvm-15 llvm-15-dev libclang-15-dev', iwyu_branch: 'clang_15', path_prefix: "/usr/lib/llvm-15"}]
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Cache
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       env:
         cache-name: cache-conan-modules
       with:
@@ -224,10 +224,10 @@ jobs:
         buildtype: [debug, release]
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Cache
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       env:
         cache-name: cache-conan-modules
       with:

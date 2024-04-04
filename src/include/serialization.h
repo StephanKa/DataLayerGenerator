@@ -127,11 +127,8 @@ struct Deserialization
     }
 
     Deserialization(const Deserialization &) = default;
-
     Deserialization &operator=(const Deserialization &) = default;
-
     Deserialization(Deserialization &&) noexcept = default;
-
     Deserialization &operator=(Deserialization &&) noexcept = default;
 
     [[nodiscard]] SerializationStatus read()
