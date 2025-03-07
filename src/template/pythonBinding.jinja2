@@ -1,10 +1,6 @@
-#include <include/datalayer.h>
+#include <pybind11/stl.h>
+#include "include/datalayer.h"
 #include <pybind11/pybind11.h>
-
-void dispatcherStructure()
-{
-    Dispatcher.printStructure();
-}
 
 {% for dp in data_points|sort(attribute='name')|sort(attribute='namespace') -%}
 struct {{ dp.name | title }}
@@ -15,7 +11,7 @@ struct {{ dp.name | title }}
 
 {% endfor %}
 
-PYBIND11_MODULE(conan_pybind11, m)
+PYBIND11_MODULE(datalayer_example, m)
 {
     {% if structs | length > 0 -%}
     // defines all custom made structures
@@ -25,7 +21,6 @@ PYBIND11_MODULE(conan_pybind11, m)
         {%- for parameter in struct.parameter | sort(attribute='name') %}
         .def_readwrite("{{ parameter.name }}", &{{ struct.name }}::{{ parameter.name }}){% if loop.last %};{% endif %}
         {%- endfor %}
-        // TODO .def("__str__", [](const {{ struct.name }} &value) { return {% for parameter in struct.parameter | sort(attribute='name') %}"{{ parameter.name }}=" + std::to_string(value.{{ parameter.name }}){% if not loop.last %} + " " + {% endif %} {% endfor -%} });
 
     {% endfor %}
     {% endif -%}
@@ -41,17 +36,14 @@ PYBIND11_MODULE(conan_pybind11, m)
     )pbdoc";
 
     {% for dp in data_points|sort(attribute='name')|sort(attribute='namespace') -%}
-    m.def("get{{ dp.name | title }}", &{{ dp.name | title }}::get, R"pbdoc(
-        get {{ dp.name }} data
-    )pbdoc");
-
-    m.def("set{{ dp.name | title }}", &{{ dp.name | title }}::set, R"pbdoc(
-        set {{ dp.name }} data
-    )pbdoc");
+    pybind11::class_<{{ dp.name | title }}>(m, "{{ dp.name | title }}")
+            .def(pybind11::init<>())
+            .def("get", &{{ dp.name | title }}::get)
+            .def("set", &{{ dp.name | title }}::set);
 
     {% endfor %}
 #ifdef VERSION_INFO
-    m.attr("__version__") = VERSION_INFO;
+    // TODO m.attr("__version__") = VERSION_INFO;
 #else
     m.attr("__version__") = "dev";
 #endif

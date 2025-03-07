@@ -1,73 +1,77 @@
 #pragma once
-
 #include <array>
 #include <cstdint>
 #include <helper.h>
+#include <variant>
 
-namespace DataLayer::Detail {
-template<typename T, size_t N>
-[[nodiscard]] constexpr std::array<T, N> make_array(T value) noexcept
+namespace DataLayer::Detail
 {
-    std::array<T, N> temp{};
-    for (auto &val : temp) {
-        val = value;
-    }
-    return temp;
-}
-
-template<typename Type>
-concept IsArray = requires(Type val)
-{
-    val.begin();
-};
-
-template<typename Type>
-struct BaseType
-{
-    constexpr BaseType() = default;
-
-    constexpr BaseType(const Type &val) : value(val)
-    {}
-
-    constexpr Type operator()()
+    template<typename T, size_t N>
+    [[nodiscard]] constexpr std::array<T, N> make_array(T value) noexcept
     {
-        return value;
+        std::array<T, N> temp{};
+        for (auto &val : temp)
+        {
+            val = value;
+        }
+        return temp;
     }
 
-    Type value{};
-};
+    template<typename Type>
+    concept IsArray = requires(Type val) { val.begin(); };
 
-enum class RangeCheck : std::uint8_t
-{
-    underflow,
-    overflow,
-    ok,
-    notChecked
-};
+    template<typename Type>
+    struct BaseType
+    {
+        constexpr BaseType() = default;
 
-struct CheckResult
-{
-    bool success{ false };
-    RangeCheck check{ RangeCheck::notChecked };
-};
+        constexpr BaseType(const auto &val) : value(static_cast<Type>(val))
+        {}
 
-template<typename T>
-[[nodiscard]] auto checkValue(T value) noexcept
-{
-    using Type = std::remove_cvref_t<T>;
-    if constexpr (Helper::is_base_template_of<BaseType, Type>::value) {
-        using UnderlyingType = typename Type::Type;
-        using RetType = std::variant<RangeCheck, UnderlyingType>;
-        if (value() < Type::Minimum) {
-            return RetType{ RangeCheck::underflow };
+        constexpr Type operator()() const noexcept
+        {
+            return value;
         }
-        if (value() > Type::Maximum) {
-            return RetType{ RangeCheck::overflow };
+
+        Type value{};
+    };
+
+    enum class RangeCheck : std::uint8_t
+    {
+        underflow,
+        overflow,
+        ok,
+        notChecked
+    };
+
+    struct CheckResult
+    {
+        bool success{ false };
+        RangeCheck check{ RangeCheck::notChecked };
+    };
+
+    template<typename T>
+    [[nodiscard]] auto checkValue(T value) noexcept
+    {
+        using Type = std::remove_cvref_t<T>;
+        if constexpr (Helper::is_base_template_of<BaseType, Type>::value)
+        {
+            using UnderlyingType = typename Type::Type;
+            using RetType = std::variant<RangeCheck, UnderlyingType>;
+            if (value() < Type::Minimum)
+            {
+                return RetType{ RangeCheck::underflow };
+            }
+            if (value() > Type::Maximum)
+            {
+                return RetType{ RangeCheck::overflow };
+            }
+            return RetType{ value() };
         }
-        return RetType{ value() };
-    } else {
-        using RetType = std::variant<RangeCheck, T>;
-        return RetType{ value };
+        else
+        {
+            using RetType = std::variant<RangeCheck, T>;
+            return RetType{ value };
+        }
     }
-}
 }// namespace DataLayer::Detail

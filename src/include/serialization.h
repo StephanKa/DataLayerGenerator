@@ -1,13 +1,9 @@
 #pragma once
-
-#include <array>
 #include <filesystem>
 #include <fstream>
 #include <helper.h>
-#include <iostream>
 #include <string>
 #include <tuple>
-#include <vector>
 
 enum class SerializationError : uint8_t
 {
@@ -26,10 +22,7 @@ struct SerializationStatus
 };
 
 template<typename Type>
-concept IsContainer = requires(Type val)
-{
-    val.size();
-};
+concept IsContainer = requires(Type val) { val.size(); };
 
 template<typename Type>
 concept IsString = std::is_same_v<char *, std::decay_t<Type>> || std::is_same_v<const char *, std::decay_t<Type>> || std::is_same_v<std::string, std::decay_t<Type>>;
@@ -37,7 +30,6 @@ concept IsString = std::is_same_v<char *, std::decay_t<Type>> || std::is_same_v<
 template<typename Data>
 struct Serialization
 {
-
     constexpr explicit Serialization(const Version &groupVersionInfo, std::string_view path, Data &input)
       : m_dataVariables(input), m_ofileNonPOD(path.data(), std::ios::binary), m_groupVersionInfo(groupVersionInfo)
     {}
@@ -71,7 +63,8 @@ struct Serialization
 
     void close()
     {
-        if (m_ofileNonPOD.is_open()) {
+        if (m_ofileNonPOD.is_open())
+        {
             m_ofileNonPOD.close();
         }
     }
@@ -80,7 +73,8 @@ struct Serialization
     bool static writeImpl(std::ofstream &ofile, auto &val, bool &ret, size_t &size)
     {
         ret = !ofile.fail();
-        if (ofile.fail()) {
+        if (ofile.fail())
+        {
             return true;
         }
 
@@ -89,17 +83,22 @@ struct Serialization
         size += sizeof(version);
         const auto value = val();
 
-        if constexpr (IsString<std::remove_cvref_t<decltype(value)>>) {
+        if constexpr (IsString<std::remove_cvref_t<decltype(value)>>)
+        {
             const auto valueSize = value.size();
             ofile.write(reinterpret_cast<const char *>(&valueSize), sizeof(valueSize));
             size += sizeof(valueSize);
             ofile.write(reinterpret_cast<const char *>(value.data()), valueSize);
             size += valueSize;
-        } else if constexpr (IsContainer<std::remove_cvref_t<decltype(value)>>) {
+        }
+        else if constexpr (IsContainer<std::remove_cvref_t<decltype(value)>>)
+        {
             constexpr auto valueSize = sizeof(std::remove_extent_t<decltype(value)>);
             ofile.write(reinterpret_cast<const char *>(value.data()), valueSize);
             size += valueSize;
-        } else {
+        }
+        else
+        {
             ofile.write(reinterpret_cast<const char *>(&value), sizeof(value));
             size += sizeof(value);
         }
@@ -121,7 +120,8 @@ struct Deserialization
 
     ~Deserialization()
     {
-        if (m_ifileNonPOD.is_open()) {
+        if (m_ifileNonPOD.is_open())
+        {
             m_ifileNonPOD.close();
         }
     }
@@ -135,19 +135,21 @@ struct Deserialization
     {
         bool ret = true;
         size_t size = 0;
-        SerializationError error = SerializationError::None;
+        auto error = SerializationError::None;
 
         Version groupVersionTemp;
         m_ifileNonPOD.read(reinterpret_cast<char *>(&groupVersionTemp), sizeof(groupVersionTemp));
         size += sizeof(groupVersionTemp);
-        if ((groupVersionTemp > m_groupVersionInfo) && !m_allowUpgrade) {
+        if ((groupVersionTemp > m_groupVersionInfo) && !m_allowUpgrade)
+        {
             error = SerializationError::GroupVersion;
         }
         return std::apply(
           [this, &ret, &size, &error](auto &...args) {
               ((readImpl(m_ifileNonPOD, args, ret, size, m_fileSize, error)) || ... || true);
 
-              if ((size < m_fileSize) && (error == SerializationError::None)) {
+              if ((size < m_fileSize) && (error == SerializationError::None))
+              {
                   error = SerializationError::NotAllBytesRead;
               }
               return SerializationStatus{ ret, size, error };
@@ -159,7 +161,8 @@ struct Deserialization
     bool static readImpl(std::ifstream &ifile, auto &val, bool &ret, size_t &size, const size_t fileSize, SerializationError &error)
     {
         ret &= !ifile.fail();
-        if (ifile.fail()) {
+        if (ifile.fail())
+        {
             return true;
         }
 
@@ -168,36 +171,47 @@ struct Deserialization
         size += sizeof(temp);
         auto tempValue = val();
 
-        if constexpr (IsString<std::remove_cvref_t<decltype(tempValue)>>) {
+        if constexpr (IsString<std::remove_cvref_t<decltype(tempValue)>>)
+        {
             size_t valueSize{ 0 };
             size += sizeof(valueSize);
-            if (fileSize < size) {
+            if (fileSize < size)
+            {
                 return false;
             }
             ifile.read(reinterpret_cast<char *>(&valueSize), sizeof(valueSize));
             tempValue.reserve(valueSize);
             size += valueSize;
-            if (fileSize < size) {
+            if (fileSize < size)
+            {
                 return false;
             }
             ifile.read(reinterpret_cast<char *>(&tempValue.front()), valueSize);
-        } else if constexpr (IsContainer<std::remove_cvref_t<decltype(tempValue)>>) {
+        }
+        else if constexpr (IsContainer<std::remove_cvref_t<decltype(tempValue)>>)
+        {
             constexpr auto valueSize = sizeof(std::remove_extent_t<decltype(tempValue)>);
             size += valueSize;
-            if (fileSize < size) {
+            if (fileSize < size)
+            {
                 return false;
             }
             ifile.read(reinterpret_cast<char *>(&tempValue.front()), valueSize);
-        } else {
+        }
+        else
+        {
             size += sizeof(tempValue);
-            if (fileSize < size) {
+            if (fileSize < size)
+            {
                 return false;
             }
             ifile.read(reinterpret_cast<char *>(&tempValue), sizeof(tempValue));
         }
-        if ((temp > val.getVersion()) && !val.getIsUpgradeAllowed()) {
+        if ((temp > val.getVersion()) && !val.getIsUpgradeAllowed())
+        {
             ret = false;
-            switch (error) {
+            switch (error)
+            {
             case SerializationError::None: {
                 error = SerializationError::DatapointVersion;
                 break;

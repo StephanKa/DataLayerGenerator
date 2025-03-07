@@ -43,8 +43,8 @@ ELSE()
         FIND_PACKAGE(Python COMPONENTS Interpreter Development REQUIRED)
         FIND_PACKAGE(pybind11 REQUIRED)
 
-        SET_SOURCE_FILES_PROPERTIES(${CMAKE_BINARY_DIR}/generated/python/pythonBinding.cpp PROPERTIES GENERATED TRUE)
-        PYBIND11_ADD_MODULE(conan_pybind11 ${CMAKE_BINARY_DIR}/generated/python/pythonBinding.cpp)
+        SET_SOURCE_FILES_PROPERTIES(${CMAKE_BINARY_DIR}/generated/datalayer_example/pythonBinding.cpp PROPERTIES GENERATED TRUE)
+        PYBIND11_ADD_MODULE(conan_pybind11 ${CMAKE_BINARY_DIR}/generated/datalayer_example/pythonBinding.cpp)
         TARGET_LINK_LIBRARIES(conan_pybind11
                               PRIVATE
                               project_warnings
@@ -52,9 +52,17 @@ ELSE()
         TARGET_INCLUDE_DIRECTORIES(conan_pybind11 PRIVATE ${CMAKE_BINARY_DIR}/generated ${CMAKE_CURRENT_SOURCE_DIR}/include)
         ADD_DEPENDENCIES(conan_pybind11 GenerateDataLayer)
         ADD_CUSTOM_COMMAND(TARGET conan_pybind11 POST_BUILD
-                           COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:conan_pybind11> ${CMAKE_BINARY_DIR}/install/bin/$<TARGET_FILE_NAME:conan_pybind11>)
-        ADD_CUSTOM_COMMAND(TARGET conan_pybind11 POST_BUILD
-                           COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_BINARY_DIR}/generated ${CMAKE_BINARY_DIR}/install/generated)
+                           COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:conan_pybind11> ${CMAKE_BINARY_DIR}/install/bin/$<TARGET_FILE_NAME:conan_pybind11>
+                           COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_BINARY_DIR}/generated ${CMAKE_BINARY_DIR}/install/generated
+                           COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/../datalayer_example ${CMAKE_BINARY_DIR}/install/generated/datalayer_example
+                           COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_BINARY_DIR}/generated/include ${CMAKE_BINARY_DIR}/install/generated/datalayer_example/include
+                           COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_BINARY_DIR}/install/generated/datalayer_example/include)
+
+        ADD_CUSTOM_COMMAND(
+                TARGET conan_pybind11 POST_BUILD
+                WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/install/generated/datalayer_example
+                COMMAND ${CMAKE_COMMAND} -E tar "cvf" "${CMAKE_BINARY_DIR}/install/datalayer_example_pkg.zip" --format=zip .
+        )
     ENDIF()
 ENDIF()
 

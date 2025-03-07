@@ -1,16 +1,14 @@
 #pragma once
-
 #include <array>
-#include <cstring>
 
-namespace DataLayer {
-
-enum class Persistance : uint8_t
+namespace DataLayer
 {
-    None,
-    Cyclic,
-    OnWrite
-};
+    enum class Persistance : uint8_t
+    {
+        None,
+        Cyclic,
+        OnWrite
+    };
 }
 
 struct Version
@@ -42,7 +40,8 @@ struct FixedString
 
     consteval FixedString(char const *input)
     {
-        for (unsigned i = 0; i != N; ++i) {
+        for (unsigned i = 0; i != N; ++i)
+        {
             buf[i] = input[i];
         }
     }
@@ -56,64 +55,64 @@ struct FixedString
 template<unsigned N>
 FixedString(const char (&)[N]) -> FixedString<N - 1>;
 
-namespace Helper {
-// helper classes
-struct READONLY
+namespace Helper
 {
-};
+    // helper classes
+    struct READONLY
+    {
+    };
 
-struct WRITEONLY
-{
-};
+    struct WRITEONLY
+    {
+    };
 
-struct READWRITE
-  : public READONLY
-  , public WRITEONLY
-{
-};
+    struct READWRITE
+      : READONLY
+      , WRITEONLY
+    {
+    };
 
-// helper concepts
-template<typename Access>
-concept WriteConcept = std::is_same_v<Access, READWRITE> || std::is_same_v<Access, WRITEONLY>;
+    // helper concepts
+    template<typename Access>
+    concept WriteConcept = std::is_same_v<Access, READWRITE> || std::is_same_v<Access, WRITEONLY>;
 
-template<typename Access>
-concept ReadConcept = std::is_same_v<Access, READWRITE> || std::is_same_v<Access, READONLY>;
-
-
-template<template<typename...> class BaseTemplate, typename Derived, typename TCheck = void>
-struct testBaseTemplate;
-
-template<template<typename...> class BaseTemplate, typename Derived>
-using is_base_template_of = typename testBaseTemplate<BaseTemplate, Derived>::is_base;
-
-// Derive - is a class. Let inherit from Derive, so it can cast to its protected parents
-template<template<typename...> class BaseTemplate, typename Derived>
-struct testBaseTemplate<BaseTemplate, Derived, std::enable_if_t<std::is_class_v<Derived>>> : Derived
-{
-    template<typename... T>
-    static constexpr std::true_type test(BaseTemplate<T...> *);
-
-    static constexpr std::false_type test(...);
-
-    using is_base = decltype(test(static_cast<testBaseTemplate *>(nullptr)));
-};
-
-// Derive - is not a class, so it is always false_type
-template<template<typename...> class BaseTemplate, typename Derived>
-struct testBaseTemplate<BaseTemplate, Derived, std::enable_if_t<!std::is_class_v<Derived>>>
-{
-    using is_base = std::false_type;
-};
-
-// helper type for the visitor #4
-template<class... Ts>
-struct overloaded : Ts...
-{
-    using Ts::operator()...;
-};
-// explicit deduction guide (not needed as of C++20)
-template<class... Ts>
-overloaded(Ts...) -> overloaded<Ts...>;
+    template<typename Access>
+    concept ReadConcept = std::is_same_v<Access, READWRITE> || std::is_same_v<Access, READONLY>;
 
 
+    template<template<typename...> class BaseTemplate, typename Derived, typename TCheck = void>
+    struct testBaseTemplate;
+
+    template<template<typename...> class BaseTemplate, typename Derived>
+    using is_base_template_of = typename testBaseTemplate<BaseTemplate, Derived>::is_base;
+
+    // Derive - is a class. Let inherit from Derive, so it can cast to its protected parents
+    template<template<typename...> class BaseTemplate, typename Derived>
+    struct testBaseTemplate<BaseTemplate, Derived, std::enable_if_t<std::is_class_v<Derived>>> : Derived
+    {
+        template<typename... T>
+        static constexpr std::true_type test(BaseTemplate<T...> *);
+
+        static constexpr std::false_type test(...);
+
+        using is_base = decltype(test(static_cast<testBaseTemplate *>(nullptr)));
+    };
+
+    // Derive - is not a class, so it is always false_type
+    template<template<typename...> class BaseTemplate, typename Derived>
+    struct testBaseTemplate<BaseTemplate, Derived, std::enable_if_t<!std::is_class_v<Derived>>>
+    {
+        using is_base = std::false_type;
+    };
+
+    // helper type for the visitor #4
+    template<class... Ts>
+    struct overloaded : Ts...
+    {
+        using Ts::operator()...;
+    };
+
+    // explicit deduction guide (not needed as of C++20)
+    template<class... Ts>
+    overloaded(Ts...) -> overloaded<Ts...>;
 }// namespace Helper

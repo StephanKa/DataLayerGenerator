@@ -14,7 +14,7 @@ from overviewGenerator import generate_overview
 
 GENERATED_FOLDER = '/generated/include'
 DOC_FOLDER = '/generated/doc'
-PYTHON_FOLDER = '/generated/python'
+PYTHON_FOLDER = '/generated/datalayer_example'
 
 
 def validate_json(model_data, schema):

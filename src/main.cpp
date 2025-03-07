@@ -1,9 +1,9 @@
-#include "dispatcher.h"// for DataPoint, GroupDataPointMapping, Dis...
-#include "helper.h"// for Version
-#include <fmt/format.h>// for print, basic_string_view, formatter
-#include <include/datalayer.h>// for Temperature, test, test4, CyclicGroup
+#include "dispatcher.h"
+#include "helper.h"
+#include <fmt/format.h>
+#include <include/datalayer.h>
 #include <include/formatter.h>
-#include <include/version.hpp>// for SoftwareVersion
+#include <include/version.hpp>
 
 using namespace std::string_view_literals;
 
@@ -78,19 +78,21 @@ int main()
     Dispatcher.printStructure();
 
     fmt::print("arrayTest\n");
-    for (const auto &value : arrayTest.get()) {
+    for (const auto &value : arrayTest.get())
+    {
         fmt::print("{}\n", value);
     }
 
     fmt::print("arrayTest2\n");
-    for (const auto &value : Testify::arrayTest2.get()) {
+    for (const auto &value : Testify::arrayTest2.get())
+    {
         fmt::print("{}\n", value);
     }
     fmt::print("errorCode: {}\n", errorCode());
 
     fmt::print("TestAlias test under/overflow\n");
-    const auto checkMin = TestAlias.set(42);
-    switch (checkMin) {
+    switch (TestAlias.set(42))
+    {
     case DataLayer::Detail::RangeCheck::underflow:
         fmt::print("Value underflow\n");
         break;
@@ -101,7 +103,8 @@ int main()
         break;
     }
     const auto checkMax = TestAlias.set(222);
-    switch (checkMax) {
+    switch (checkMax)
+    {
     case DataLayer::Detail::RangeCheck::underflow:
         fmt::print("Value underflow\n");
         break;
