@@ -19,15 +19,14 @@ BinPackArguments: false
 BinPackParameters: false
 BraceWrapping:
   AfterClass: true
-  AfterControlStatement: false
+  AfterControlStatement: true
   AfterEnum: true
   AfterFunction: true
-  AfterNamespace: false
-  AfterObjCDeclaration: false
+  AfterNamespace: true
   AfterStruct: true
   AfterUnion: false
   BeforeCatch: false
-  BeforeElse: false
+  BeforeElse: true
   IndentBraces: false
   SplitEmptyFunction: false
   SplitEmptyNamespace: true
@@ -73,7 +72,7 @@ Language: Cpp
 MacroBlockBegin: ''
 MacroBlockEnd: ''
 MaxEmptyLinesToKeep: 2
-NamespaceIndentation: Inner
+NamespaceIndentation: All
 PointerAlignment: Right
 ReflowComments: true
 SortIncludes: CaseSensitive

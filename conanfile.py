@@ -1,5 +1,4 @@
 """Conanfile module for this project."""
-import conans.model.requires
 from conan import ConanFile
 from conan.tools.cmake import CMakeToolchain
 
@@ -11,12 +10,19 @@ class ProjectConan(ConanFile):
     default_options = {'fmt/*:header_only': True}
     generators = 'CMakeDeps', 'CMakeToolchain'
 
+    def requirements(self):
+        """Override the requirements method and define packages depending on the arch type."""
+        if self.settings.get_safe('arch') == 'armv7':
+            self.requires('fmt/11.1.4')
+        else:
+            self.requires('catch2/3.8.0')
+            self.requires('fmt/11.1.4')
+            self.requires('pybind11/2.13.6')
+
     def configure(self):
         """Override the configure method and defines different requirements for different architectures."""
-        if self.settings.get_safe('arch') == 'armv7':
-            self.requires = conans.model.requires.Requirements(['fmt/10.1.0'])
-        else:
-            self.requires = conans.model.requires.Requirements(['catch2/3.4.0', 'fmt/10.1.0', 'pybind11/2.10.4'])
+        cmake = CMakeToolchain(self)
+        cmake.user_presets_path = None
 
     def build(self):
         """Override the build method."""
