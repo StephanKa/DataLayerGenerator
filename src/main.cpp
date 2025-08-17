@@ -17,7 +17,7 @@ struct fmt::formatter<SoftwareVersion>
     }
 
     template<typename FormatContext>
-    auto format(const SoftwareVersion &version, FormatContext &ctx)
+    auto format(const SoftwareVersion &version, FormatContext &ctx) const
     {
         return fmt::format_to(ctx.out(), "Major: {} Minor: {} Build: {} Githash: {}", version.Major, version.Minor, version.Patch, version.GitHash);
     }
@@ -33,7 +33,7 @@ struct fmt::formatter<Version>
     }
 
     template<typename FormatContext>
-    auto format(const Version &version, FormatContext &ctx)
+    auto format(const Version &version, FormatContext &ctx) const
     {
         return fmt::format_to(ctx.out(), "Major: {} Minor: {} Build: {}", version.major, version.minor, version.build);
     }
