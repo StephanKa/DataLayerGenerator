@@ -36,11 +36,13 @@ jobs:
                     {name: 'GCC 12', preset: gcc-12, pkgs: 'gcc-12 g++-12 lib32gcc-12-dev gcc-multilib'},
                     {name: 'GCC 13', preset: gcc-13, pkgs: 'gcc-13 g++-13 lib32gcc-13-dev gcc-multilib'},
                     {name: 'GCC 14', preset: gcc-14, pkgs: 'gcc-14 g++-14 lib32gcc-14-dev gcc-multilib'},
+                    {name: 'GCC 15', preset: gcc-15, pkgs: 'gcc-15 g++-15 lib32gcc-15-dev gcc-multilib'},
                     {name: 'Clang 15', preset: clang-15, version: '15'},
                     {name: 'Clang 16', preset: clang-16, version: '16'},
                     {name: 'Clang 17', preset: clang-17, version: '17'},
                     {name: 'Clang 18', preset: clang-18, version: '18'},
-                    {name: 'Clang 19', preset: clang-19, version: '19'}
+                    {name: 'Clang 19', preset: clang-19, version: '19'},
+                    {name: 'Clang 20', preset: clang-20, version: '20'}
                   ]
     steps:
     - uses: actions/checkout@v4
@@ -254,8 +256,8 @@ jobs:
 
     - name: Install GCC ARM
       run:   |
-             wget -O archive.tar.xz "https://developer.arm.com/-/media/Files/downloads/gnu/12.2.rel1/binrel/arm-gnu-toolchain-12.2.rel1-x86_64-arm-none-eabi.tar.xz?rev=7bd049b7a3034e64885fa1a71c12f91d&hash=732D909FA8F68C0E1D0D17D08E057619" && \
-             echo 84be93d0f9e96a15addd490b6e237f588c641c8afdf90e7610a628007fc96867 archive.tar.xz > /tmp/archive.sha256 && sha256sum -c /tmp/archive.sha256 && rm /tmp/archive.sha256 && \
+             wget -O archive.tar.xz "https://developer.arm.com/-/media/Files/downloads/gnu/15.2.rel1/binrel/arm-gnu-toolchain-15.2.rel1-x86_64-arm-none-eabi.tar.xz" && \
+             echo 597893282ac8c6ab1a4073977f2362990184599643b4c5ee34870a8215783a16 archive.tar.xz > /tmp/archive.sha256 && sha256sum -c /tmp/archive.sha256 && rm /tmp/archive.sha256 && \
              tar xf archive.tar.xz -C /opt
       shell: bash
 
