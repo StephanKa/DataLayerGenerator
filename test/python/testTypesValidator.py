@@ -55,6 +55,41 @@ class TestTypesValidator(unittest.TestCase):
         test_data = [{'name': 'Temperature', 'type': 'uint32_t'}, {'name': 'Temperature', 'type': 'uint16_t'}]
         self.assertRaises(generator.TypeException, generator.type_validator, test_data)
 
+    def test_empty_type_list(self):
+        """Test that an empty list is valid and returned unchanged."""
+        result = generator.type_validator([])
+        self.assertEqual(result, [])
+
+    def test_multiple_valid_types(self):
+        """Test that multiple distinct types with different base types are all valid."""
+        test_data = [
+            {'name': 'TypeA', 'type': 'uint32_t', 'min': 0, 'max': 100},
+            {'name': 'TypeB', 'type': 'float'}
+        ]
+        generator.type_validator(test_data)
+
+    def test_float_min_max_valid(self):
+        """Test that float min/max values are accepted."""
+        test_data = [{'name': 'FloatRange', 'type': 'float', 'min': -1.5, 'max': 1.5}]
+        generator.type_validator(test_data)
+
+    def test_negative_range_valid(self):
+        """Test that a negative min and negative max (min < max) is valid."""
+        test_data = [{'name': 'NegRange', 'type': 'int32_t', 'min': -100, 'max': -10}]
+        generator.type_validator(test_data)
+
+    def test_missing_type_key_raises(self):
+        """Test that a type definition missing the 'type' field raises TypeException."""
+        test_data = [{'name': 'NoType'}]
+        self.assertRaises(generator.TypeException, generator.type_validator, test_data)
+
+    def test_min_max_defaulted_to_none_when_absent(self):
+        """Test that min and max are set to None when not provided."""
+        test_data = [{'name': 'T', 'type': 'uint32_t'}]
+        result = generator.type_validator(test_data)
+        self.assertIsNone(result[0]['min'])
+        self.assertIsNone(result[0]['max'])
+
 
 if __name__ == '__main__':
     unittest.main()

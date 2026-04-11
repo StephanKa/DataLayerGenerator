@@ -25,7 +25,7 @@ TEST_CASE("Test groups", "[Groups]")
 
     SECTION("default group persistence")
     {
-        REQUIRE(DefaultGroupInfo.persist == DataLayer::Persistance::None);
+        REQUIRE(DefaultGroupInfo.persist == DataLayer::PersistenceType::None);
     }
 
     SECTION("cyclic group name")
@@ -49,7 +49,7 @@ TEST_CASE("Test groups", "[Groups]")
 
     SECTION("cyclic group persistence")
     {
-        REQUIRE(DefaultCyclicGroupInfo.persist == DataLayer::Persistance::Cyclic);
+        REQUIRE(DefaultCyclicGroupInfo.persist == DataLayer::PersistenceType::Cyclic);
     }
 
     SECTION("on-write group name")
@@ -73,6 +73,37 @@ TEST_CASE("Test groups", "[Groups]")
 
     SECTION("on-write group persistence")
     {
-        REQUIRE(DefaultOnWriteGroupInfo.persist == DataLayer::Persistance::OnWrite);
+        REQUIRE(DefaultOnWriteGroupInfo.persist == DataLayer::PersistenceType::OnWrite);
+    }
+
+    SECTION("default group allowUpgrade is true")
+    {
+        static_assert(DefaultGroupInfo.allowUpgrade == true);
+    }
+
+    SECTION("cyclic group allowUpgrade defaults to false")
+    {
+        static_assert(DefaultCyclicGroupInfo.allowUpgrade == false);
+    }
+
+    SECTION("on-write group allowUpgrade defaults to false")
+    {
+        static_assert(DefaultOnWriteGroupInfo.allowUpgrade == false);
+    }
+
+    SECTION("group base ids are distinct")
+    {
+        static_assert(DefaultGroupInfo.baseId != DefaultCyclicGroupInfo.baseId);
+        static_assert(DefaultCyclicGroupInfo.baseId != DefaultOnWriteGroupInfo.baseId);
+        static_assert(DefaultGroupInfo.baseId != DefaultOnWriteGroupInfo.baseId);
+    }
+
+    SECTION("group versions are independent")
+    {
+        constexpr auto v1 = DefaultGroupInfo.version;
+        constexpr auto v2 = DefaultCyclicGroupInfo.version;
+        constexpr auto v3 = DefaultOnWriteGroupInfo.version;
+        REQUIRE(v1.major != v2.major);
+        REQUIRE(v2.major != v3.major);
     }
 }

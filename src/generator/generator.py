@@ -60,6 +60,8 @@ def get_args():
     parser.add_argument('-t', '--template_dir', required=True,
                         help='Template directory where the jinja2 templates are located.')
     parser.add_argument('-c', '--schema_dir', required=True, help='Scheme directory where the schema.json is located.')
+    parser.add_argument('-n', '--module_name', required=False, default='datalayer_example',
+                        help='Python module name used in the generated pybind11 binding (default: datalayer_example).')
     if sys.version_info < (3, 9):
         parser.add_argument('-x', '--convert', action='store_true', help='flag for converting json to yaml')
     else:
@@ -92,9 +94,7 @@ def read_model_files(args):
                     name_without_yaml = name[:name.rfind('.')]
                     with open(os.path.join(root, f'{name_without_yaml}.json'), 'w') as json_file:
                         json.dump(tmp_dict, json_file, indent=2)
-
-            if json_data is None:
-                json_data = tmp_dict
+            if tmp_dict is None:
                 continue
             if 'Enums' in tmp_dict:
                 json_data['Enums'].extend(tmp_dict['Enums'])
@@ -161,7 +161,8 @@ def main(template_file_name, template_formatter_file_name, python_binding_file_n
 
     template = env.get_template(python_binding_file_name)
     output = template.render(enums=enums, groups=groups, structs=structs, data_points=data_points,
-                             group_data_points_mapping=group_data_points_mapping, prefix_map=PREFIX_MAP)
+                             group_data_points_mapping=group_data_points_mapping, prefix_map=PREFIX_MAP,
+                             module_name=args.module_name)
     with open(f'{args.out_dir}{PYTHON_FOLDER}/pythonBinding.cpp', 'w') as f:
         f.write(output)
 

@@ -1,5 +1,6 @@
 #pragma once
 #include <array>
+#include <concepts>
 #include <cstdint>
 #include <helper.h>
 #include <variant>
@@ -18,14 +19,14 @@ namespace DataLayer::Detail
     }
 
     template<typename Type>
-    concept IsArray = requires(Type val) { val.begin(); };
+    concept IsArray = requires { typename Type::value_type; } && !std::is_same_v<std::decay_t<Type>, std::string>;
 
     template<typename Type>
     struct BaseType
     {
         constexpr BaseType() = default;
 
-        constexpr BaseType(const auto &val) : value(static_cast<Type>(val))
+        constexpr BaseType(const auto &val) : value{ static_cast<Type>(val) }
         {}
 
         constexpr Type operator()() const noexcept
@@ -50,13 +51,19 @@ namespace DataLayer::Detail
         RangeCheck check{ RangeCheck::notChecked };
     };
 
+    template<typename Type>
+    concept hasRange = requires {
+        Type::Minimum;
+        Type::Maximum;
+    };
+
     template<typename T>
     [[nodiscard]] auto checkValue(T value) noexcept
     {
         using Type = std::remove_cvref_t<T>;
-        if constexpr (Helper::is_base_template_of<BaseType, Type>::value)
+        if constexpr (hasRange<Type>)
         {
-            using UnderlyingType = typename Type::Type;
+            using UnderlyingType = Type::Type;
             using RetType = std::variant<RangeCheck, UnderlyingType>;
             if (value() < Type::Minimum)
             {

@@ -29,13 +29,13 @@
 * {{ dp.description }}
 */
 {% endif -%}
-DataLayer::DataPoint<
+constinit DataLayer::DataPoint<
 {%- if dp.arraySize > 0 -%}
         std::array<{{ dp.type }}, {{ dp.arraySize }}>
     {%- else -%}
         {{ dp.type }}
     {%- endif -%}
-    , {{ dp.group }}Info, 0x{{ "%0x" | format( dp.id | int) }}, Helper::{{ dp.access }}, Version{ {{ dp.version.major }}, {{ dp.version.minor }}, {{ dp.version.build }} }, "{{ dp.name }}", {{ dp.allowUpgrade }}> {{ dp.name }}
+    , {{ dp.group }}Info, 0x{{ "%0x" | format( dp.id | int) }}, Helper::{{ dp.access }}, Version{ {{ dp.version.major }}, {{ dp.version.minor }}, {{ dp.version.build }} }, FixedString{"{{ dp.name }}"}, {{ dp.allowUpgrade }}> {{ dp.name }}
     {%- if 'default' in dp -%}
     ({{ datapoint(dp) }})
 {%- endif %};
@@ -95,7 +95,7 @@ struct {{ struct.name }}
 * {{ group.description }}
 */
 {% endif -%}
-constexpr DataLayer::GroupInfo<{{ group.baseId }}, "{{ group.name }}", {{ group.allowUpgrade }}, DataLayer::Persistance::{{ group.persistence }}, Version{ {{ group.version.major }}, {{ group.version.minor }}, {{ group.version.build }} }> {{ group.name }}Info;
+constexpr DataLayer::GroupInfo<{{ group.baseId }}, FixedString{"{{ group.name }}"}, {{ group.allowUpgrade }}, DataLayer::PersistenceType::{{ group.persistence }}, Version{ {{ group.version.major }}, {{ group.version.minor }}, {{ group.version.build }} }> {{ group.name }}Info;
 {% endfor %}
 
 {%- set namespace_name = namespace(value="") %}

@@ -15,6 +15,9 @@
       "type": "uint32_t",
       "values": [
         {
+          "None": 0
+        },
+        {
           "Info": 1
         },
         {

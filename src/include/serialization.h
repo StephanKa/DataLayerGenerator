@@ -39,10 +39,10 @@ struct Serialization
         close();
     }
 
-    Serialization(const Serialization &) = default;
-    Serialization &operator=(const Serialization &) = default;
-    Serialization(Serialization &&) noexcept = default;
-    Serialization &operator=(Serialization &&) noexcept = default;
+    Serialization(const Serialization &) = delete;
+    Serialization &operator=(const Serialization &) = delete;
+    Serialization(Serialization &&) noexcept = delete;
+    Serialization &operator=(Serialization &&) noexcept = delete;
 
     [[nodiscard]] SerializationStatus write()
     {
@@ -126,10 +126,10 @@ struct Deserialization
         }
     }
 
-    Deserialization(const Deserialization &) = default;
-    Deserialization &operator=(const Deserialization &) = default;
-    Deserialization(Deserialization &&) noexcept = default;
-    Deserialization &operator=(Deserialization &&) noexcept = default;
+    Deserialization(const Deserialization &) = delete;
+    Deserialization &operator=(const Deserialization &) = delete;
+    Deserialization(Deserialization &&) noexcept = delete;
+    Deserialization &operator=(Deserialization &&) noexcept = delete;
 
     [[nodiscard]] SerializationStatus read()
     {
@@ -180,13 +180,13 @@ struct Deserialization
                 return false;
             }
             ifile.read(reinterpret_cast<char *>(&valueSize), sizeof(valueSize));
-            tempValue.reserve(valueSize);
+            tempValue.resize(valueSize);
             size += valueSize;
             if (fileSize < size)
             {
                 return false;
             }
-            ifile.read(reinterpret_cast<char *>(&tempValue.front()), valueSize);
+            ifile.read(reinterpret_cast<char *>(tempValue.data()), valueSize);
         }
         else if constexpr (IsContainer<std::remove_cvref_t<decltype(tempValue)>>)
         {
@@ -196,7 +196,7 @@ struct Deserialization
             {
                 return false;
             }
-            ifile.read(reinterpret_cast<char *>(&tempValue.front()), valueSize);
+            ifile.read(reinterpret_cast<char *>(tempValue.data()), valueSize);
         }
         else
         {

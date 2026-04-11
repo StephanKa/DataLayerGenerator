@@ -1,7 +1,7 @@
 {
   "Datapoints": [
     {
-      "access": "READWRITE",
+      "access": "READ_WRITE",
       "default": {
         "raw": 4711,
         "value": 123.0
@@ -13,7 +13,7 @@
       "version": "1.0.22"
     },
     {
-      "access": "READONLY",
+      "access": "READ_ONLY",
       "group": "DefaultGroup",
       "id": 8,
       "name": "testWithoutDefaultValue",
@@ -21,7 +21,7 @@
       "version": "2.10.223"
     },
     {
-      "access": "WRITEONLY",
+      "access": "WRITE_ONLY",
       "group": "DefaultGroup",
       "id": 12,
       "name": "testWithoutDefaultValueWriteOnly",
@@ -38,7 +38,7 @@
         "value": 123.0,
         "raw": 5555
       },
-      "access": "READWRITE",
+      "access": "READ_WRITE",
       "version": "1.0.1"
     },
     {
@@ -48,7 +48,7 @@
       "type": "int32_t",
       "arraySize": 10,
       "default": 1234,
-      "access": "READWRITE",
+      "access": "READ_WRITE",
       "version": "1.0.1"
     },
     {
@@ -56,7 +56,7 @@
       "group": "DefaultGroup",
       "id": 42,
       "type": "Environment",
-      "access": "READWRITE",
+      "access": "READ_WRITE",
       "version": "1.0.1",
       "default": {
         "internal": {
@@ -70,7 +70,7 @@
       }
     },
     {
-      "access": "READWRITE",
+      "access": "READ_WRITE",
       "default": {
         "raw": 4711,
         "value": 123.0
@@ -82,7 +82,7 @@
       "version": "2.0.22"
     },
     {
-      "access": "READONLY",
+      "access": "READ_ONLY",
       "group": "SecondGroup",
       "id": 8,
       "name": "testWithoutDefaultValueSecond",
@@ -90,7 +90,7 @@
       "version": "3.10.223"
     },
     {
-      "access": "WRITEONLY",
+      "access": "WRITE_ONLY",
       "group": "SecondGroup",
       "id": 12,
       "name": "testWithoutDefaultValueWriteOnlySecond",
@@ -107,7 +107,7 @@
         "value": 123.0,
         "raw": 5555
       },
-      "access": "READWRITE",
+      "access": "READ_WRITE",
       "version": "1.0.2"
     },
     {
@@ -117,7 +117,7 @@
       "type": "int32_t",
       "arraySize": 10,
       "default": 1234,
-      "access": "READWRITE",
+      "access": "READ_WRITE",
       "version": "1.0.3"
     },
     {
@@ -125,7 +125,7 @@
       "group": "SecondGroup",
       "id": 42,
       "type": "Environment",
-      "access": "READWRITE",
+      "access": "READ_WRITE",
       "version": "1.0.1",
       "default": {
         "internal": {
@@ -139,7 +139,7 @@
       }
     },
     {
-      "access": "READWRITE",
+      "access": "READ_WRITE",
       "group": "OldGroup",
       "id": 4,
       "name": "OldGroupDatapoint",
@@ -147,7 +147,7 @@
       "version": "1.0.22"
     },
     {
-      "access": "READWRITE",
+      "access": "READ_WRITE",
       "group": "NewerGroup",
       "id": 4,
       "name": "NewGroupDatapoint",
@@ -155,7 +155,7 @@
       "version": "1.0.22"
     },
     {
-      "access": "READWRITE",
+      "access": "READ_WRITE",
       "group": "NewerGroupAndDatapoint",
       "id": 4,
       "name": "NewerGroupDatapoint",
@@ -163,7 +163,7 @@
       "version": "2.0.0"
     },
     {
-      "access": "READWRITE",
+      "access": "READ_WRITE",
       "group": "AllowUpgradeGroup",
       "id": 4,
       "name": "UpgradableDatapoint",
@@ -172,7 +172,7 @@
       "allowUpgrade": true
     },
     {
-      "access": "READWRITE",
+      "access": "READ_WRITE",
       "group": "OldGroupMultipleDatapoint",
       "id": 1,
       "name": "Dp1",
@@ -181,13 +181,21 @@
       "allowUpgrade": true
     },
     {
-      "access": "READWRITE",
+      "access": "READ_WRITE",
       "group": "OldGroupMultipleDatapoint",
       "id": 2,
       "name": "Dp2",
       "type": "Temperature",
       "version": "1.0.22",
       "allowUpgrade": true
+    },
+    {
+      "access": "READ_WRITE",
+      "group": "RangeCheckGroup",
+      "id": 1,
+      "name": "rangeAlias",
+      "type": "RangeAlias",
+      "version": "1.0.0"
     }
   ]
 }

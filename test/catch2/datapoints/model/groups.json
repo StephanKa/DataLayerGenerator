@@ -41,6 +41,12 @@
       "name": "OldGroupMultipleDatapoint",
       "persistence": "None",
       "version": "2.0.0"
+    },
+    {
+      "baseId": "0x7000",
+      "name": "RangeCheckGroup",
+      "persistence": "None",
+      "version": "1.0.0"
     }
   ]
 }

@@ -6,12 +6,12 @@
 struct {{ dp.name | title }}
 {
     static {% if dp.arraySize > 0 -%}std::array<{{ dp.type }}, {{ dp.arraySize }}>{% else %}{{ dp.type }}{% endif %} get() { return {% if dp.namespace|length %}{{ dp.namespace }}::{% endif %}{{ dp.name}}(); }
-    static void set(const {% if dp.arraySize > 0 -%}std::array<{{ dp.type }}, {{ dp.arraySize }}>{% else %}{{ dp.type }}{% endif %}& value) { {% if dp.namespace|length %}{{ dp.namespace }}::{% endif %}{{ dp.name}} = value; }
+    static void set(const {% if dp.arraySize > 0 -%}std::array<{{ dp.type }}, {{ dp.arraySize }}>{% else %}{{ dp.type }}{% endif %}& value) { std::ignore = {% if dp.namespace|length %}{{ dp.namespace }}::{% endif %}{{ dp.name}}.set(value); }
 };
 
 {% endfor %}
 
-PYBIND11_MODULE(datalayer_example, m)
+PYBIND11_MODULE({{ module_name }}, m)
 {
     {% if structs | length > 0 -%}
     // defines all custom made structures
@@ -43,7 +43,7 @@ PYBIND11_MODULE(datalayer_example, m)
 
     {% endfor %}
 #ifdef VERSION_INFO
-    // TODO m.attr("__version__") = VERSION_INFO;
+    m.attr("__version__") = VERSION_INFO;
 #else
     m.attr("__version__") = "dev";
 #endif

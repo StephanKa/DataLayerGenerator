@@ -72,7 +72,8 @@ ADD_CUSTOM_TARGET(GenerateDataLayer
                   --model_dir ${CMAKE_CURRENT_SOURCE_DIR}/model
                   --out_dir ${CMAKE_BINARY_DIR}
                   --template_dir ${CMAKE_CURRENT_SOURCE_DIR}/template
-                  --schema_dir ${CMAKE_CURRENT_SOURCE_DIR}/generator)
+                  --schema_dir ${CMAKE_CURRENT_SOURCE_DIR}/generator
+                  --module_name conan_pybind11)
 
 TARGET_INCLUDE_DIRECTORIES(${PROJECT_NAME} PRIVATE ${CMAKE_BINARY_DIR}/generated ${CMAKE_CURRENT_SOURCE_DIR}/include)
 ADD_DEPENDENCIES(${PROJECT_NAME} GenerateDataLayer)

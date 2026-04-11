@@ -6,17 +6,17 @@
       "id": 1,
       "type": "int32_t",
       "default": 4211,
-      "access": "READWRITE",
+      "access": "READ_WRITE",
       "namespace": "Testify",
       "version": "1.0.1",
       "description": "Test for a int32_t value"
     },
     {
-      "name": "est2",
+      "name": "test2",
       "group": "DefaultGroup",
       "id": 2,
       "type": "int32_t",
-      "access": "READWRITE",
+      "access": "READ_WRITE",
       "namespace": "Testify",
       "version": "1.0.1"
     },
@@ -25,7 +25,7 @@
       "group": "DefaultGroup",
       "id": 3,
       "type": "int32_t",
-      "access": "READWRITE",
+      "access": "READ_WRITE",
       "version": "1.0.1"
     },
     {
@@ -37,7 +37,7 @@
         "value": 123.0,
         "raw": 5555
       },
-      "access": "READWRITE",
+      "access": "READ_WRITE",
       "version": "1.0.1"
     },
     {
@@ -50,7 +50,7 @@
         "value": 123.0,
         "raw": 5555
       },
-      "access": "READWRITE",
+      "access": "READ_WRITE",
       "version": "1.0.1"
     },
     {
@@ -60,7 +60,7 @@
       "type": "int32_t",
       "arraySize": 10,
       "default": 1234,
-      "access": "READWRITE",
+      "access": "READ_WRITE",
       "namespace": "Testify",
       "version": "1.0.1"
     },
@@ -70,7 +70,7 @@
       "id": 24,
       "type": "ErrorStates",
       "default": "None",
-      "access": "READWRITE",
+      "access": "READ_WRITE",
       "version": "1.0.1"
     },
     {
@@ -78,7 +78,7 @@
       "group": "DefaultGroup",
       "id": 28,
       "type": "AliasTypeUint32t",
-      "access": "READWRITE",
+      "access": "READ_WRITE",
       "version": "1.0.1"
     },
     {
@@ -88,7 +88,7 @@
       "type": "ErrorStates",
       "arraySize": 5,
       "default": "None",
-      "access": "READWRITE",
+      "access": "READ_WRITE",
       "version": "1.0.1"
     },
     {
@@ -96,7 +96,7 @@
       "group": "DefaultGroup",
       "id": 42,
       "type": "Environment",
-      "access": "READWRITE",
+      "access": "READ_WRITE",
       "version": "1.0.1",
       "default": {
         "internal": {

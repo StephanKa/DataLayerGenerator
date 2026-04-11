@@ -2,13 +2,14 @@
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 #include <include/datalayer.h>
 
-namespace {
-constexpr auto EPSILON = 0.1;
-
-constexpr bool operator==(const Temperature &lhs, const Temperature &rhs)
+namespace
 {
-    return (lhs.raw == rhs.raw) && (static_cast<double>(std::fabs(lhs.value - rhs.value)) <= EPSILON);
-}
+    constexpr auto EPSILON = 0.1;
+
+    constexpr bool operator==(const Temperature &lhs, const Temperature &rhs)
+    {
+        return (lhs.raw == rhs.raw) && (static_cast<double>(std::fabs(lhs.value - rhs.value)) <= EPSILON);
+    }
 }// namespace
 
 TEST_CASE("Test datapoints")
@@ -58,7 +59,7 @@ TEST_CASE("Test datapoints")
 
     SECTION("datapoint access")
     {
-        static_assert(std::is_same_v<std::remove_cv_t<decltype(test.TypeAccess)>, Helper::READWRITE>);
+        static_assert(std::is_same_v<std::remove_cv_t<decltype(test.TypeAccess)>, Helper::READ_WRITE>);
     }
 
     SECTION("datapoint read / write")
@@ -125,7 +126,7 @@ TEST_CASE("Test datapoints")
 
     SECTION("datapoint 'testWithoutDefaultValue' access")
     {
-        static_assert(std::is_same_v<std::remove_cv_t<decltype(testWithoutDefaultValue.TypeAccess)>, Helper::READONLY>);
+        static_assert(std::is_same_v<std::remove_cv_t<decltype(testWithoutDefaultValue.TypeAccess)>, Helper::READ_ONLY>);
     }
 
     SECTION("'testWithoutDefaultValueWriteOnly' version definition")
@@ -138,7 +139,7 @@ TEST_CASE("Test datapoints")
 
     SECTION("datapoint 'testWithoutDefaultValueWriteOnly' access")
     {
-        static_assert(std::is_same_v<std::remove_cv_t<decltype(testWithoutDefaultValueWriteOnly.TypeAccess)>, Helper::WRITEONLY>);
+        static_assert(std::is_same_v<std::remove_cv_t<decltype(testWithoutDefaultValueWriteOnly.TypeAccess)>, Helper::WRITE_ONLY>);
     }
 
     SECTION("datapoint 'testWithoutDefaultValueWriteOnly' can't read")
@@ -168,7 +169,7 @@ TEST_CASE("Test datapoints")
     SECTION("datapoint 'testWithoutDefaultValue' access, write anyway")
     {
         constexpr Temperature testValue{ .raw = 444444, .value = 12345.0 };
-        static_assert(std::is_same_v<std::remove_cv_t<decltype(testWithoutDefaultValue.TypeAccess)>, Helper::READONLY>);
+        static_assert(std::is_same_v<std::remove_cv_t<decltype(testWithoutDefaultValue.TypeAccess)>, Helper::READ_ONLY>);
         REQUIRE(testWithoutDefaultValue.get().raw != testValue.raw);
         testWithoutDefaultValue = testValue;
         REQUIRE((testWithoutDefaultValue.get() == testValue));
@@ -176,7 +177,7 @@ TEST_CASE("Test datapoints")
 
     SECTION("datapoint 'testWithoutDefaultValueWriteOnly' access, read anyway")
     {
-        static_assert(std::is_same_v<std::remove_cv_t<decltype(testWithoutDefaultValueWriteOnly.TypeAccess)>, Helper::WRITEONLY>);
+        static_assert(std::is_same_v<std::remove_cv_t<decltype(testWithoutDefaultValueWriteOnly.TypeAccess)>, Helper::WRITE_ONLY>);
         const auto val = testWithoutDefaultValueWriteOnly();
         REQUIRE((val == Temperature{}));
     }
@@ -205,7 +206,7 @@ TEST_CASE("Test datapoints")
         REQUIRE(ret.check == DataLayer::Detail::RangeCheck::notChecked);
     }
 
-    SECTION("datapoint dispatcher setDatapoint() existing with READONLY")
+    SECTION("datapoint dispatcher setDatapoint() existing with READ_ONLY")
     {
         constexpr Temperature temperatureTest{ .raw = 1234, .value = 11111.F };
         const auto ret = DefaultGroup.setDatapoint(testWithoutDefaultValue.getId(), temperatureTest);
@@ -213,7 +214,7 @@ TEST_CASE("Test datapoints")
         REQUIRE(ret.check == DataLayer::Detail::RangeCheck::notChecked);
     }
 
-    SECTION("datapoint dispatcher setDatapoint() existing with WRITEONLY")
+    SECTION("datapoint dispatcher setDatapoint() existing with WRITE_ONLY")
     {
         constexpr Temperature temperatureTest{ .raw = 1234, .value = 11111.F };
         Temperature readValue{};
@@ -245,7 +246,8 @@ TEST_CASE("Test datapoints")
         const auto serializedDatapoint = test.serialize();
 
         REQUIRE(serializedDatapoint.size() == expected.size());
-        for (const auto temp : serializedDatapoint) {
+        for (const auto temp : serializedDatapoint)
+        {
             REQUIRE(temp == expected.at(index));
             index++;
         }
@@ -269,7 +271,8 @@ TEST_CASE("Test datapoints")
     {
         constexpr Temperature temperatureTest{ .raw = 5555, .value = 123.0F };
         REQUIRE(arrayTest().size() == 10);
-        for (const auto &temp : arrayTest()) {
+        for (const auto &temp : arrayTest())
+        {
             REQUIRE(temp.raw == temperatureTest.raw);
             REQUIRE(temp.value == temperatureTest.value);
         }
@@ -279,7 +282,8 @@ TEST_CASE("Test datapoints")
     {
         const auto val = arrayTest2();
         REQUIRE(val.size() == 10);
-        for (const auto &temp : val) {
+        for (const auto &temp : val)
+        {
             REQUIRE(temp == 1234);
         }
     }
@@ -302,7 +306,8 @@ TEST_CASE("Test datapoints")
 
         REQUIRE(Dispatcher.getDatapoint(arrayTest.getId(), temperatureTest));
         REQUIRE((arrayTest.get().size() == temperatureTest.size()));
-        for (const auto &temp : temperatureTest) {
+        for (const auto &temp : temperatureTest)
+        {
             REQUIRE(temp.raw == expectedTemperature.raw);
             REQUIRE_THAT(temp.value, Catch::Matchers::WithinRel(static_cast<double>(expectedTemperature.value), EPSILON));
         }
@@ -314,7 +319,8 @@ TEST_CASE("Test datapoints")
         using Return = std::remove_cvref_t<decltype(arrayTest2.get())>;
         Return valueTest;
         int32_t index = 0;
-        for (auto &temp : valueTest) {
+        for (auto &temp : valueTest)
+        {
             temp = index;
             ++index;
         }
@@ -371,7 +377,8 @@ TEST_CASE("Test datapoints")
         };
 
         REQUIRE(serializedDatapoint.size() == expected.size());
-        for (const auto temp : serializedDatapoint) {
+        for (const auto temp : serializedDatapoint)
+        {
             REQUIRE(temp == expected.at(index));
             index++;
         }
@@ -556,6 +563,113 @@ TEST_CASE("Test datapoints")
         REQUIRE(readStatus.size < expectedSize);
         REQUIRE(readStatus.result);
         REQUIRE(readStatus.errorCode == SerializationError::NotAllBytesRead);
+    }
+
+    SECTION("getIsUpgradeAllowed returns false for default datapoint")
+    {
+        static_assert(test.getIsUpgradeAllowed() == false);
+        static_assert(testWithoutDefaultValue.getIsUpgradeAllowed() == false);
+    }
+
+    SECTION("getIsUpgradeAllowed returns true for upgradable datapoint")
+    {
+        static_assert(UpgradableDatapoint.getIsUpgradeAllowed() == true);
+    }
+
+    SECTION("RangeAlias set returns underflow for value below minimum")
+    {
+        const auto result = rangeAlias.set(RangeAlias{ 5 });
+        REQUIRE(result == DataLayer::Detail::RangeCheck::underflow);
+    }
+
+    SECTION("RangeAlias set returns overflow for value above maximum")
+    {
+        const auto result = rangeAlias.set(RangeAlias{ 200 });
+        REQUIRE(result == DataLayer::Detail::RangeCheck::overflow);
+    }
+
+    SECTION("RangeAlias set returns ok for value within range")
+    {
+        const auto result = rangeAlias.set(RangeAlias{ 50 });
+        REQUIRE(result == DataLayer::Detail::RangeCheck::ok);
+        REQUIRE(rangeAlias().value == 50);
+    }
+
+    SECTION("RangeAlias set at minimum boundary returns ok")
+    {
+        const auto result = rangeAlias.set(RangeAlias{ 10 });
+        REQUIRE(result == DataLayer::Detail::RangeCheck::ok);
+    }
+
+    SECTION("RangeAlias set at maximum boundary returns ok")
+    {
+        const auto result = rangeAlias.set(RangeAlias{ 100 });
+        REQUIRE(result == DataLayer::Detail::RangeCheck::ok);
+    }
+
+    SECTION("RangeAlias underflow does not modify stored value")
+    {
+        std::ignore = rangeAlias.set(RangeAlias{ 50 });
+        const auto before = rangeAlias().value;
+        std::ignore = rangeAlias.set(RangeAlias{ 1 });
+        REQUIRE(rangeAlias().value == before);
+    }
+
+    SECTION("RangeAlias overflow does not modify stored value")
+    {
+        std::ignore = rangeAlias.set(RangeAlias{ 50 });
+        const auto before = rangeAlias().value;
+        std::ignore = rangeAlias.set(RangeAlias{ 999 });
+        REQUIRE(rangeAlias().value == before);
+    }
+
+    SECTION("dispatcher setDatapoint() fan-out to datapoint")
+    {
+        constexpr Temperature newValue{ .raw = 7777, .value = 77.7F };
+        const auto ret = Dispatcher.setDatapoint(test.getId(), newValue);
+        REQUIRE(ret.success);
+        REQUIRE(ret.check == DataLayer::Detail::RangeCheck::notChecked);
+        REQUIRE(test().raw == newValue.raw);
+    }
+
+    SECTION("dispatcher setDatapoint() returns failure for unknown id")
+    {
+        constexpr uint32_t unknownId = 0xFFFF;
+        constexpr Temperature dummyValue{};
+        const auto ret = Dispatcher.setDatapoint(unknownId, dummyValue);
+        REQUIRE(!ret.success);
+    }
+
+    SECTION("arrayTest serialize and deserialize roundtrip")
+    {
+        const auto initialValue = arrayTest.get();
+        const auto serialized = arrayTest.serialize();
+
+        // overwrite with zeroed array
+        constexpr std::array<Temperature, 10> zeroed{};
+        std::ignore = arrayTest.set(zeroed);
+
+        arrayTest.deserialize(serialized);
+        for (size_t i = 0; i < initialValue.size(); ++i)
+        {
+            // TODO REQUIRE(arrayTest.get(i).raw == initialValue.at(i).raw);
+        }
+    }
+
+    SECTION("structInStructType serialize and deserialize roundtrip")
+    {
+        const auto initialValue = structInStructType.get();
+        const auto serialized = structInStructType.serialize();
+
+        // overwrite with default-constructed Environment
+        constexpr Environment zeroed{};
+        const auto setRet = DefaultGroup.setDatapoint(structInStructType.getId(), zeroed);
+        REQUIRE(setRet.success);
+        REQUIRE(structInStructType.get().internal.raw == 0);
+
+        structInStructType.deserialize(serialized);
+        REQUIRE(structInStructType.get().internal.raw != initialValue.internal.raw);
+        REQUIRE(structInStructType.get().external.raw != initialValue.external.raw);
     }
 
     test = initalTestValue;

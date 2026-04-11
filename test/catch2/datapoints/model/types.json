@@ -1,0 +1,10 @@
+{
+  "Types": [
+    {
+      "name": "RangeAlias",
+      "type": "uint32_t",
+      "min": 10,
+      "max": 100
+    }
+  ]
+}

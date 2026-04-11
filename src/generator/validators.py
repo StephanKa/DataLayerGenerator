@@ -156,7 +156,7 @@ def struct_validator(struct_data):
         for index, temp_parameter in enumerate(temp_group['parameter']):
             temp = Parameter(temp_parameter)
             if temp.name in parameter_names:
-                raise StructException(f"Struct name '{temp_group['name']}' already defined, please check your model")
+                raise StructException(f"Struct name '{temp_group['name']}' has a duplicate parameter '{temp.name}'")
             parameter_names.append(temp.name)
             if temp.value not in BASE_TYPES and temp.value not in struct_type_names:
                 raise StructException(f"Parameter type '{temp.value}' is not supported")

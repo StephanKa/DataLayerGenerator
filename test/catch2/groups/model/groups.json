@@ -4,7 +4,8 @@
       "name": "DefaultGroup",
       "persistence": "None",
       "baseId": "0x4000",
-      "version": "1.2.3"
+      "version": "1.2.3",
+      "allowUpgrade": true
     },
     {
       "name": "DefaultCyclicGroup",

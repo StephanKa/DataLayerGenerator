@@ -134,7 +134,7 @@ The following properties are allowed.
 | id           | yes      | id of the datapoint. **NOTE**: that's the id without the offset of the group itself.                           |
 | type         | yes      | defines the datatype for normal values or this can also be a self defined struct                               |
 | default      | no       | defines the initial value of the datapoint, structures can also be defaulted                                   |
-| access       | yes      | describes the access to the datapoint:**<br/>READWRITE<br/>READONLY<br/>WRITEONLY**                            |
+| access       | yes      | describes the access to the datapoint:**<br/>READ_WRITE<br/>READ_ONLY<br/>WRITE_ONLY**                            |
 | namespace    | no       | each datapoint can be moved in separate namespaces otherwise the datapoint will be visible without a namespace |
 | version      | yes      | describes the version where it was created or updated. It is defined as string **\<MAJOR>.\<MINOR>.\<BUILD>**  |
 | arraySize    | no       | describes if the defined type is a std::array, it will define the size of the std::array with defined type     |
@@ -150,7 +150,7 @@ The following properties are allowed.
       "id": 1,
       "type": "int32_t",
       "default": 4211,
-      "access": "READWRITE",
+      "access": "READ_WRITE",
       "namespace": "Testify",
       "version": "1.1.1"
     },
@@ -159,7 +159,7 @@ The following properties are allowed.
       "group": "DefaultGroup",
       "id": 3,
       "type": "int32_t",
-      "access": "READWRITE",
+      "access": "READ_WRITE",
       "version": "1.0.1"
     },
     {
@@ -167,7 +167,7 @@ The following properties are allowed.
       "group": "DefaultGroup",
       "id": 3,
       "type": "int32_t",
-      "access": "READWRITE",
+      "access": "READ_WRITE",
       "version": "1.0.1",
       "arraySize": 42
     }

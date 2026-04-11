@@ -102,8 +102,7 @@ int main()
     default:
         break;
     }
-    const auto checkMax = TestAlias.set(222);
-    switch (checkMax)
+    switch (TestAlias.set(222))
     {
     case DataLayer::Detail::RangeCheck::underflow:
         fmt::print("Value underflow\n");

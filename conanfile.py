@@ -13,11 +13,11 @@ class ProjectConan(ConanFile):
     def requirements(self):
         """Override the requirements method and define packages depending on the arch type."""
         if self.settings.get_safe('arch') == 'armv7':
-            self.requires('fmt/11.2.0')
+            self.requires('fmt/12.1.0')
         else:
-            self.requires('catch2/3.9.1')
-            self.requires('fmt/11.2.0')
-            self.requires('pybind11/2.13.6')
+            self.requires('catch2/3.12.0')
+            self.requires('fmt/12.1.0')
+            self.requires('pybind11/3.0.1')
 
     def configure(self):
         """Override the configure method and defines different requirements for different architectures."""

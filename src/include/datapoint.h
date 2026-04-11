@@ -7,7 +7,7 @@ namespace DataLayer
 {
     // data point definition
 
-    template<typename T, GroupInfo group, uint16_t id, typename Access, auto Version = Version{ 0, 0, 0 }, FixedString Name = "", bool AllowUpgrade = false>
+    template<typename T, GroupInfo group, uint16_t id, typename Access, auto Version = Version{ 0, 0, 0 }, FixedString Name = { "" }, bool AllowUpgrade = false>
     class DataPoint
     {
       public:
@@ -43,7 +43,7 @@ namespace DataLayer
             return *this;
         }
 
-        // function that will be restricted by READ and READWRITE access
+        // function that will be restricted by READ and READ_WRITE access
         template<typename A = Access>
             requires Helper::ReadConcept<A>
         [[nodiscard]] T &get() noexcept
@@ -51,7 +51,7 @@ namespace DataLayer
             return m_value;
         }
 
-        // function that will be restricted by READ and READWRITE access
+        // function that will be restricted by READ and READ_WRITE access
         template<typename A = Access>
             requires Helper::ReadConcept<A> && Detail::IsArray<T>
         [[nodiscard]] constexpr auto &get(size_t index)
@@ -63,10 +63,11 @@ namespace DataLayer
             requires Helper::ReadConcept<A>
         [[nodiscard]] auto serialize()
         {
-            return std::as_bytes(std::span<const T, 1>{ std::addressof(m_value), 1 });
+            static_assert(std::is_trivially_copyable_v<T>);
+            return std::as_bytes(std::span{ &m_value, 1 });
         }
 
-        // function that will be restricted by WRITE and READWRITE access
+        // function that will be restricted by WRITE and READ_WRITE access
         template<typename A = Access>
             requires Helper::WriteConcept<A>
         [[nodiscard]] constexpr auto set(const T &value) noexcept
@@ -74,7 +75,7 @@ namespace DataLayer
             return setValue(value);
         }
 
-        // function that will be restricted by WRITE and READWRITE access
+        // function that will be restricted by WRITE and READ_WRITE access
         template<typename A = Access>
             requires Helper::WriteConcept<A> && Detail::IsArray<T>
         constexpr void set(size_t index, const auto &value)
@@ -84,9 +85,12 @@ namespace DataLayer
 
         template<typename A = Access>
             requires Helper::WriteConcept<A>
-        void deserialize(const auto &value)
+        void deserialize(std::span<const std::byte> bytes)
         {
-            std::memcpy(&m_value, value.data(), sizeof(T));
+            if (bytes.size() == sizeof(T))
+            {
+                std::memcpy(&m_value, bytes.data(), sizeof(T));
+            }
         }
 
         template<typename Type = T>
@@ -96,7 +100,7 @@ namespace DataLayer
             return m_value.size();
         }
 
-        [[nodiscard]] constexpr bool getIsUpgradeAllowed() noexcept
+        [[nodiscard]] static constexpr bool getIsUpgradeAllowed() noexcept
         {
             return AllowUpgrade;
         }

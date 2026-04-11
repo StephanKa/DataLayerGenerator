@@ -34,7 +34,7 @@ namespace DataLayer
         }
 
         template<typename T>
-        [[nodiscard]] bool setDatapoint(uint32_t dataPointId, const T &value) const
+        [[nodiscard]] Detail::CheckResult setDatapoint(uint32_t dataPointId, const T &value) const
         {
             return std::apply(
               [&](auto &...args) {
