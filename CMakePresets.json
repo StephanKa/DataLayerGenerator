@@ -10,38 +10,5 @@
     "cmake/presets/clang-linux.json",
     "cmake/presets/windows.json",
     "cmake/presets/arm.json"
-  ],
-  "configurePresets": [
-    {
-      "name": "debug-base",
-      "hidden": true,
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/debug/${presetName}",
-      "displayName": "Base preset for debug builds",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
-        "ENABLE_COVERAGE": "ON",
-        "ENABLE_SANITIZER_ADDRESS": "ON",
-        "ENABLE_SANITIZER_LEAK": "ON",
-        "ENABLE_SANITIZER_UNDEFINED_BEHAVIOR": "ON",
-        "ENABLE_SANITIZER_MEMORY": "OFF",
-        "ENABLE_FMT": "ON",
-        "ENABLE_FILE_PERSISTENCE": "ON",
-        "ENABLE_PYBIND11": "ON"
-      }
-    },
-    {
-      "name": "release-base",
-      "hidden": true,
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/release/${presetName}",
-      "displayName": "Base preset for release builds",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release",
-        "ENABLE_FMT": "ON",
-        "ENABLE_FILE_PERSISTENCE": "ON",
-        "ENABLE_PYBIND11": "ON"
-      }
-    }
   ]
 }

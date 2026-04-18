@@ -1,5 +1,8 @@
 {
   "version": 7,
+  "include": [
+    "base.json"
+  ],
   "configurePresets": [
     {
       "name": "clang-12-debug",   "inherits": "debug-base",   "displayName": "Clang 12 Debug",

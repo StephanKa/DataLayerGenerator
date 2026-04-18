@@ -1,5 +1,8 @@
 {
   "version": 7,
+  "include": [
+    "base.json"
+  ],
   "configurePresets": [
     {
       "name": "gcc-10-debug",   "inherits": "debug-base",   "displayName": "GCC 10 Debug",
