@@ -76,7 +76,7 @@ jobs:
 
     - name: Install conan
       shell: bash
-      run: uv pip install --system conan
+      run: uv tool install conan
 
     - name: Configure via CMake
       # Use a bash shell so we can use the same syntax for environment variable
@@ -106,7 +106,7 @@ jobs:
       - uses: astral-sh/setup-uv@v5
       - name: Install conan
         shell: bash
-        run: uv pip install --system conan jsonschema virtualenv ninja
+        run: uv tool install conan
 
       - name: Configure CMake
         # Use a bash shell so we can use the same syntax for environment variable
@@ -141,8 +141,8 @@ jobs:
       - name: Install conan
         run: |
           pacman --noconfirm -Syu
-          pacman --noconfirm -S mingw-w64-x86_64-ninja mingw-w64-x86_64-gcc mingw-w64-x86_64-cmake mingw-w64-x86_64-python mingw-w64-x86_64-uv
-          uv pip install --system conan jsonschema virtualenv ninja
+          pacman --noconfirm -S mingw-w64-x86_64-ninja mingw-w64-x86_64-gcc mingw-w64-x86_64-cmake mingw-w64-x86_64-python mingw-w64-x86_64-python-pip
+          pip install conan
 
       - name: Configure CMake
         run: cmake --preset win32-gcc-x64-mingw-${{ matrix.buildtype }}
@@ -180,7 +180,7 @@ jobs:
 
     - name: Install conan
       shell: bash
-      run: uv pip install --system conan
+      run: uv tool install conan
 
     - name: Install dependencies
       run:   |
@@ -235,7 +235,7 @@ jobs:
 
     - name: Install conan
       shell: bash
-      run: uv pip install --system conan
+      run: uv tool install conan
 
     - name: Install dependencies
       run:   |
