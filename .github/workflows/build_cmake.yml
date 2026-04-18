@@ -69,14 +69,14 @@ jobs:
       if: ${{ startsWith(matrix.compiler.name, 'GCC') }}
       run:   |
              sudo apt update
-             sudo apt install ninja-build ${{ matrix.compiler.pkgs }}
+             sudo apt install ninja-build ccache ${{ matrix.compiler.pkgs }}
       shell: bash
+
+    - uses: astral-sh/setup-uv@v5
 
     - name: Install conan
       shell: bash
-      run: |
-           python3 -m pip install --upgrade pip setuptools conan
-           source ~/.profile
+      run: uv pip install --system conan
 
     - name: Configure via CMake
       # Use a bash shell so we can use the same syntax for environment variable
@@ -103,11 +103,10 @@ jobs:
         buildtype: [release]
     steps:
       - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
       - name: Install conan
         shell: bash
-        run: |
-          python3 -m pip install --upgrade pip setuptools
-          python3 -m pip install conan jsonschema virtualenv ninja
+        run: uv pip install --system conan jsonschema virtualenv ninja
 
       - name: Configure CMake
         # Use a bash shell so we can use the same syntax for environment variable
@@ -141,15 +140,9 @@ jobs:
           install: make
       - name: Install conan
         run: |
-          pacman --noconfirm -S mingw-w64-x86_64-ninja
-          pacman --noconfirm -U https://repo.msys2.org/mingw/mingw64/mingw-w64-x86_64-gcc-libs-12.2.0-9-any.pkg.tar.zst
-          pacman --noconfirm -U https://repo.msys2.org/mingw/mingw64/mingw-w64-x86_64-gcc-12.2.0-9-any.pkg.tar.zst
-          pacman --noconfirm -S mingw-w64-x86_64-cmake
-          pacman --noconfirm -S mingw-w64-x86_64-python
-          pacman --noconfirm -S mingw-w64-x86_64-python-pip
-          pacman --noconfirm -S mingw-w64-x86_64-rust
-          python3 -m pip install --upgrade pip setuptools
-          python3 -m pip install PyYAML==5.3.1 conan jsonschema virtualenv ninja
+          pacman --noconfirm -Syu
+          pacman --noconfirm -S mingw-w64-x86_64-ninja mingw-w64-x86_64-gcc mingw-w64-x86_64-cmake mingw-w64-x86_64-python mingw-w64-x86_64-uv
+          uv pip install --system conan jsonschema virtualenv ninja
 
       - name: Configure CMake
         run: cmake --preset win32-gcc-x64-mingw-${{ matrix.buildtype }}
@@ -183,16 +176,16 @@ jobs:
           ~/.cache/pip
         key: ${{ runner.os }}-${{ env.BUILD_TYPE }}-${{ hashFiles('CMakeLists.txt') }}-${{ hashFiles('cmake/Conan.cmake') }}
 
+    - uses: astral-sh/setup-uv@v5
+
     - name: Install conan
       shell: bash
-      run: |
-        python3 -m pip install --upgrade pip setuptools conan
-        source ~/.profile
+      run: uv pip install --system conan
 
     - name: Install dependencies
       run:   |
              sudo apt update
-             sudo apt install ninja-build ${{ matrix.compiler.pkgs }} cppcheck
+             sudo apt install ninja-build ccache ${{ matrix.compiler.pkgs }} cppcheck
       shell: bash
 
     - name: Compile and install IWYU
@@ -238,11 +231,11 @@ jobs:
           ~/.cache/pip
         key: ${{ runner.os }}-${{ env.BUILD_TYPE }}-${{ hashFiles('CMakeLists.txt') }}-${{ hashFiles('cmake/Conan.cmake') }}
 
+    - uses: astral-sh/setup-uv@v5
+
     - name: Install conan
       shell: bash
-      run: |
-        python3 -m pip install --upgrade pip setuptools conan
-        source ~/.profile
+      run: uv pip install --system conan
 
     - name: Install dependencies
       run:   |
