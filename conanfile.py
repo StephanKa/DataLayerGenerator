@@ -29,8 +29,8 @@ class DataLayerGeneratorConan(ConanFile):
     }
     default_options = {
         'with_fmt': True,
-        'with_file_persistence': False,
-        'with_pybind11': False,
+        'with_file_persistence': True,
+        'with_pybind11': True,
         'fmt/*:header_only': True,
     }
 
