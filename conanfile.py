@@ -2,7 +2,7 @@
 import os
 
 from conan import ConanFile
-from conan.tools.cmake import CMake, CMakeToolchain, cmake_layout
+from conan.tools.cmake import CMake, CMakeDeps, CMakeToolchain, cmake_layout
 from conan.tools.files import copy
 
 
@@ -67,6 +67,8 @@ class DataLayerGeneratorConan(ConanFile):
         tc = CMakeToolchain(self)
         tc.user_presets_path = None
         tc.generate()
+        deps = CMakeDeps(self)
+        deps.generate()
 
     def build(self):
         """Build the example executable and/or tests (not invoked when consumed as a library)."""
