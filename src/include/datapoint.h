@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <groupInfo.h>
 #include <span>
+#include <cstring>
 
 namespace DataLayer
 {
