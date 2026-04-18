@@ -55,20 +55,26 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y doxygen graphviz
 
-      # ── CMake (no compiler / tests needed — docs only) ────────────────────
-      - name: Configure CMake (docs only)
+      # Configure the Doxyfile by substituting the @...@ placeholders directly
+      # (avoids needing CMake + compiler toolchain just for docs)
+      - name: Configure Doxyfile
         run: |
-          cmake -S . -B build-docs \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DDOCS_ONLY=ON \
-            -DENABLE_DOCS=ON \
-            -DWARNINGS_AS_ERRORS=OFF
+          mkdir -p build-docs/doxygen
+          sed \
+            -e 's|@DOXYGEN_INPUT_DIR@|'"$GITHUB_WORKSPACE"'/src/include|g' \
+            -e 's|@DOXYGEN_OUTPUT_DIR@|'"$GITHUB_WORKSPACE"'/build-docs/doxygen|g' \
+            docs/Doxyfile.in > build-docs/Doxyfile
 
-      - name: Build Doxygen XML
-        run: cmake --build build-docs --target Doxygen
+      - name: Run Doxygen
+        run: doxygen build-docs/Doxyfile
 
-      - name: Build Sphinx HTML
-        run: cmake --build build-docs --target Sphinx
+      # ── Sphinx ────────────────────────────────────────────────────────────
+      - name: Run Sphinx
+        run: |
+          sphinx-build -b html \
+            -Dbreathe_projects.DataLayerGenerator="$GITHUB_WORKSPACE/build-docs/doxygen/xml" \
+            -Dhtml_theme=sphinx_rtd_theme \
+            docs/ build-docs/sphinx
 
       # ── Upload to GitHub Pages ────────────────────────────────────────────
       # NOTE: GitHub Pages must be enabled once manually in the repository:
@@ -76,7 +82,7 @@ jobs:
       - name: Upload HTML artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: build-docs/docs/sphinx
+          path: build-docs/sphinx
 
   deploy:
     name: Deploy to GitHub Pages

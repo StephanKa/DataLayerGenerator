@@ -258,9 +258,16 @@ To build the docs locally:
 
 ```bash
 pip install sphinx sphinx-rtd-theme breathe sphinx-copybutton
-cmake -S . -B build-docs -DDOCS_ONLY=ON -DENABLE_DOCS=ON
-cmake --build build-docs --target Sphinx
-# Output: build-docs/docs/sphinx/index.html
+mkdir -p build-docs/doxygen
+sed \
+  -e "s|@DOXYGEN_INPUT_DIR@|$(pwd)/src/include|g" \
+  -e "s|@DOXYGEN_OUTPUT_DIR@|$(pwd)/build-docs/doxygen|g" \
+  docs/Doxyfile.in > build-docs/Doxyfile
+doxygen build-docs/Doxyfile
+sphinx-build -b html \
+  -Dbreathe_projects.DataLayerGenerator="$(pwd)/build-docs/doxygen/xml" \
+  docs/ build-docs/sphinx
+# Output: build-docs/sphinx/index.html
 ```
 
 ---
