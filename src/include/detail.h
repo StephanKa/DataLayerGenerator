@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <helper.h>
 #include <variant>
+#include <string>
 
 namespace DataLayer::Detail
 {
