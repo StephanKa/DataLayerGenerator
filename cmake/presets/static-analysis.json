@@ -1,7 +1,7 @@
 {
   "version": 7,
   "include": [
-    "cmake/presets/clang-linux.json"
+    "clang-linux.json"
   ],
   "configurePresets": [
     {
