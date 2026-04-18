@@ -1,262 +1,270 @@
-# Datalayer Generator
+# DataLayerGenerator
 
-[![CMake](https://github.com/StephanKa/DataLayerGenerator/actions/workflows/build_cmake.yml/badge.svg?branch=main)](https://github.com/StephanKa/DataLayerGenerator/actions/workflows/build_cmake.yml)
+[![CMake CI](https://github.com/StephanKa/DataLayerGenerator/actions/workflows/build_cmake.yml/badge.svg?branch=main)](https://github.com/StephanKa/DataLayerGenerator/actions/workflows/build_cmake.yml)
+[![Documentation](https://github.com/StephanKa/DataLayerGenerator/actions/workflows/docs.yml/badge.svg?branch=main)](https://stephanKa.github.io/DataLayerGenerator/)
 
-## Description
+**📖 [Full documentation on GitHub Pages](https://StephanKa.github.io/DataLayerGenerator/)**
 
-This small project should present the possibility to use modern C++ for a datalayer. The datalayer could be used for MCU to read / write data in structures.
-The advantages are:
-- C++ 20 features
-- compile time, as much as possible as constexpr and template meta programming
-- version scheme in data points, e.g. to update data saved on EEPROM to update values
-- default values can be used
-- using of fmt library for printing data
-  - generated struct formatter for fmt
+---
 
-### Generator
+A **header-only C++20 framework** with a **Python/Jinja2 code generator** for building type-safe,
+zero-allocation data layers — targeting embedded systems (MCU / bare-metal) as well as host
+applications.
 
-The code generator is based on python and Jinja2. The description files are needed to be placed under [**src/model**](src/model).
-For writing model files you can choose json or yaml. For more information about the generation and capabilites see manual [here](src/generator/README.md)
+You describe your data model in JSON or YAML files. The generator produces a single `datalayer.h`
+header that contains fully type-safe `constinit` datapoint globals, with access control enforced at
+compile time, optional range checking, optional file persistence, optional `fmt` formatters, and
+optional Python bindings.
 
-### Formatter
+---
 
-The python generator will automatically generate [FMT](https://github.com/fmtlib/fmt) compatible formatter but only for structures.
+## Features
 
-### Docker
+| Feature | Description |
+|---|---|
+| **C++20** | Requires C++20 — leverages Concepts, NTTPs, `consteval`, `constinit`, `std::span` |
+| **Header-only framework** | `src/include/` has no compiled artifacts and no external dependencies |
+| **Compile-time access control** | `READ_ONLY`, `WRITE_ONLY`, `READ_WRITE` enforced via C++20 Concepts |
+| **Range checking** | Alias types carry `Minimum`/`Maximum`; violations return `RangeCheck::underflow/overflow` |
+| **Versioning** | Groups and individual datapoints carry `Version{major, minor, build}` for EEPROM upgrade paths |
+| **Persistence** | Binary file serialization with group- and datapoint-level version validation (`-DENABLE_FILE_PERSISTENCE=ON`) |
+| **fmt support** | Auto-generated `fmt::formatter<>` for all custom structs and enums (`-DENABLE_FMT=ON`) |
+| **Python bindings** | Auto-generated `pybind11` module (`-DENABLE_PYBIND11=ON`) |
+| **JSON & YAML models** | Write model files in JSON or YAML; mixed directories supported |
+| **Cross-compilation** | ARM Cortex-M4 GCC toolchain included |
+| **Conan package** | Distributable as a Conan `header-library` package with consumer helper CMake function |
 
-There are two different [docker images](docker). One image for CI and building and one for the developer itself.
+---
 
-## Example
+## Quick Start
 
-The following example can be found in main.cpp.
+### Prerequisites
 
-```c++
-#include "dispatcher.h"
-#include "helper.h"
-#include "include/version.hpp"
-#include <datalayer.h>
+- CMake ≥ 3.19
+- C++20 compiler (GCC 10+, Clang 15+, MSVC 2022)
+- Python ≥ 3.9 with `pip install jinja2 jsonschema pyyaml`
+- [Conan 2.x](https://conan.io/)
+
+### Build
+
+```bash
+# Install dependencies via Conan and configure
+conan install . --build=missing
+cmake --preset gcc-14-release   # see CMakePresets.json for available presets
+
+# Build
+cmake --build --preset gcc-14-release
+
+# Run tests
+ctest --preset gcc-14-release
+```
+
+### Docker (alternative)
+
+```bash
+cd docker
+./build-dev-image.sh   # developer image with all tools pre-installed
+./build-ci-image.sh    # CI image
+```
+
+---
+
+## Project Structure
+
+```
+src/
+├── include/        ← Header-only C++ framework (ship this + generated header)
+├── generator/      ← Python code generator (generator.py, validators, templates)
+├── template/       ← Jinja2 templates (datalayer.h, formatter.h, pythonBinding.cpp)
+├── model/          ← Example model files (JSON)
+├── main.cpp        ← Host demo executable
+└── embedded.cpp    ← Bare-metal demo executable
+
+test/
+├── catch2/         ← C++ unit tests (Catch2)
+└── python/         ← Python unit tests for the generator
+
+docs/               ← Sphinx documentation source
+cmake/              ← CMake helpers, toolchains, find modules
+```
+
+---
+
+## Model Files
+
+Place your model files in any directory and pass it via `--model_dir`. Five file types are
+recognised (JSON or YAML):
+
+| File | Purpose |
+|---|---|
+| `groups.json` | Define groups — each group has a `baseId`, `version`, and persistence mode |
+| `datapoints.json` | Define datapoints — type, access, default value, version, optional namespace |
+| `structs.json` | Define custom struct types (nestable) |
+| `enums.json` | Define enumerations — auto-ID or explicit values |
+| `types.json` | Define alias types with optional compile-time range bounds |
+
+### Example: groups.json
+
+```json
+{
+  "Groups": [
+    { "name": "DefaultGroup", "persistence": "None",   "baseId": "0x4000", "version": "1.0.1" },
+    { "name": "CyclicGroup",  "persistence": "Cyclic", "baseId": "0x5000", "version": "2.0.0" }
+  ]
+}
+```
+
+### Example: datapoints.json
+
+```json
+{
+  "Datapoints": [
+    {
+      "name": "test", "group": "DefaultGroup", "id": 1,
+      "type": "int32_t", "default": 4211,
+      "access": "READ_WRITE", "namespace": "Testify", "version": "1.0.1"
+    }
+  ]
+}
+```
+
+See the [Model File Reference](https://StephanKa.github.io/DataLayerGenerator/model.html) for the
+full specification.
+
+---
+
+## Code Generator
+
+```bash
+python src/generator/generator.py \
+  --model_dir   src/model \
+  --out_dir     build/ \
+  --template_dir src/template \
+  --schema_dir   src/generator \
+  --module_name  my_module      # optional pybind11 module name
+```
+
+Generated output under `build/generated/`:
+
+| File | Content |
+|---|---|
+| `include/datalayer.h` | All group infos, types, enums, structs, `constinit` datapoint globals |
+| `include/formatter.h` | `fmt::formatter<>` specialisations for every generated struct and enum |
+| `datalayer_example/pythonBinding.cpp` | pybind11 module source |
+| `doc/*.puml` | PlantUML class diagrams |
+| `doc/overview.csv` | Datapoint overview table |
+
+---
+
+## CMake Options
+
+| Option | Default | Description |
+|---|---|---|
+| `ENABLE_FMT` | `OFF` | Enable `fmt` library support; compiles with `-DUSE_FMT` |
+| `ENABLE_FILE_PERSISTENCE` | `OFF` | Enable binary file persistence; compiles with `-DUSE_FILE_PERSISTENCE` |
+| `ENABLE_PYBIND11` | `OFF` | Build pybind11 Python module |
+| `ENABLE_TESTING` | `ON` | Build Catch2 test suite |
+| `ENABLE_DOCS` | `OFF` | Build Sphinx/Doxygen documentation |
+| `DOCS_ONLY` | `OFF` | Skip all C++ targets and Conan — docs build only |
+
+---
+
+## Usage Example
+
+```cpp
+#include <include/datalayer.h>    // generated
+#include <include/formatter.h>   // generated (requires ENABLE_FMT)
 #include <fmt/format.h>
-#include <formatter.h>
-
-using namespace std::string_view_literals;
-
-template<>
-struct fmt::formatter<SoftwareVersion>
-{
-    template<typename ParseContext>
-    constexpr auto parse(ParseContext &ctx)
-    {
-        return ctx.begin();
-    }
-
-    template<typename FormatContext>
-    auto format(const SoftwareVersion &version, FormatContext &ctx)
-    {
-        return format_to(ctx.out(), "Major: {} Minor: {} Build: {} Githash: {}", version.Major, version.Minor, version.Patch, version.GitHash);
-    }
-};
-
-template<>
-struct fmt::formatter<Version>
-{
-    template<typename ParseContext>
-    constexpr auto parse(ParseContext &ctx)
-    {
-        return ctx.begin();
-    }
-
-    template<typename FormatContext>
-    auto format(const Version &version, FormatContext &ctx)
-    {
-        return format_to(ctx.out(), "Major: {} Minor: {} Build: {}", version.major, version.minor, version.build);
-    }
-};
 
 int main()
 {
+    // Print group structure
     DefaultGroup.printDatapoints();
-    CyclicGroup.printDatapoints();
 
-    fmt::print("------------------------------------\nGroup: {:#06x}\n", DefaultGroupInfo.baseId);
-    Testify::test.set(42);
-    const auto versionTest = Testify::test.getVersion();
-    fmt::print(R"(Datapoints
-    id: {:#06x}
-    value: {}
-    version:
-        Major = {}
-        Minor = {}
-        Build = {}
-)",
-      Testify::test.getId(),
-      Testify::test(),
-      versionTest.major,
-      versionTest.minor,
-      versionTest.build);
+    // Read / write a typed datapoint
+    std::ignore = Testify::test.set(42);     // returns RangeCheck::ok
+    int32_t val = Testify::test.get();       // val == 42
 
-    constexpr Temperature a{ .raw = 1234, .value = 42.2F };
-    test4.set(a);
-    const auto test4Value = test4();
-    constexpr auto version4Test = test4.getVersion();
-    fmt::print("Test4 version: {}\n", version4Test);
-    fmt::print(R"(Datapoints
-    id: {:#06x}
-    value: {}
-)",
-      test4.getId(),
-      test4Value);
+    // Range-checked alias type (min=100, max=200)
+    auto rc = TestAlias.set(AliasTypeUint32t{42});
+    // rc == DataLayer::Detail::RangeCheck::underflow
 
-    fmt::print("{}\n", SoftwareVersion{});
-    fmt::print("\nPrint whole structure:\n");
-    Dispatcher.printStructure();
+    // Struct datapoint
+    constexpr Temperature a{ .raw = 1234, .value = 42.2f };
+    std::ignore = test4.set(a);
 
-    fmt::print("arrayTest\n");
-    for (const auto &value : arrayTest.get()) {
-        fmt::print("{}\n", value);
-    }
-
-    fmt::print("arrayTest2\n");
-    for (const auto &value : Testify::arrayTest2.get()) {
-        fmt::print("{}\n", value);
-    }
-    fmt::print("errorCode: {}\n", errorCode());
+    // Runtime-ID dispatch across all groups
+    auto result = Dispatcher.setDatapoint(0x4001, 99);
+    // result.success == true, result.check == RangeCheck::ok
 
 #ifdef USE_FILE_PERSISTENCE
-    const auto writeStatus = CyclicGroup.serializeGroup("sample.bin"sv);
-    test4.set({ .raw = 1111, .value = 12.345f });
-    const auto readStatus = CyclicGroup.deserializeGroup("sample.bin"sv);
-    fmt::print("writeStatus: {}\nreadStatus: {}\n", writeStatus.size, readStatus.size);
-    const bool result = test4().raw == a.raw;
-    fmt::print("test4.raw: {}\n", test4().raw);
-    return result && (writeStatus.size == readStatus.size) ? 0 : 1;
-#else
-    return 0;
+    // Persist and restore CyclicGroup
+    CyclicGroup.serializeGroup("sample.bin");
+    CyclicGroup.deserializeGroup("sample.bin");
 #endif
 }
 ```
 
-The code above will output the following:
+---
 
-```c++
-Group: DefaultGroup
-test: 0x4001
-est2: 0x4002
-test3: 0x4003
-arrayTest2: 0x400c
-errorCode: 0x4018
-errorCodeArray: 0x4019
-structInStructType: 0x402a
-Group: CyclicGroup
-test4: 0x5004
-arrayTest: 0x5005
-------------------------------------
-Group: 0x4000
-Datapoints
-    id: 0x4001
-    value: 42
-    version:
-        Major = 1
-        Minor = 0
-        Build = 1
-Test4 version: Major: 1 Minor: 0 Build: 1
-Datapoints
-    id: 0x5004
-    value:  raw = 1234 value = 42.2
-Major: 0 Minor: 0 Build: 1 Githash: c9ee00d
-
-Print whole structure:
-Structure:
-Group: DefaultGroup
-test: 0x4001
-est2: 0x4002
-test3: 0x4003
-arrayTest2: 0x400c
-errorCode: 0x4018
-errorCodeArray: 0x4019
-structInStructType: 0x402a
-Group: CyclicGroup
-test4: 0x5004
-arrayTest: 0x5005
-arrayTest
- raw = 5555 value = 123
- raw = 5555 value = 123
- raw = 5555 value = 123
- raw = 5555 value = 123
- raw = 5555 value = 123
- raw = 5555 value = 123
- raw = 5555 value = 123
- raw = 5555 value = 123
- raw = 5555 value = 123
- raw = 5555 value = 123
-arrayTest2
-1234
-1234
-1234
-1234
-1234
-1234
-1234
-1234
-1234
-1234
-errorCode: None
-writeStatus: 124
-readStatus: 124
-test4.raw: 1234
-```
-
-## Usage
-
-For getting known preset have a look into [CMakePresets.json](CMakePresets.json).
-
-Existing presets are for example:
-- clang-12-debug
-- clang-12-release
-- clang-13-debug
-- clang-13-release
-- clang-14-debug
-- clang-14-release
-- clang-15-debug
-- clang-15-release
-- clang-16-debug
-- clang-16-release
-- gcc-10-debug
-- gcc-10-release
-- gcc-11-debug
-- gcc-11-release
-- gcc-12-debug
-- gcc-12-release
-- windows-2019-debug
-- windows-2019-release
-- windows-2022-debug
-- windows-2022-release
-- win32-gcc-x64-mingw-debug
-- win32-gcc-x64-mingw-release
-- clang-15-debug-static-analysis
-- gcc-arm-debug
-- gcc-arm-release
+## Consuming as a Conan Package
 
 ```bash
-cmake --preset <PRESET_NAME>
-cmake --build --preset <PRESET_NAME>
-ctest --preset <PRESET_NAME>
+conan create . --build=missing   # build & install into local cache
 ```
 
-## Serialization
+In your project's `conanfile.txt`:
 
-| data type       | Group version | Datapoint version | Container persistence description |
-|-----------------|---------------|-------------------|-----------------------------------|
-|                 | 12 Byte       | 12 Byte           |                                   |
-| **std::string** |               |                   | 4 Byte (size) + dynamic bytes     |
-| **std::array**  |               |                   | dynamic bytes                     |
-| **structs**     |               |                   | dynamic bytes                     |
+```ini
+[requires]
+datalayer-generator/0.0.1
 
-## Compiler Explorer Example
+[options]
+datalayer-generator/*:with_fmt=True
 
-[Clang 15.0.0](https://godbolt.org/z/EGG4YrMhG)
+[generators]
+CMakeDeps
+CMakeToolchain
+```
 
-## To-Do's
-- [ ] add coverage
-- [ ] version schema dynamisch
-- [ ] add splitting namespaces to separate files (amalgamation or single files)
-- [ ] add MPS project for generating JSON files
+In your `CMakeLists.txt`:
+
+```cmake
+find_package(DataLayerGenerator REQUIRED)
+
+add_executable(my_app main.cpp)
+target_link_libraries(my_app PRIVATE DataLayerGenerator::DataLayerGenerator)
+
+generate_datalayer(my_app
+    MODEL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/model
+    OUT_DIR   ${CMAKE_CURRENT_BINARY_DIR}
+)
+```
+
+The `generate_datalayer()` helper is automatically available after `find_package` — it wires up the
+Python generator as a stamp-file-based custom command so the generator only reruns when model files
+change.
+
+---
+
+## Documentation
+
+Full documentation — including API reference, model file specification, and integration guide — is
+published automatically to GitHub Pages on every push to `main`:
+
+**➡ https://StephanKa.github.io/DataLayerGenerator/**
+
+To build the docs locally:
+
+```bash
+pip install sphinx sphinx-rtd-theme breathe sphinx-copybutton
+cmake -S . -B build-docs -DDOCS_ONLY=ON -DENABLE_DOCS=ON
+cmake --build build-docs --target Sphinx
+# Output: build-docs/docs/sphinx/index.html
+```
+
+---
+
+## License
+
+This project is released into the public domain under the [Unlicense](LICENSE).
