@@ -80,6 +80,24 @@
     {
       "name": "clang-21-release", "inherits": "release-base", "displayName": "Clang 21 Release",
       "environment": { "CXX": "clang++-21", "CC": "clang-21" }
+    },
+    {
+      "name": "clang-18-debug-static-analysis",
+      "displayName": "Clang 18 Debug — Static Analysis",
+      "inherits": "clang-18-debug",
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "clang-18",
+        "CMAKE_CXX_COMPILER": "clang++-18",
+        "CMAKE_BUILD_TYPE": "Debug",
+        "ENABLE_CPPCHECK": "ON",
+        "ENABLE_CLANG_TIDY": "ON",
+        "ENABLE_INCLUDE_WHAT_YOU_USE": "ON",
+        "ENABLE_COVERAGE": "OFF",
+        "ENABLE_SANITIZER_ADDRESS": "OFF",
+        "ENABLE_SANITIZER_LEAK": "OFF",
+        "ENABLE_SANITIZER_UNDEFINED_BEHAVIOR": "OFF",
+        "ENABLE_SANITIZER_MEMORY": "OFF"
+      }
     }
   ],
   "buildPresets": [
@@ -124,6 +142,7 @@
     { "name": "clang-20-debug",   "configurePreset": "clang-20-debug"   },
     { "name": "clang-20-release", "configurePreset": "clang-20-release" },
     { "name": "clang-21-debug",   "configurePreset": "clang-21-debug"   },
-    { "name": "clang-21-release", "configurePreset": "clang-21-release" }
+    { "name": "clang-21-release", "configurePreset": "clang-21-release" },
+    { "name": "clang-18-debug-static-analysis", "configurePreset": "clang-18-debug-static-analysis" }
   ]
 }

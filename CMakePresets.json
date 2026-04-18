@@ -9,8 +9,7 @@
     "cmake/presets/gcc-linux.json",
     "cmake/presets/clang-linux.json",
     "cmake/presets/windows.json",
-    "cmake/presets/arm.json",
-    "cmake/presets/static-analysis.json"
+    "cmake/presets/arm.json"
   ],
   "configurePresets": [
     {
