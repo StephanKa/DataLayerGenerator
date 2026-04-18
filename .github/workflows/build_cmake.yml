@@ -76,7 +76,9 @@ jobs:
 
     - name: Install conan
       shell: bash
-      run: uv tool install conan
+      run: |
+        uv tool install conan
+        conan profile detect --exist-ok
 
     - name: Configure via CMake
       # Use a bash shell so we can use the same syntax for environment variable
@@ -106,7 +108,9 @@ jobs:
       - uses: astral-sh/setup-uv@v5
       - name: Install conan
         shell: bash
-        run: uv tool install conan
+        run: |
+          uv tool install conan
+          conan profile detect --exist-ok
 
       - name: Configure CMake
         # Use a bash shell so we can use the same syntax for environment variable
@@ -180,7 +184,9 @@ jobs:
 
     - name: Install conan
       shell: bash
-      run: uv tool install conan
+      run: |
+        uv tool install conan
+        conan profile detect --exist-ok
 
     - name: Install dependencies
       run:   |
@@ -235,7 +241,9 @@ jobs:
 
     - name: Install conan
       shell: bash
-      run: uv tool install conan
+      run: |
+        uv tool install conan
+        conan profile detect --exist-ok
 
     - name: Install dependencies
       run:   |
