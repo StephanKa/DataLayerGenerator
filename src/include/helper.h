@@ -1,6 +1,7 @@
 #pragma once
 #include <array>
 #include <span>
+#include <string_view>
 
 namespace DataLayer
 {
