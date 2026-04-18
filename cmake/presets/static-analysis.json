@@ -1,13 +1,16 @@
 {
   "version": 7,
+  "include": [
+    "cmake/presets/clang-linux.json"
+  ],
   "configurePresets": [
     {
-      "name": "clang-15-debug-static-analysis",
-      "displayName": "Clang 15 Debug — Static Analysis",
-      "inherits": "clang-15-debug",
+      "name": "clang-18-debug-static-analysis",
+      "displayName": "Clang 18 Debug — Static Analysis",
+      "inherits": "clang-18-debug",
       "cacheVariables": {
-        "CMAKE_C_COMPILER": "clang-15",
-        "CMAKE_CXX_COMPILER": "clang++-15",
+        "CMAKE_C_COMPILER": "clang-18",
+        "CMAKE_CXX_COMPILER": "clang++-18",
         "CMAKE_BUILD_TYPE": "Debug",
         "ENABLE_CPPCHECK": "ON",
         "ENABLE_CLANG_TIDY": "ON",
@@ -21,6 +24,6 @@
     }
   ],
   "buildPresets": [
-    { "name": "clang-15-debug-static-analysis", "configurePreset": "clang-15-debug-static-analysis" }
+    { "name": "clang-18-debug-static-analysis", "configurePreset": "clang-18-debug-static-analysis" }
   ]
 }
