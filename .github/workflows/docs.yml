@@ -1,0 +1,91 @@
+name: Documentation
+
+on:
+  push:
+    branches: [main, master]
+  # Allow triggering manually from the Actions tab
+  workflow_dispatch:
+
+# Grant the workflow the permissions required by the GitHub Pages deployment API
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Only one deployment runs at a time; cancel any in-progress run when a new
+# push arrives so the latest commit is always what gets published.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build-docs:
+    name: Build Sphinx documentation
+    runs-on: ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # ── Python + Sphinx + Breathe ──────────────────────────────────────────
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Python doc dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install \
+            sphinx \
+            sphinx-rtd-theme \
+            breathe \
+            sphinx-copybutton \
+            jinja2 \
+            jsonschema \
+            pyyaml
+
+      # ── Doxygen ───────────────────────────────────────────────────────────
+      - name: Install Doxygen
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y doxygen graphviz
+
+      # ── CMake (no compiler / tests needed — docs only) ────────────────────
+      - name: Configure CMake (docs only)
+        run: |
+          cmake -S . -B build-docs \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DDOCS_ONLY=ON \
+            -DENABLE_DOCS=ON \
+            -DWARNINGS_AS_ERRORS=OFF
+
+      - name: Build Doxygen XML
+        run: cmake --build build-docs --target Doxygen
+
+      - name: Build Sphinx HTML
+        run: cmake --build build-docs --target Sphinx
+
+      # ── Upload to GitHub Pages ────────────────────────────────────────────
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload HTML artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # Path must point to the directory that Sphinx wrote its HTML into.
+          # Matches SPHINX_BUILD in docs/CMakeLists.txt.
+          path: build-docs/docs/sphinx
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build-docs
+    runs-on: ubuntu-24.04
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,3 +1,30 @@
+# ---------------------------------------------------------------------------
+# DataLayerGenerator — header-only INTERFACE library
+# Consumers link against this target to get the include path and compile
+# definitions. The actual code-generated header (datalayer.h) is added via
+# the generate_datalayer() CMake function from DataLayerGeneratorHelpers.cmake.
+# ---------------------------------------------------------------------------
+ADD_LIBRARY(DataLayerGenerator INTERFACE)
+ADD_LIBRARY(DataLayerGenerator::DataLayerGenerator ALIAS DataLayerGenerator)
+
+TARGET_INCLUDE_DIRECTORIES(DataLayerGenerator
+    INTERFACE
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>
+)
+
+TARGET_COMPILE_FEATURES(DataLayerGenerator INTERFACE cxx_std_20)
+
+IF(ENABLE_FMT)
+    TARGET_COMPILE_DEFINITIONS(DataLayerGenerator INTERFACE USE_FMT)
+ENDIF()
+IF(ENABLE_FILE_PERSISTENCE)
+    TARGET_COMPILE_DEFINITIONS(DataLayerGenerator INTERFACE USE_FILE_PERSISTENCE)
+ENDIF()
+
+# ---------------------------------------------------------------------------
+# Example executable
+# ---------------------------------------------------------------------------
 SET(PROJECT_NAME DatalayerGeneratorExample)
 
 IF(CMAKE_CROSSCOMPILING)
@@ -5,7 +32,8 @@ IF(CMAKE_CROSSCOMPILING)
     TARGET_LINK_LIBRARIES(
             ${PROJECT_NAME}
             PRIVATE project_options
-            project_warnings)
+            project_warnings
+            DataLayerGenerator::DataLayerGenerator)
 
     SET_TARGET_PROPERTIES(${PROJECT_NAME} PROPERTIES SUFFIX ".elf")
     TARGET_LINK_OPTIONS(${PROJECT_NAME}
@@ -31,6 +59,7 @@ ELSE()
             ${PROJECT_NAME}
             PRIVATE project_options
             project_warnings
+            DataLayerGenerator::DataLayerGenerator
             fmt::fmt-header-only)
 
     ADD_CUSTOM_COMMAND(TARGET ${PROJECT_NAME} POST_BUILD
@@ -48,8 +77,9 @@ ELSE()
         TARGET_LINK_LIBRARIES(conan_pybind11
                               PRIVATE
                               project_warnings
+                              DataLayerGenerator::DataLayerGenerator
                               fmt::fmt-header-only)
-        TARGET_INCLUDE_DIRECTORIES(conan_pybind11 PRIVATE ${CMAKE_BINARY_DIR}/generated ${CMAKE_CURRENT_SOURCE_DIR}/include)
+        TARGET_INCLUDE_DIRECTORIES(conan_pybind11 PRIVATE ${CMAKE_BINARY_DIR}/generated)
         ADD_DEPENDENCIES(conan_pybind11 GenerateDataLayer)
         ADD_CUSTOM_COMMAND(TARGET conan_pybind11 POST_BUILD
                            COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:conan_pybind11> ${CMAKE_BINARY_DIR}/install/bin/$<TARGET_FILE_NAME:conan_pybind11>
@@ -67,13 +97,23 @@ ELSE()
 ENDIF()
 
 
-ADD_CUSTOM_TARGET(GenerateDataLayer
-                  COMMAND ${Python_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/generator/generator.py
-                  --model_dir ${CMAKE_CURRENT_SOURCE_DIR}/model
-                  --out_dir ${CMAKE_BINARY_DIR}
-                  --template_dir ${CMAKE_CURRENT_SOURCE_DIR}/template
-                  --schema_dir ${CMAKE_CURRENT_SOURCE_DIR}/generator
-                  --module_name conan_pybind11)
+SET(_GEN_STAMP "${CMAKE_BINARY_DIR}/generated/.datalayer_generated.stamp")
 
-TARGET_INCLUDE_DIRECTORIES(${PROJECT_NAME} PRIVATE ${CMAKE_BINARY_DIR}/generated ${CMAKE_CURRENT_SOURCE_DIR}/include)
+ADD_CUSTOM_COMMAND(
+    OUTPUT  "${_GEN_STAMP}"
+    COMMAND ${Python_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/generator/generator.py
+            --model_dir    ${CMAKE_CURRENT_SOURCE_DIR}/model
+            --out_dir      ${CMAKE_BINARY_DIR}
+            --template_dir ${CMAKE_CURRENT_SOURCE_DIR}/template
+            --schema_dir   ${CMAKE_CURRENT_SOURCE_DIR}/generator
+            --module_name  conan_pybind11
+    COMMAND ${CMAKE_COMMAND} -E touch "${_GEN_STAMP}"
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/model
+    COMMENT "DataLayerGenerator: generating datalayer.h"
+    VERBATIM
+)
+
+ADD_CUSTOM_TARGET(GenerateDataLayer DEPENDS "${_GEN_STAMP}")
+
+TARGET_INCLUDE_DIRECTORIES(${PROJECT_NAME} PRIVATE ${CMAKE_BINARY_DIR}/generated)
 ADD_DEPENDENCIES(${PROJECT_NAME} GenerateDataLayer)

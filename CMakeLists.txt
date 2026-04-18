@@ -1,6 +1,11 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.19)
 
-INCLUDE(cmake/Conan.cmake)
+# When building docs only we skip Conan and all C++ targets.
+# This must be set before INCLUDE(cmake/Options.cmake) is called so we read
+# the cache value set by the caller.
+IF(NOT DOCS_ONLY)
+    INCLUDE(cmake/Conan.cmake)
+ENDIF()
 
 # Set the project name to your project name, my project isn't very descriptive
 PROJECT(DatalayerGenerator
@@ -69,6 +74,15 @@ ENABLE_DOXYGEN()
 
 # allow for static analysis options
 INCLUDE(cmake/StaticAnalyzers.cmake)
+
+# documentation generation
+IF(ENABLE_DOCS)
+    ADD_SUBDIRECTORY(docs)
+ENDIF()
+
+IF(DOCS_ONLY)
+    RETURN()
+ENDIF()
 
 # Very basic PCH example
 IF(ENABLE_PCH)
