@@ -71,16 +71,11 @@ jobs:
         run: cmake --build build-docs --target Sphinx
 
       # ── Upload to GitHub Pages ────────────────────────────────────────────
-      - name: Configure GitHub Pages
-        uses: actions/configure-pages@v5
-        with:
-          enablement: true
-
+      # NOTE: GitHub Pages must be enabled once manually in the repository:
+      #   Settings → Pages → Source → GitHub Actions
       - name: Upload HTML artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Path must point to the directory that Sphinx wrote its HTML into.
-          # Matches SPHINX_BUILD in docs/CMakeLists.txt.
           path: build-docs/docs/sphinx
 
   deploy:
