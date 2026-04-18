@@ -1,0 +1,129 @@
+{
+  "version": 7,
+  "configurePresets": [
+    {
+      "name": "clang-12-debug",   "inherits": "debug-base",   "displayName": "Clang 12 Debug",
+      "environment": { "CXX": "clang++-12", "CC": "clang-12" }
+    },
+    {
+      "name": "clang-12-release", "inherits": "release-base", "displayName": "Clang 12 Release",
+      "environment": { "CXX": "clang++-12", "CC": "clang-12" }
+    },
+    {
+      "name": "clang-13-debug",   "inherits": "debug-base",   "displayName": "Clang 13 Debug",
+      "environment": { "CXX": "clang++-13", "CC": "clang-13" }
+    },
+    {
+      "name": "clang-13-release", "inherits": "release-base", "displayName": "Clang 13 Release",
+      "environment": { "CXX": "clang++-13", "CC": "clang-13" }
+    },
+    {
+      "name": "clang-14-debug",   "inherits": "debug-base",   "displayName": "Clang 14 Debug",
+      "environment": { "CXX": "clang++-14", "CC": "clang-14" }
+    },
+    {
+      "name": "clang-14-release", "inherits": "release-base", "displayName": "Clang 14 Release",
+      "environment": { "CXX": "clang++-14", "CC": "clang-14" }
+    },
+    {
+      "name": "clang-15-debug",   "inherits": "debug-base",   "displayName": "Clang 15 Debug",
+      "environment": { "CXX": "clang++-15", "CC": "clang-15" }
+    },
+    {
+      "name": "clang-15-release", "inherits": "release-base", "displayName": "Clang 15 Release",
+      "environment": { "CXX": "clang++-15", "CC": "clang-15" }
+    },
+    {
+      "name": "clang-16-debug",   "inherits": "debug-base",   "displayName": "Clang 16 Debug",
+      "environment": { "CXX": "clang++-16", "CC": "clang-16" }
+    },
+    {
+      "name": "clang-16-release", "inherits": "release-base", "displayName": "Clang 16 Release",
+      "environment": { "CXX": "clang++-16", "CC": "clang-16" }
+    },
+    {
+      "name": "clang-17-debug",   "inherits": "debug-base",   "displayName": "Clang 17 Debug",
+      "environment": { "CXX": "clang++-17", "CC": "clang-17" }
+    },
+    {
+      "name": "clang-17-release", "inherits": "release-base", "displayName": "Clang 17 Release",
+      "environment": { "CXX": "clang++-17", "CC": "clang-17" }
+    },
+    {
+      "name": "clang-18-debug",   "inherits": "debug-base",   "displayName": "Clang 18 Debug",
+      "environment": { "CXX": "clang++-18", "CC": "clang-18" }
+    },
+    {
+      "name": "clang-18-release", "inherits": "release-base", "displayName": "Clang 18 Release",
+      "environment": { "CXX": "clang++-18", "CC": "clang-18" }
+    },
+    {
+      "name": "clang-19-debug",   "inherits": "debug-base",   "displayName": "Clang 19 Debug",
+      "environment": { "CXX": "clang++-19", "CC": "clang-19" }
+    },
+    {
+      "name": "clang-19-release", "inherits": "release-base", "displayName": "Clang 19 Release",
+      "environment": { "CXX": "clang++-19", "CC": "clang-19" }
+    },
+    {
+      "name": "clang-20-debug",   "inherits": "debug-base",   "displayName": "Clang 20 Debug",
+      "environment": { "CXX": "clang++-20", "CC": "clang-20" }
+    },
+    {
+      "name": "clang-20-release", "inherits": "release-base", "displayName": "Clang 20 Release",
+      "environment": { "CXX": "clang++-20", "CC": "clang-20" }
+    },
+    {
+      "name": "clang-21-debug",   "inherits": "debug-base",   "displayName": "Clang 21 Debug",
+      "environment": { "CXX": "clang++-21", "CC": "clang-21" }
+    },
+    {
+      "name": "clang-21-release", "inherits": "release-base", "displayName": "Clang 21 Release",
+      "environment": { "CXX": "clang++-21", "CC": "clang-21" }
+    }
+  ],
+  "buildPresets": [
+    { "name": "clang-12-debug",   "configurePreset": "clang-12-debug"   },
+    { "name": "clang-12-release", "configurePreset": "clang-12-release" },
+    { "name": "clang-13-debug",   "configurePreset": "clang-13-debug"   },
+    { "name": "clang-13-release", "configurePreset": "clang-13-release" },
+    { "name": "clang-14-debug",   "configurePreset": "clang-14-debug"   },
+    { "name": "clang-14-release", "configurePreset": "clang-14-release" },
+    { "name": "clang-15-debug",   "configurePreset": "clang-15-debug"   },
+    { "name": "clang-15-release", "configurePreset": "clang-15-release" },
+    { "name": "clang-16-debug",   "configurePreset": "clang-16-debug"   },
+    { "name": "clang-16-release", "configurePreset": "clang-16-release" },
+    { "name": "clang-17-debug",   "configurePreset": "clang-17-debug"   },
+    { "name": "clang-17-release", "configurePreset": "clang-17-release" },
+    { "name": "clang-18-debug",   "configurePreset": "clang-18-debug"   },
+    { "name": "clang-18-release", "configurePreset": "clang-18-release" },
+    { "name": "clang-19-debug",   "configurePreset": "clang-19-debug"   },
+    { "name": "clang-19-release", "configurePreset": "clang-19-release" },
+    { "name": "clang-20-debug",   "configurePreset": "clang-20-debug"   },
+    { "name": "clang-20-release", "configurePreset": "clang-20-release" },
+    { "name": "clang-21-debug",   "configurePreset": "clang-21-debug"   },
+    { "name": "clang-21-release", "configurePreset": "clang-21-release" }
+  ],
+  "testPresets": [
+    { "name": "clang-12-debug",   "configurePreset": "clang-12-debug"   },
+    { "name": "clang-12-release", "configurePreset": "clang-12-release" },
+    { "name": "clang-13-debug",   "configurePreset": "clang-13-debug"   },
+    { "name": "clang-13-release", "configurePreset": "clang-13-release" },
+    { "name": "clang-14-debug",   "configurePreset": "clang-14-debug"   },
+    { "name": "clang-14-release", "configurePreset": "clang-14-release" },
+    { "name": "clang-15-debug",   "configurePreset": "clang-15-debug"   },
+    { "name": "clang-15-release", "configurePreset": "clang-15-release" },
+    { "name": "clang-16-debug",   "configurePreset": "clang-16-debug"   },
+    { "name": "clang-16-release", "configurePreset": "clang-16-release" },
+    { "name": "clang-17-debug",   "configurePreset": "clang-17-debug"   },
+    { "name": "clang-17-release", "configurePreset": "clang-17-release" },
+    { "name": "clang-18-debug",   "configurePreset": "clang-18-debug"   },
+    { "name": "clang-18-release", "configurePreset": "clang-18-release" },
+    { "name": "clang-19-debug",   "configurePreset": "clang-19-debug"   },
+    { "name": "clang-19-release", "configurePreset": "clang-19-release" },
+    { "name": "clang-20-debug",   "configurePreset": "clang-20-debug"   },
+    { "name": "clang-20-release", "configurePreset": "clang-20-release" },
+    { "name": "clang-21-debug",   "configurePreset": "clang-21-debug"   },
+    { "name": "clang-21-release", "configurePreset": "clang-21-release" }
+  ]
+}

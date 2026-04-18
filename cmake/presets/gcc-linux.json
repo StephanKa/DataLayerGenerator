@@ -1,0 +1,81 @@
+{
+  "version": 7,
+  "configurePresets": [
+    {
+      "name": "gcc-10-debug",   "inherits": "debug-base",   "displayName": "GCC 10 Debug",
+      "environment": { "CXX": "g++-10",  "CC": "gcc-10"  }
+    },
+    {
+      "name": "gcc-10-release", "inherits": "release-base", "displayName": "GCC 10 Release",
+      "environment": { "CXX": "g++-10",  "CC": "gcc-10"  }
+    },
+    {
+      "name": "gcc-11-debug",   "inherits": "debug-base",   "displayName": "GCC 11 Debug",
+      "environment": { "CXX": "g++-11",  "CC": "gcc-11"  }
+    },
+    {
+      "name": "gcc-11-release", "inherits": "release-base", "displayName": "GCC 11 Release",
+      "environment": { "CXX": "g++-11",  "CC": "gcc-11"  }
+    },
+    {
+      "name": "gcc-12-debug",   "inherits": "debug-base",   "displayName": "GCC 12 Debug",
+      "environment": { "CXX": "g++-12",  "CC": "gcc-12"  }
+    },
+    {
+      "name": "gcc-12-release", "inherits": "release-base", "displayName": "GCC 12 Release",
+      "environment": { "CXX": "g++-12",  "CC": "gcc-12"  }
+    },
+    {
+      "name": "gcc-13-debug",   "inherits": "debug-base",   "displayName": "GCC 13 Debug",
+      "environment": { "CXX": "g++-13",  "CC": "gcc-13"  }
+    },
+    {
+      "name": "gcc-13-release", "inherits": "release-base", "displayName": "GCC 13 Release",
+      "environment": { "CXX": "g++-13",  "CC": "gcc-13"  }
+    },
+    {
+      "name": "gcc-14-debug",   "inherits": "debug-base",   "displayName": "GCC 14 Debug",
+      "environment": { "CXX": "g++-14",  "CC": "gcc-14"  }
+    },
+    {
+      "name": "gcc-14-release", "inherits": "release-base", "displayName": "GCC 14 Release",
+      "environment": { "CXX": "g++-14",  "CC": "gcc-14"  }
+    },
+    {
+      "name": "gcc-15-debug",   "inherits": "debug-base",   "displayName": "GCC 15 Debug",
+      "environment": { "CXX": "g++-15",  "CC": "gcc-15"  }
+    },
+    {
+      "name": "gcc-15-release", "inherits": "release-base", "displayName": "GCC 15 Release",
+      "environment": { "CXX": "g++-15",  "CC": "gcc-15"  }
+    }
+  ],
+  "buildPresets": [
+    { "name": "gcc-10-debug",   "configurePreset": "gcc-10-debug"   },
+    { "name": "gcc-10-release", "configurePreset": "gcc-10-release" },
+    { "name": "gcc-11-debug",   "configurePreset": "gcc-11-debug"   },
+    { "name": "gcc-11-release", "configurePreset": "gcc-11-release" },
+    { "name": "gcc-12-debug",   "configurePreset": "gcc-12-debug"   },
+    { "name": "gcc-12-release", "configurePreset": "gcc-12-release" },
+    { "name": "gcc-13-debug",   "configurePreset": "gcc-13-debug"   },
+    { "name": "gcc-13-release", "configurePreset": "gcc-13-release" },
+    { "name": "gcc-14-debug",   "configurePreset": "gcc-14-debug"   },
+    { "name": "gcc-14-release", "configurePreset": "gcc-14-release" },
+    { "name": "gcc-15-debug",   "configurePreset": "gcc-15-debug"   },
+    { "name": "gcc-15-release", "configurePreset": "gcc-15-release" }
+  ],
+  "testPresets": [
+    { "name": "gcc-10-debug",   "configurePreset": "gcc-10-debug"   },
+    { "name": "gcc-10-release", "configurePreset": "gcc-10-release" },
+    { "name": "gcc-11-debug",   "configurePreset": "gcc-11-debug"   },
+    { "name": "gcc-11-release", "configurePreset": "gcc-11-release" },
+    { "name": "gcc-12-debug",   "configurePreset": "gcc-12-debug"   },
+    { "name": "gcc-12-release", "configurePreset": "gcc-12-release" },
+    { "name": "gcc-13-debug",   "configurePreset": "gcc-13-debug"   },
+    { "name": "gcc-13-release", "configurePreset": "gcc-13-release" },
+    { "name": "gcc-14-debug",   "configurePreset": "gcc-14-debug"   },
+    { "name": "gcc-14-release", "configurePreset": "gcc-14-release" },
+    { "name": "gcc-15-debug",   "configurePreset": "gcc-15-debug"   },
+    { "name": "gcc-15-release", "configurePreset": "gcc-15-release" }
+  ]
+}
