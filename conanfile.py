@@ -60,7 +60,7 @@ class DataLayerGeneratorConan(ConanFile):
     def build_requirements(self):
         """Dependencies only needed when building the project itself (tests, example)."""
         if not self.settings.get_safe('arch') == 'armv7':
-            self.test_requires('catch2/3.12.0')
+            self.test_requires('catch2/3.14.0')
 
     def generate(self):
         """Generate build system files. Only needed when building the example/tests."""
