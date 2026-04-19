@@ -8,7 +8,6 @@
 #   sphinx-build -b html docs/ build/docs/sphinx/
 
 import os
-import sys
 
 # -- Project information -----------------------------------------------------
 project = 'DataLayerGenerator'
