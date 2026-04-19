@@ -123,7 +123,8 @@
     { "name": "clang-20-debug",   "configurePreset": "clang-20-debug"   },
     { "name": "clang-20-release", "configurePreset": "clang-20-release" },
     { "name": "clang-21-debug",   "configurePreset": "clang-21-debug"   },
-    { "name": "clang-21-release", "configurePreset": "clang-21-release" }
+    { "name": "clang-21-release", "configurePreset": "clang-21-release" },
+    { "name": "clang-18-debug-static-analysis", "configurePreset": "clang-18-debug-static-analysis" }
   ],
   "testPresets": [
     { "name": "clang-12-debug",   "configurePreset": "clang-12-debug"   },
