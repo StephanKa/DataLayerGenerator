@@ -46,7 +46,11 @@ function(generate_datalayer TARGET_NAME)
         set(ARG_MODULE_NAME "datalayer")
     endif()
 
-    find_package(Python COMPONENTS Interpreter REQUIRED)
+    if(NOT Python_EXECUTABLE)
+        find_package(Python COMPONENTS Interpreter REQUIRED)
+    endif()
+
+    file(GLOB_RECURSE _MODEL_FILES "${ARG_MODEL_DIR}/*")
 
     set(_GEN_STAMP "${ARG_OUT_DIR}/generated/.datalayer_generated.stamp")
 
@@ -60,7 +64,7 @@ function(generate_datalayer TARGET_NAME)
                 --schema_dir   "${DATALAYER_GENERATOR_DIR}"
                 --module_name  "${ARG_MODULE_NAME}"
         COMMAND "${CMAKE_COMMAND}" -E touch "${_GEN_STAMP}"
-        DEPENDS "${ARG_MODEL_DIR}"
+        DEPENDS ${_MODEL_FILES}
         COMMENT "DataLayerGenerator: generating datalayer.h from ${ARG_MODEL_DIR}"
         VERBATIM
     )

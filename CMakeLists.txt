@@ -70,7 +70,7 @@ ENABLE_SANITIZERS(project_options)
 
 # enable doxygen
 INCLUDE(cmake/Doxygen.cmake)
-ENABLE_DOXYGEN()
+SETUP_DOXYGEN()
 
 # allow for static analysis options
 INCLUDE(cmake/StaticAnalyzers.cmake)

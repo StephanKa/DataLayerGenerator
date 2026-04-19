@@ -1,6 +1,6 @@
 FIND_PACKAGE(Python COMPONENTS Interpreter REQUIRED)
 
-IF(ENABLED_VENV)
+IF(ENABLE_VENV)
     # install PyPI Python package using pip
     EXECUTE_PROCESS(COMMAND ${Python_EXECUTABLE} -m pip install --upgrade pip virtualenv)
 
@@ -15,5 +15,16 @@ IF(ENABLED_VENV)
     FIND_PACKAGE(Python COMPONENTS Interpreter Development REQUIRED)
 ENDIF()
 
-# install PyPI Python package using pip
-EXECUTE_PROCESS(COMMAND ${Python_EXECUTABLE} -m pip install --user --upgrade  -r ${CMAKE_CURRENT_SOURCE_DIR}/src/generator/requirements.txt)
+# Install generator requirements only when requirements.txt changes.
+SET(_PIP_STAMP "${CMAKE_BINARY_DIR}/.pip_requirements.stamp")
+SET(_PIP_REQUIREMENTS "${CMAKE_CURRENT_SOURCE_DIR}/src/generator/requirements.txt")
+IF(NOT EXISTS "${_PIP_STAMP}" OR "${_PIP_REQUIREMENTS}" IS_NEWER_THAN "${_PIP_STAMP}")
+    IF(ENABLE_VENV)
+        EXECUTE_PROCESS(COMMAND ${Python_EXECUTABLE} -m pip install --upgrade -r "${_PIP_REQUIREMENTS}")
+    ELSE()
+        EXECUTE_PROCESS(COMMAND ${Python_EXECUTABLE} -m pip install --user --upgrade -r "${_PIP_REQUIREMENTS}")
+    ENDIF()
+    FILE(TOUCH "${_PIP_STAMP}")
+ENDIF()
+UNSET(_PIP_STAMP)
+UNSET(_PIP_REQUIREMENTS)

@@ -20,7 +20,7 @@ FUNCTION(SET_PROJECT_WARNINGS project_name)
         /w14546 # function call before comma missing argument list
         /w14547 # 'operator': operator before comma has no effect; expected operator with side-effect
         /w14549 # 'operator': operator before comma has no effect; did you intend 'operator'?
-        /w14555 # expression has no effect; expected expression with side- effect
+        /w14555 # expression has no effect; expected expression with side-effect
         /w14619 # pragma warning: there is no warning number 'number'
         /w14640 # Enable warning on thread un-safe static member initialization
         /w14826 # Conversion from 'type1' to 'type_2' is sign-extended. This may cause unexpected runtime behavior.
@@ -46,12 +46,8 @@ FUNCTION(SET_PROJECT_WARNINGS project_name)
         -Wnull-dereference # warn if a null dereference is detected
         -Wdouble-promotion # warn if float is implicit promoted to double
         -Wformat=2 # warn on security issues around functions that format output (ie printf)
+        -Wimplicit-fallthrough # warn on implicit fallthrough in switch statements
         )
-
-    IF(WARNINGS_AS_ERRORS)
-        SET(CLANG_WARNINGS ${CLANG_WARNINGS} -Werror)
-        SET(MSVC_WARNINGS ${MSVC_WARNINGS} /WX)
-    ENDIF()
 
     SET(GCC_WARNINGS
         ${CLANG_WARNINGS}
@@ -60,6 +56,7 @@ FUNCTION(SET_PROJECT_WARNINGS project_name)
         -Wduplicated-branches # warn if if / else branches have duplicated code
         -Wlogical-op # warn about logical operations being used where bitwise were probably wanted
         -Wuseless-cast # warn if you perform a cast to the same type
+        -Wno-interference-size # suppress noisy C++17/20 ABI warning on GCC >= 12
         )
 
     IF(MSVC)
@@ -72,6 +69,11 @@ FUNCTION(SET_PROJECT_WARNINGS project_name)
         MESSAGE(AUTHOR_WARNING "No compiler warnings set for '${CMAKE_CXX_COMPILER_ID}' compiler.")
     ENDIF()
 
-    TARGET_COMPILE_OPTIONS(${project_name} INTERFACE ${PROJECT_WARNINGS})
+    IF(WARNINGS_AS_ERRORS)
+        LIST(APPEND PROJECT_WARNINGS $<IF:$<CXX_COMPILER_ID:MSVC>,/WX,-Werror>)
+    ENDIF()
+
+    TARGET_COMPILE_OPTIONS(${project_name} INTERFACE
+        $<$<COMPILE_LANGUAGE:CXX>:${PROJECT_WARNINGS}>)
 
 ENDFUNCTION()

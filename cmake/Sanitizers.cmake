@@ -3,7 +3,10 @@ FUNCTION(ENABLE_SANITIZERS project_name)
     IF(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
 
         IF(ENABLE_COVERAGE)
-            TARGET_COMPILE_OPTIONS(${project_name} INTERFACE --coverage -O0 -g)
+            TARGET_COMPILE_OPTIONS(${project_name} INTERFACE
+                $<$<COMPILE_LANGUAGE:CXX>:--coverage>
+                $<$<COMPILE_LANGUAGE:CXX>:-O0>
+                $<$<COMPILE_LANGUAGE:CXX>:-g>)
             TARGET_LINK_LIBRARIES(${project_name} INTERFACE --coverage)
         ENDIF()
 
@@ -39,22 +42,25 @@ FUNCTION(ENABLE_SANITIZERS project_name)
             ENDIF()
         ENDIF()
 
-        LIST(
-                JOIN
-                SANITIZERS
-                ","
-                LIST_OF_SANITIZERS)
+        LIST(JOIN SANITIZERS "," LIST_OF_SANITIZERS)
 
-    ENDIF()
-
-    IF(LIST_OF_SANITIZERS)
-        IF(NOT
-           "${LIST_OF_SANITIZERS}"
-           STREQUAL
-           "")
+        IF(LIST_OF_SANITIZERS)
             TARGET_COMPILE_OPTIONS(${project_name} INTERFACE -fsanitize=${LIST_OF_SANITIZERS})
             TARGET_LINK_OPTIONS(${project_name} INTERFACE -fsanitize=${LIST_OF_SANITIZERS})
         ENDIF()
+
+    ELSEIF(MSVC)
+
+        IF(ENABLE_SANITIZER_ADDRESS)
+            MESSAGE(STATUS "Enabling MSVC AddressSanitizer (/fsanitize=address)")
+            TARGET_COMPILE_OPTIONS(${project_name} INTERFACE /fsanitize=address)
+            TARGET_LINK_OPTIONS(${project_name} INTERFACE /INCREMENTAL:NO)
+        ENDIF()
+        IF(ENABLE_SANITIZER_LEAK OR ENABLE_SANITIZER_UNDEFINED_BEHAVIOR OR
+           ENABLE_SANITIZER_THREAD OR ENABLE_SANITIZER_MEMORY)
+            MESSAGE(WARNING "MSVC only supports AddressSanitizer; other sanitizer options are ignored.")
+        ENDIF()
+
     ENDIF()
 
 ENDFUNCTION()
