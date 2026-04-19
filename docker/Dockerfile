@@ -70,10 +70,6 @@ RUN groupadd -f -g 1000 ${DEV_USER} && \
   echo "${DEV_USER}:${DEV_USER}" | chpasswd && \
   echo "${DEV_USER}   ALL=(ALL:ALL) ALL" >> /etc/sudoers
 
-# fix "Missing privilege separation directory" error in SSHD
-# see: https://bugs.launchpad.net/ubuntu/+source/openssh/+bug/45234
-RUN chmod 0755 /run/sshd
-
 COPY ccache.conf /etc/.
 
 USER ${DEV_USER}
