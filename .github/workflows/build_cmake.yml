@@ -31,13 +31,12 @@ jobs:
       matrix:
         os: [ubuntu-24.04]
         buildtype: [debug, release]
-        compiler: [ {name: 'GCC 11', preset: gcc-11, pkgs: 'gcc-11 g++-11 lib32gcc-11-dev gcc-multilib'},
-                    {name: 'GCC 12', preset: gcc-12, pkgs: 'gcc-12 g++-12 lib32gcc-12-dev gcc-multilib'},
-                    {name: 'GCC 13', preset: gcc-13, pkgs: 'gcc-13 g++-13 lib32gcc-13-dev gcc-multilib'},
+        compiler: [ {name: 'GCC 13', preset: gcc-13, pkgs: 'gcc-13 g++-13 lib32gcc-13-dev gcc-multilib'},
                     {name: 'GCC 14', preset: gcc-14, pkgs: 'gcc-14 g++-14 lib32gcc-14-dev gcc-multilib'},
-                    {name: 'Clang 18', preset: clang-18, version: '18'},
+                    {name: 'GCC 15', preset: gcc-15, pkgs: 'gcc-15 g++-15 lib32gcc-15-dev gcc-multilib'},
                     {name: 'Clang 19', preset: clang-19, version: '19'},
-                    {name: 'Clang 20', preset: clang-20, version: '20'}
+                    {name: 'Clang 20', preset: clang-20, version: '20'},
+                    {name: 'Clang 21', preset: clang-21, version: '21'}
                   ]
     steps:
     - uses: actions/checkout@v4
