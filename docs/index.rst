@@ -1,11 +1,12 @@
 DataLayerGenerator
 ==================
 
-A compile-time C++20 data layer framework with Python/Jinja2 code generation for embedded and host applications.
+A compile-time C++20/23 data layer framework with Python/Jinja2 code generation for embedded and host applications.
 
 The library is header-only. You describe your data model (datapoints, groups, types, enums, structs) in
 JSON or YAML files, run the generator, and get a fully type-safe ``datalayer.h`` header with ``constinit``
-objects, range-checked access, optional persistence, optional ``fmt`` formatters, and optional Python bindings.
+objects, range-checked access via ``std::expected``, optional persistence, optional ``fmt`` formatters,
+and optional Python bindings.
 
 .. toctree::
    :maxdepth: 2

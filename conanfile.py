@@ -7,15 +7,15 @@ from conan.tools.files import copy
 
 
 class DataLayerGeneratorConan(ConanFile):
-    """Header-only C++20 data layer framework with compile-time code generator."""
+    """Header-only C++20/23 data layer framework with compile-time code generator."""
 
     name = 'datalayer-generator'
     version = '0.0.1'
-    description = 'Header-only C++20 data layer framework with compile-time Python/Jinja2 code generation'
+    description = 'Header-only C++20/23 data layer framework with compile-time Python/Jinja2 code generation'
     url = 'https://github.com/your-org/DataLayerGenerator'
     homepage = 'https://github.com/your-org/DataLayerGenerator'
     license = 'Unlicense'
-    topics = ('embedded', 'code-generation', 'header-only', 'c++20', 'data-layer')
+    topics = ('embedded', 'code-generation', 'header-only', 'c++23', 'data-layer')
 
     # Header-only: no compiler/build_type/arch needed for the library itself,
     # but we keep them for the test executable and optional pybind11 module.

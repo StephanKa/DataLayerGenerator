@@ -1,5 +1,7 @@
 #pragma once
+#include <algorithm>
 #include <array>
+#include <compare>
 #include <span>
 #include <string_view>
 
@@ -24,15 +26,8 @@ struct Version
     uint32_t minor{};
     uint32_t build{};
 
-    constexpr bool operator!=(const Version &rhs) const
-    {
-        return rhs.major != major || rhs.minor != minor || rhs.build != build;
-    }
-
-    constexpr bool operator>(const Version &rhs) const
-    {
-        return rhs.major > major || rhs.minor > minor || rhs.build > build;
-    }
+    constexpr auto operator<=>(const Version &) const = default;
+    constexpr bool operator==(const Version &) const = default;
 };
 
 template<size_t N>
@@ -40,14 +35,19 @@ struct FixedString
 {
     std::array<char, N + 1> buf{};
 
-    consteval FixedString(std::span<const char> input)
+    consteval FixedString(const char (&str)[N + 1])
     {
-        std::copy(input.begin(), input.end(), buf.begin());
+        std::copy_n(str, N + 1, buf.begin());
     }
 
     [[nodiscard]] constexpr operator std::string_view() const
     {
-        return buf.data();
+        return { buf.data(), N };
+    }
+
+    [[nodiscard]] static constexpr size_t size() noexcept
+    {
+        return N;
     }
 };
 

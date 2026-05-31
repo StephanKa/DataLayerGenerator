@@ -29,7 +29,7 @@ namespace DataLayer
         }
 
         template<typename T>
-        [[nodiscard]] Detail::CheckResult setDatapoint(uint32_t dataPointId, const T &value) const
+        [[nodiscard]] constexpr Detail::CheckResult setDatapoint(uint32_t dataPointId, const T &value) const
         {
             return std::apply(
               [&](auto &...args) {
@@ -44,7 +44,7 @@ namespace DataLayer
         }
 
         template<typename T>
-        [[nodiscard]] bool getDatapoint(uint32_t dataPointId, T &value) const
+        [[nodiscard]] constexpr bool getDatapoint(uint32_t dataPointId, T &value) const
         {
             return std::apply(
               [&](const auto &...args) {
@@ -59,13 +59,13 @@ namespace DataLayer
 
 #ifdef USE_FILE_PERSISTENCE
 
-        [[nodiscard]] SerializationStatus serializeGroup(std::string_view path) const
+        [[nodiscard]] SerializationStatus serializeGroup(const std::filesystem::path &path) const
         {
             Serialization value(group.version, path, datapoints);
             return value.write();
         }
 
-        [[nodiscard]] SerializationStatus deserializeGroup(std::string_view path) const
+        [[nodiscard]] SerializationStatus deserializeGroup(const std::filesystem::path &path) const
         {
             Deserialization value(group.version, path, datapoints, group.allowUpgrade);
             return value.read();

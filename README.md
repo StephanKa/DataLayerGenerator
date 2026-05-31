@@ -7,7 +7,7 @@
 
 ---
 
-A **header-only C++20 framework** with a **Python/Jinja2 code generator** for building type-safe,
+A **header-only C++20/23 framework** with a **Python/Jinja2 code generator** for building type-safe,
 zero-allocation data layers — targeting embedded systems (MCU / bare-metal) as well as host
 applications.
 
@@ -22,7 +22,7 @@ optional Python bindings.
 
 | Feature | Description |
 |---|---|
-| **C++20** | Requires C++20 — leverages Concepts, NTTPs, `consteval`, `constinit`, `std::span` |
+| **C++20/23** | Requires C++20 minimum — leverages Concepts, NTTPs, `consteval`, `constinit`, `std::span`, `std::expected` |
 | **Header-only framework** | `src/include/` has no compiled artifacts and no external dependencies |
 | **Compile-time access control** | `READ_ONLY`, `WRITE_ONLY`, `READ_WRITE` enforced via C++20 Concepts |
 | **Range checking** | Alias types carry `Minimum`/`Maximum`; violations return `RangeCheck::underflow/overflow` |
@@ -40,8 +40,8 @@ optional Python bindings.
 
 ### Prerequisites
 
-- CMake ≥ 3.19
-- C++20 compiler (GCC 10+, Clang 15+, MSVC 2022)
+- CMake ≥ 3.25
+- C++23 compiler (GCC 13+, Clang 16+, MSVC 2022 17.5+)
 - Python ≥ 3.9 with `pip install jinja2 jsonschema pyyaml`
 - [Conan 2.x](https://conan.io/)
 

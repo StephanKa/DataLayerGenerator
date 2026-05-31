@@ -57,6 +57,7 @@ FUNCTION(SET_PROJECT_WARNINGS project_name)
         -Wlogical-op # warn about logical operations being used where bitwise were probably wanted
         -Wuseless-cast # warn if you perform a cast to the same type
         -Wno-interference-size # suppress noisy C++17/20 ABI warning on GCC >= 12
+        -Wdangling-reference # GCC 13+ — catches dangling references to temporaries
         )
 
     IF(MSVC)

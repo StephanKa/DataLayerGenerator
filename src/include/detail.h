@@ -2,8 +2,8 @@
 #include <array>
 #include <concepts>
 #include <cstdint>
+#include <expected>
 #include <helper.h>
-#include <variant>
 #include <string>
 
 namespace DataLayer::Detail
@@ -12,10 +12,7 @@ namespace DataLayer::Detail
     [[nodiscard]] constexpr std::array<T, N> make_array(T value) noexcept
     {
         std::array<T, N> temp{};
-        for (auto &val : temp)
-        {
-            val = value;
-        }
+        temp.fill(value);
         return temp;
     }
 
@@ -59,26 +56,26 @@ namespace DataLayer::Detail
     };
 
     template<typename T>
-    [[nodiscard]] auto checkValue(T value) noexcept
+    [[nodiscard]] constexpr auto checkValue(T value) noexcept
     {
         using Type = std::remove_cvref_t<T>;
         if constexpr (hasRange<Type>)
         {
-            using UnderlyingType = Type::Type;
-            using RetType = std::variant<RangeCheck, UnderlyingType>;
+            using UnderlyingType = typename Type::Type;
+            using RetType = std::expected<UnderlyingType, RangeCheck>;
             if (value() < Type::Minimum)
             {
-                return RetType{ RangeCheck::underflow };
+                return RetType{ std::unexpected(RangeCheck::underflow) };
             }
             if (value() > Type::Maximum)
             {
-                return RetType{ RangeCheck::overflow };
+                return RetType{ std::unexpected(RangeCheck::overflow) };
             }
             return RetType{ value() };
         }
         else
         {
-            using RetType = std::variant<RangeCheck, T>;
+            using RetType = std::expected<T, RangeCheck>;
             return RetType{ value };
         }
     }

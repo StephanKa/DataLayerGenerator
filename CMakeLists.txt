@@ -1,5 +1,6 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 3.19)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.25)
 
+INCLUDE(cmake/ProjectSettings.cmake)
 # When building docs only we skip Conan and all C++ targets.
 # This must be set before INCLUDE(cmake/Options.cmake) is called so we read
 # the cache value set by the caller.
@@ -13,10 +14,12 @@ PROJECT(DatalayerGenerator
         VERSION 0.0.1)
 
 IF(NOT DEFINED CXX_STANDARD)
-    SET(CMAKE_CXX_STANDARD 20)
+    SET(CMAKE_CXX_STANDARD 23)
 ELSE()
     SET(CMAKE_CXX_STANDARD ${CXX_STANDARD})
 ENDIF()
+SET(CMAKE_CXX_STANDARD_REQUIRED ON)
+SET(CMAKE_CXX_EXTENSIONS OFF)
 MESSAGE("Using C++ standard ${CMAKE_CXX_STANDARD}")
 
 INCLUDE(cmake/Options.cmake)
@@ -24,6 +27,9 @@ INCLUDE(cmake/StandardProjectSettings.cmake)
 INCLUDE(cmake/PreventInSourceBuilds.cmake)
 INCLUDE(cmake/Python.cmake)
 INCLUDE(cmake/CodeFormat.cmake)
+# enabled precompiled headers
+INCLUDE(cmake/PrecompiledHeader.cmake)
+ENABLE_PCH()
 
 IF(ENABLE_FMT)
     ADD_COMPILE_DEFINITIONS(USE_FMT)

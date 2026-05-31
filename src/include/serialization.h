@@ -11,8 +11,11 @@ enum class SerializationError : uint8_t
     GroupVersion,
     DatapointVersion,
     GroupAndDatapointVersion,
-    NotAllBytesRead
+    NotAllBytesRead,
+    StringTooLarge
 };
+
+inline constexpr size_t MaxDeserializedStringSize = 1024 * 1024;// 1 MiB safety cap
 
 struct SerializationStatus
 {
@@ -30,8 +33,8 @@ concept IsString = std::is_same_v<char *, std::decay_t<Type>> || std::is_same_v<
 template<typename Data>
 struct Serialization
 {
-    constexpr explicit Serialization(const Version &groupVersionInfo, std::string_view path, Data &input)
-      : m_dataVariables(input), m_ofileNonPOD(path.data(), std::ios::binary), m_groupVersionInfo(groupVersionInfo)
+    constexpr explicit Serialization(const Version &groupVersionInfo, const std::filesystem::path &path, Data &input)
+      : m_dataVariables(input), m_ofileNonPOD(path, std::ios::binary), m_groupVersionInfo(groupVersionInfo)
     {}
 
     ~Serialization()
@@ -113,8 +116,8 @@ struct Serialization
 template<typename Data>
 struct Deserialization
 {
-    constexpr explicit Deserialization(const Version &groupVersionInfo, std::string_view path, Data &input, bool allowUpgrade)
-      : m_dataVariables(input), m_ifileNonPOD(path.data(), std::ios::binary), m_fileSize(std::filesystem::file_size(path)), m_groupVersionInfo(groupVersionInfo),
+    constexpr explicit Deserialization(const Version &groupVersionInfo, const std::filesystem::path &path, Data &input, bool allowUpgrade)
+      : m_dataVariables(input), m_ifileNonPOD(path, std::ios::binary), m_fileSize(std::filesystem::file_size(path)), m_groupVersionInfo(groupVersionInfo),
         m_allowUpgrade(allowUpgrade)
     {}
 
@@ -180,6 +183,12 @@ struct Deserialization
                 return false;
             }
             ifile.read(reinterpret_cast<char *>(&valueSize), sizeof(valueSize));
+            if (valueSize > MaxDeserializedStringSize)
+            {
+                error = SerializationError::StringTooLarge;
+                ret = false;
+                return true;
+            }
             tempValue.resize(valueSize);
             size += valueSize;
             if (fileSize < size)

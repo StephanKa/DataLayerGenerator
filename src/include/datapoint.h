@@ -1,8 +1,8 @@
 #pragma once
 #include <cstdint>
+#include <cstring>
 #include <groupInfo.h>
 #include <span>
-#include <cstring>
 
 namespace DataLayer
 {
@@ -96,9 +96,9 @@ namespace DataLayer
 
         template<typename Type = T>
             requires Detail::IsArray<Type>
-        [[nodiscard]] constexpr auto size() noexcept
+        [[nodiscard]] static constexpr auto size() noexcept
         {
-            return m_value.size();
+            return Type{}.size();
         }
 
         [[nodiscard]] static constexpr bool getIsUpgradeAllowed() noexcept
@@ -109,10 +109,13 @@ namespace DataLayer
       private:
         constexpr auto setValue(const T &value)
         {
-            const auto checkValue = Detail::checkValue(value);
-            auto val = Detail::RangeCheck::ok;
-            std::visit(Helper::overloaded{ [&](const Detail::RangeCheck check) { val = check; }, [&](const auto &arg) { m_value = arg; } }, checkValue);
-            return val;
+            const auto result = Detail::checkValue(value);
+            if (result.has_value())
+            {
+                m_value = *result;
+                return Detail::RangeCheck::ok;
+            }
+            return result.error();
         }
 
         T m_value{};

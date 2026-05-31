@@ -1,5 +1,5 @@
-C++20 Concepts
-==============
+C++20/23 Concepts
+=================
 
 The framework uses C++20 Concepts to enforce access control and type constraints at compile time.
 Violating a concept (e.g. calling ``get()`` on a ``WRITE_ONLY`` datapoint) produces a clear
@@ -11,9 +11,9 @@ Access Concepts
 These two concepts gate the ``get()`` and ``set()`` member functions of
 :cpp:struct:`DataLayer::DataPoint`.
 
-.. doxygenconcept:: DataLayer::Helper::ReadConcept
+.. doxygenconcept:: Helper::ReadConcept
 
-.. doxygenconcept:: DataLayer::Helper::WriteConcept
+.. doxygenconcept:: Helper::WriteConcept
 
 Usage example:
 
