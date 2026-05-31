@@ -143,7 +143,7 @@ struct Deserialization
         Version groupVersionTemp;
         m_ifileNonPOD.read(reinterpret_cast<char *>(&groupVersionTemp), sizeof(groupVersionTemp));
         size += sizeof(groupVersionTemp);
-        if ((groupVersionTemp > m_groupVersionInfo) && !m_allowUpgrade)
+        if ((m_groupVersionInfo > groupVersionTemp) && !m_allowUpgrade)
         {
             error = SerializationError::GroupVersion;
         }
@@ -216,7 +216,7 @@ struct Deserialization
             }
             ifile.read(reinterpret_cast<char *>(&tempValue), sizeof(tempValue));
         }
-        if ((temp > val.getVersion()) && !val.getIsUpgradeAllowed())
+        if ((val.getVersion() > temp) && !val.getIsUpgradeAllowed())
         {
             ret = false;
             switch (error)
