@@ -30,7 +30,7 @@ struct SerializationStatus
 
 namespace DataLayer::Persistence
 {
-    inline constexpr std::array<char, 4> Magic{ 'D', 'L', 'G', '1' };
+    inline constexpr std::array Magic{ 'D', 'L', 'G', '1' };
     inline constexpr uint16_t FormatVersion = 1;
 
     struct Header
@@ -97,7 +97,7 @@ struct Serialization
         std::apply([&](const auto &...dataPoints) { (appendRecord(records, dataPoints, success), ...); }, m_dataVariables);
         if (!success)
         {
-            return { false, 0, SerializationError::InvalidFormat };
+            return { .result = false, .size = 0, .errorCode = SerializationError::InvalidFormat };
         }
 
         DataLayer::Persistence::Header header{ .groupId = m_groupId, .groupVersion = m_groupVersionInfo, .checksum = DataLayer::Persistence::crc32(records) };
@@ -112,7 +112,7 @@ struct Serialization
             outputFile.flush();
             if (outputFile.fail())
             {
-                return { false, output.size(), SerializationError::InvalidFormat };
+                return { .result = false, .size = output.size(), .errorCode = SerializationError::InvalidFormat };
             }
         }
 
@@ -124,7 +124,7 @@ struct Serialization
             error.clear();
             std::filesystem::rename(temporaryPath, m_path, error);
         }
-        return { !error, output.size(), error ? SerializationError::InvalidFormat : SerializationError::None };
+        return { .result = !error, .size = output.size(), .errorCode = error ? SerializationError::InvalidFormat : SerializationError::None };
     }
 
   private:
@@ -137,7 +137,7 @@ struct Serialization
             success = false;
             return;
         }
-        DataLayer::Persistence::RecordHeader header{ .dataPointId = dataPoint.getId(), .version = dataPoint.getVersion(), .payloadSize = sizeof(Value) };
+        const DataLayer::Persistence::RecordHeader header{ .dataPointId = dataPoint.getId(), .version = dataPoint.getVersion(), .payloadSize = sizeof(Value) };
         DataLayer::Persistence::append(records, header);
         DataLayer::Persistence::append(records, value);
     }
@@ -160,12 +160,12 @@ struct Deserialization
         std::ifstream inputFile(m_path, std::ios::binary | std::ios::ate);
         if (!inputFile)
         {
-            return { false, 0, SerializationError::InvalidFormat };
+            return { .result = false, .size = 0, .errorCode = SerializationError::InvalidFormat };
         }
         const auto fileSize = static_cast<size_t>(inputFile.tellg());
         if (fileSize < sizeof(DataLayer::Persistence::Header) || fileSize > MaxPersistenceFileSize)
         {
-            return { false, fileSize, SerializationError::InvalidFormat };
+            return { .result = false, .size = fileSize, .errorCode = SerializationError::InvalidFormat };
         }
 
         std::vector<std::byte> input(fileSize);
@@ -173,7 +173,7 @@ struct Deserialization
         inputFile.read(reinterpret_cast<char *>(input.data()), static_cast<std::streamsize>(input.size()));
         if (inputFile.fail())
         {
-            return { false, 0, SerializationError::InvalidFormat };
+            return { .result = false, .size = 0, .errorCode = SerializationError::InvalidFormat };
         }
 
         DataLayer::Persistence::Header header{};
@@ -181,17 +181,17 @@ struct Deserialization
         if (!DataLayer::Persistence::read(std::span{ input }, offset, header) || header.magic != DataLayer::Persistence::Magic
             || header.formatVersion != DataLayer::Persistence::FormatVersion)
         {
-            return { false, input.size(), SerializationError::InvalidFormat };
+            return { .result = false, .size = input.size(), .errorCode = SerializationError::InvalidFormat };
         }
         if (header.groupId != m_groupId)
         {
-            return { false, input.size(), SerializationError::GroupIdMismatch };
+            return { .result = false, .size = input.size(), .errorCode = SerializationError::GroupIdMismatch };
         }
 
         const auto records = std::span<const std::byte>{ input }.subspan(offset);
         if (header.checksum != DataLayer::Persistence::crc32(records))
         {
-            return { false, input.size(), SerializationError::ChecksumMismatch };
+            return { .result = false, .size = input.size(), .errorCode = SerializationError::ChecksumMismatch };
         }
 
         SerializationError error = (m_groupVersionInfo > header.groupVersion && !m_allowUpgrade) ? SerializationError::GroupVersion : SerializationError::None;
@@ -201,13 +201,13 @@ struct Deserialization
             DataLayer::Persistence::RecordHeader record{};
             if (!DataLayer::Persistence::read(std::span{ input }, offset, record) || input.size() - offset < record.payloadSize)
             {
-                return { false, offset, SerializationError::InvalidFormat };
+                return { .result = false, .size = offset, .errorCode = SerializationError::InvalidFormat };
             }
             const auto payload = std::span<const std::byte>{ input }.subspan(offset, record.payloadSize);
             offset += record.payloadSize;
             std::apply([&](auto &...dataPoints) { (readRecord(dataPoints, record, payload, error, success), ...); }, m_dataVariables);
         }
-        return { success, input.size(), error };
+        return { .result = success, .size = input.size(), .errorCode = error };
     }
 
   private:
