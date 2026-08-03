@@ -18,8 +18,9 @@ Key properties:
 - Range checking (``Minimum`` / ``Maximum``) is evaluated at the call site and returns a
   :cpp:enum:`DataLayer::Detail::RangeCheck` value — no exceptions.
 - Versioning metadata is embedded in groups and individual datapoints to support EEPROM upgrade paths.
-- Optional binary file persistence via :cpp:struct:`Serialization` / :cpp:struct:`Deserialization`
+- Optional ``DLG1`` file persistence with CRC32, length-delimited records, and group identity checks
   (enabled with ``-DENABLE_FILE_PERSISTENCE=ON``).
+- Optional allocation-free change callbacks, plus application-owned MQTT and CAN/CAN-FD adapters.
 - Optional ``fmt`` formatters for all generated structs and enums (enabled with ``-DENABLE_FMT=ON``).
 - Optional Python bindings via ``pybind11`` (enabled with ``-DENABLE_PYBIND11=ON``).
 - Cross-compilation support for ARM Cortex-M4 (GCC ARM toolchain).
@@ -65,6 +66,10 @@ The ``src/include/`` headers provide the type machinery:
          │     └── DataLayer::Dispatcher<…GroupInfos>
          └── serialization.h  (guarded by USE_FILE_PERSISTENCE)
                └── Serialization<Data>, Deserialization<Data>
+           ├── mqttAdapter.h
+           │     └── DataLayer::Mqtt::Adapter<Dispatcher>
+           └── canAdapter.h
+             └── DataLayer::Can::Adapter<Dispatcher>
 
 C++ Framework API
 -----------------

@@ -13,8 +13,8 @@ applications.
 
 You describe your data model in JSON or YAML files. The generator produces a single `datalayer.h`
 header that contains fully type-safe `constinit` datapoint globals, with access control enforced at
-compile time, optional range checking, optional file persistence, optional `fmt` formatters, and
-optional Python bindings.
+compile time, optional range checking, robust file persistence, change callbacks, optional `fmt`
+formatters, optional Python bindings, and dependency-free MQTT/CAN adapter boundaries.
 
 ---
 
@@ -26,8 +26,10 @@ optional Python bindings.
 | **Header-only framework** | `src/include/` has no compiled artifacts and no external dependencies |
 | **Compile-time access control** | `READ_ONLY`, `WRITE_ONLY`, `READ_WRITE` enforced via C++20 Concepts |
 | **Range checking** | Alias types carry `Minimum`/`Maximum`; violations return `RangeCheck::underflow/overflow` |
-| **Versioning** | Groups and individual datapoints carry `Version{major, minor, build}` for EEPROM upgrade paths |
-| **Persistence** | Binary file serialization with group- and datapoint-level version validation (`-DENABLE_FILE_PERSISTENCE=ON`) |
+| **Versioning & migration** | Groups and datapoints carry versions; legacy IDs and byte-level migration callbacks support model evolution |
+| **Persistence** | `DLG1` records include group identity, versions, lengths, CRC32, and staged replacement writes (`-DENABLE_FILE_PERSISTENCE=ON`) |
+| **Change callbacks** | Optional allocation-free callback invoked after a successful datapoint write |
+| **Transport boundaries** | Dependency-free typed MQTT and CAN/CAN-FD adapters; applications supply the broker client or CAN driver |
 | **fmt support** | Auto-generated `fmt::formatter<>` for all custom structs and enums (`-DENABLE_FMT=ON`) |
 | **Python bindings** | Auto-generated `pybind11` module (`-DENABLE_PYBIND11=ON`) |
 | **JSON & YAML models** | Write model files in JSON or YAML; mixed directories supported |
@@ -122,7 +124,8 @@ recognised (JSON or YAML):
     {
       "name": "test", "group": "DefaultGroup", "id": 1,
       "type": "int32_t", "default": 4211,
-      "access": "READ_WRITE", "namespace": "Testify", "version": "1.0.1"
+      "access": "READ_WRITE", "namespace": "Testify", "version": "1.0.1",
+      "renamedFrom": [17]
     }
   ]
 }
@@ -142,6 +145,14 @@ python src/generator/generator.py \
   --template_dir src/template \
   --schema_dir   src/generator \
   --module_name  my_module      # optional pybind11 module name
+```
+
+Validate a model in CI without writing generated files:
+
+```bash
+python src/generator/generator.py \
+  --model_dir src/model --out_dir build --template_dir src/template \
+  --schema_dir src/generator --check
 ```
 
 Generated output under `build/generated/`:
@@ -204,6 +215,21 @@ int main()
 #endif
 }
 ```
+
+### Transport and Change Notifications
+
+Datapoints can notify application-owned code after a successful write. The callback receives the
+new typed value and the supplied context pointer.
+
+```cpp
+void onTemperature(const Temperature& value, void* context) noexcept;
+test4.setChangeCallback(onTemperature, applicationContext);
+```
+
+`mqttAdapter.h` and `canAdapter.h` deliberately do not include networking or driver libraries.
+Implement `DataLayer::Mqtt::Client` or `DataLayer::Can::Bus`, then use the typed adapter to publish
+values and apply validated incoming writes. CAN defaults to an 8-byte payload; instantiate
+`DataLayer::Can::Adapter<decltype(Dispatcher), 64>` for CAN FD.
 
 ---
 

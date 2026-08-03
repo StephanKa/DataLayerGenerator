@@ -124,6 +124,40 @@ Defines the individual **datapoints**.
    * - ``description``
      - No
      - Human-readable description.
+   * - ``renamedFrom``
+     - No
+     - Array of prior group-relative numeric IDs. Generated dispatch accepts these IDs for the datapoint.
+   * - ``migration``
+     - No
+     - Name of a byte-level C++ migration callback used when an allowed persistence upgrade changes payload size.
+
+Model Evolution
+---------------
+
+Use ``renamedFrom`` when a datapoint keeps its type but moves to a new group-relative ID:
+
+.. code-block:: json
+
+   {
+     "name": "temperature", "group": "CyclicGroup", "id": 12,
+     "renamedFrom": [4], "type": "int32_t", "access": "READ_WRITE", "version": "2.0.0"
+   }
+
+For a persisted type-size change, set ``allowUpgrade`` to ``true`` and declare ``migration``. The
+generator declares the callback in ``DataLayer::Migration``; the application must define it:
+
+.. code-block:: cpp
+
+   bool DataLayer::Migration::migrateTemperature(
+       const Version& sourceVersion,
+       std::span<const std::byte> source,
+       std::span<std::byte> destination) noexcept
+   {
+       // Decode source and write the destination representation.
+       return true;
+   }
+
+The callback must return ``false`` when it cannot migrate the supplied bytes.
 
 structs.json
 ------------

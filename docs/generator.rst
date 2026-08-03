@@ -53,6 +53,8 @@ Arguments:
      - Name of the generated pybind11 Python module (default: ``datalayer_example``).
    * - ``--convert``
      - Convert JSON model files to YAML (Python ≥ 3.9: ``--convert`` / ``--no-convert``).
+   * - ``--check``
+     - Validate the model and print a JSON summary without writing generated files. Suitable for CI.
 
 Output Files
 ------------
@@ -118,6 +120,7 @@ The generator validates model files in two passes:
    - Every datapoint ``"type"`` must be a base type, a defined struct, enum, or alias type.
    - Duplicate names and duplicate IDs within a group are rejected.
    - Alias types with both ``"min"`` and ``"max"`` must satisfy ``min < max``.
+  - A datapoint's ``"renamedFrom"`` IDs cannot repeat each other or its current ID.
 
 Templates
 ---------

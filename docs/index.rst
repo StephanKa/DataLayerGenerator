@@ -34,6 +34,7 @@ and optional Python bindings.
    concepts.rst
    enums.rst
    file.rst
+   transport.rst
 
 .. toctree::
    :maxdepth: 2
