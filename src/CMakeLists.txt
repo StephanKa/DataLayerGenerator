@@ -16,12 +16,15 @@ TARGET_INCLUDE_DIRECTORIES(DataLayerGenerator
 TARGET_COMPILE_FEATURES(DataLayerGenerator INTERFACE cxx_std_23)
 
 IF(ENABLE_FMT)
+    FIND_PACKAGE(fmt REQUIRED)
     TARGET_COMPILE_DEFINITIONS(DataLayerGenerator INTERFACE USE_FMT)
+    TARGET_LINK_LIBRARIES(DataLayerGenerator INTERFACE fmt::fmt-header-only)
 ENDIF()
 IF(ENABLE_FILE_PERSISTENCE)
     TARGET_COMPILE_DEFINITIONS(DataLayerGenerator INTERFACE USE_FILE_PERSISTENCE)
 ENDIF()
 
+IF(BUILD_EXAMPLES)
 # ---------------------------------------------------------------------------
 # Example executable
 # ---------------------------------------------------------------------------
@@ -117,3 +120,4 @@ ADD_CUSTOM_TARGET(GenerateDataLayer DEPENDS "${_GEN_STAMP}")
 
 TARGET_INCLUDE_DIRECTORIES(${PROJECT_NAME} PRIVATE ${CMAKE_BINARY_DIR}/generated)
 ADD_DEPENDENCIES(${PROJECT_NAME} GenerateDataLayer)
+ENDIF()

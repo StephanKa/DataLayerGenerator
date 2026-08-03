@@ -106,6 +106,59 @@ ENDIF()
 
 ADD_SUBDIRECTORY(src)
 
+INCLUDE(CMakePackageConfigHelpers)
+
+CONFIGURE_PACKAGE_CONFIG_FILE(
+    cmake/DataLayerGeneratorConfig.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/DataLayerGeneratorConfig.cmake
+    INSTALL_DESTINATION lib/cmake/DataLayerGenerator
+)
+
+WRITE_BASIC_PACKAGE_VERSION_FILE(
+    ${CMAKE_CURRENT_BINARY_DIR}/DataLayerGeneratorConfigVersion.cmake
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY SameMajorVersion
+)
+
+INSTALL(
+    TARGETS DataLayerGenerator
+    EXPORT DataLayerGeneratorTargets
+)
+INSTALL(
+    DIRECTORY src/include/
+    DESTINATION include
+)
+INSTALL(
+    DIRECTORY src/generator/
+    DESTINATION res/generator
+    PATTERN __pycache__ EXCLUDE
+    PATTERN *.pyc EXCLUDE
+)
+INSTALL(
+    DIRECTORY src/template/
+    DESTINATION res/template
+)
+INSTALL(
+    FILES cmake/DataLayerGeneratorHelpers.cmake
+    DESTINATION lib/cmake/DataLayerGenerator
+)
+INSTALL(
+    FILES LICENSE
+    DESTINATION licenses
+)
+INSTALL(
+    EXPORT DataLayerGeneratorTargets
+    FILE DataLayerGeneratorTargets.cmake
+    NAMESPACE DataLayerGenerator::
+    DESTINATION lib/cmake/DataLayerGenerator
+)
+INSTALL(
+    FILES
+    ${CMAKE_CURRENT_BINARY_DIR}/DataLayerGeneratorConfig.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/DataLayerGeneratorConfigVersion.cmake
+    DESTINATION lib/cmake/DataLayerGenerator
+)
+
 IF(CMAKE_CROSSCOMPILING)
     MESSAGE("Test are not built for GCC ARM toolchain!")
     RETURN()

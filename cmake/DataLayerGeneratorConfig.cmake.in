@@ -1,0 +1,10 @@
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+
+if(@ENABLE_FMT@)
+    find_dependency(fmt CONFIG)
+endif()
+
+include("${CMAKE_CURRENT_LIST_DIR}/DataLayerGeneratorTargets.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/DataLayerGeneratorHelpers.cmake")

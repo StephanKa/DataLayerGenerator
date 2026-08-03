@@ -3,7 +3,6 @@ import os
 
 from conan import ConanFile
 from conan.tools.cmake import CMake, CMakeDeps, CMakeToolchain, cmake_layout
-from conan.tools.files import copy
 
 
 class DataLayerGeneratorConan(ConanFile):
@@ -17,33 +16,37 @@ class DataLayerGeneratorConan(ConanFile):
     license = 'Unlicense'
     topics = ('embedded', 'code-generation', 'header-only', 'c++23', 'data-layer')
 
-    # Header-only: no compiler/build_type/arch needed for the library itself,
-    # but we keep them for the test executable and optional pybind11 module.
+    # Header-only: settings are retained for option compatibility with consumers.
     package_type = 'header-library'
     settings = 'os', 'compiler', 'build_type', 'arch'
 
     options = {
         'with_fmt': [True, False],
         'with_file_persistence': [True, False],
-        'with_pybind11': [True, False],
     }
     default_options = {
         'with_fmt': True,
         'with_file_persistence': True,
-        'with_pybind11': True,
         'fmt/*:header_only': True,
     }
 
     # Sources that must be present when packaging from source
     exports_sources = (
+        'CMakeLists.txt',
+        'templates/*',
+        'cmake/*',
+        'src/CMakeLists.txt',
         'src/include/*',
         'src/generator/*',
+        'src/model/*',
         'src/template/*',
-        'cmake/DataLayerGeneratorHelpers.cmake',
+        'src/main.cpp',
+        'src/embedded.cpp',
+        'src/linkerscript/*',
         'LICENSE',
     )
 
-    # Header-only: the source tree IS the package — no build step required
+    # Keep the source tree in place because CMake installs the package resources from it.
     no_copy_source = True
 
     def layout(self):
@@ -54,55 +57,26 @@ class DataLayerGeneratorConan(ConanFile):
         """Declare runtime dependencies based on enabled options."""
         if self.options.with_fmt:
             self.requires('fmt/12.1.0')
-        if self.options.with_pybind11:
-            self.requires('pybind11/3.0.1')
-
-    def build_requirements(self):
-        """Dependencies only needed when building the project itself (tests, example)."""
-        if not self.settings.get_safe('arch') == 'armv7':
-            self.test_requires('catch2/3.14.0')
 
     def generate(self):
-        """Generate build system files. Only needed when building the example/tests."""
+        """Generate build system files for the CMake install step."""
         tc = CMakeToolchain(self)
         tc.user_presets_path = None
+        tc.variables['BUILD_EXAMPLES'] = False
+        tc.variables['ENABLE_TESTING'] = False
+        tc.variables['ENABLE_DOCS'] = False
+        tc.variables['ENABLE_PYBIND11'] = False
+        tc.variables['ENABLE_FMT'] = self.options.with_fmt
+        tc.variables['ENABLE_FILE_PERSISTENCE'] = self.options.with_file_persistence
         tc.generate()
         deps = CMakeDeps(self)
         deps.generate()
 
     def build(self):
-        """Build the example executable and/or tests (not invoked when consumed as a library)."""
+        """Configure and install the header-only CMake package."""
         cmake = CMake(self)
         cmake.configure()
-        cmake.build()
-
-    def package(self):
-        """Install headers, generator tool, templates, and CMake helpers into the package folder."""
-        # License
-        copy(self, 'LICENSE',
-             src=self.source_folder,
-             dst=os.path.join(self.package_folder, 'licenses'))
-
-        # C++ framework headers
-        copy(self, '*.h',
-             src=os.path.join(self.source_folder, 'src', 'include'),
-             dst=os.path.join(self.package_folder, 'include'))
-
-        # Python code generator
-        copy(self, '*',
-             src=os.path.join(self.source_folder, 'src', 'generator'),
-             dst=os.path.join(self.package_folder, 'res', 'generator'),
-             excludes=['__pycache__', '*.pyc'])
-
-        # Jinja2 templates
-        copy(self, '*',
-             src=os.path.join(self.source_folder, 'src', 'template'),
-             dst=os.path.join(self.package_folder, 'res', 'template'))
-
-        # CMake helper function for consumers
-        copy(self, 'DataLayerGeneratorHelpers.cmake',
-             src=os.path.join(self.source_folder, 'cmake'),
-             dst=os.path.join(self.package_folder, 'lib', 'cmake', 'DataLayerGenerator'))
+        cmake.install()
 
     def package_info(self):
         """Populate cpp_info so consuming CMake projects find the library and its compile definitions."""
