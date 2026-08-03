@@ -62,6 +62,8 @@ def get_args():
     parser.add_argument('-c', '--schema_dir', required=True, help='Scheme directory where the schema.json is located.')
     parser.add_argument('-n', '--module_name', required=False, default='datalayer_example',
                         help='Python module name used in the generated pybind11 binding (default: datalayer_example).')
+    parser.add_argument('--check', action='store_true',
+                        help='Validate the model and print a machine-readable summary without generating files.')
     if sys.version_info < (3, 9):
         parser.add_argument('-x', '--convert', action='store_true', help='flag for converting json to yaml')
     else:
@@ -138,6 +140,18 @@ def main(template_file_name, template_formatter_file_name, python_binding_file_n
     data_points = data_point_validator(json_data['Datapoints'], struct_names, enums, types)
 
     group_data_points_mapping = create_group_data_point_dict(data_points)
+
+    if args.check:
+        report = {
+            'valid': True,
+            'groups': len(groups),
+            'datapoints': len(data_points),
+            'structs': len(structs),
+            'enums': len(enums),
+            'types': len(types),
+        }
+        print(json.dumps(report, sort_keys=True))
+        return
 
     for path in [f'{args.out_dir}{GENERATED_FOLDER}',
                  f'{args.out_dir}{DOC_FOLDER}',

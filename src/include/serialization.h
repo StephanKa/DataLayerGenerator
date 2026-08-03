@@ -1,9 +1,14 @@
 #pragma once
+
+#include <array>
+#include <cstring>
 #include <filesystem>
 #include <fstream>
 #include <helper.h>
-#include <string>
 #include <tuple>
+#include <vector>
+
+inline constexpr size_t MaxPersistenceFileSize = 16 * 1024 * 1024;
 
 enum class SerializationError : uint8_t
 {
@@ -11,11 +16,10 @@ enum class SerializationError : uint8_t
     GroupVersion,
     DatapointVersion,
     GroupAndDatapointVersion,
-    NotAllBytesRead,
-    StringTooLarge
+    InvalidFormat,
+    ChecksumMismatch,
+    GroupIdMismatch
 };
-
-inline constexpr size_t MaxDeserializedStringSize = 1024 * 1024;// 1 MiB safety cap
 
 struct SerializationStatus
 {
@@ -24,223 +28,236 @@ struct SerializationStatus
     SerializationError errorCode{ SerializationError::None };
 };
 
-template<typename Type>
-concept IsContainer = requires(Type val) { val.size(); };
+namespace DataLayer::Persistence
+{
+    inline constexpr std::array<char, 4> Magic{ 'D', 'L', 'G', '1' };
+    inline constexpr uint16_t FormatVersion = 1;
 
-template<typename Type>
-concept IsString = std::is_same_v<char *, std::decay_t<Type>> || std::is_same_v<const char *, std::decay_t<Type>> || std::is_same_v<std::string, std::decay_t<Type>>;
+    struct Header
+    {
+        std::array<char, 4> magic{ Magic };
+        uint16_t formatVersion{ FormatVersion };
+        uint16_t groupId{};
+        Version groupVersion{};
+        uint32_t checksum{};
+    };
+
+    struct RecordHeader
+    {
+        uint16_t dataPointId{};
+        Version version{};
+        uint32_t payloadSize{};
+    };
+
+    [[nodiscard]] inline uint32_t crc32(std::span<const std::byte> data) noexcept
+    {
+        uint32_t checksum = 0xFFFFFFFFU;
+        for (const auto byte : data)
+        {
+            checksum ^= std::to_integer<uint8_t>(byte);
+            for (uint8_t bit = 0; bit < 8; ++bit)
+            {
+                checksum = (checksum >> 1U) ^ (0xEDB88320U & (0U - (checksum & 1U)));
+            }
+        }
+        return ~checksum;
+    }
+
+    template<typename Value>
+    void append(std::vector<std::byte> &output, const Value &value)
+    {
+        const auto bytes = std::as_bytes(std::span{ &value, 1 });
+        output.insert(output.end(), bytes.begin(), bytes.end());
+    }
+
+    template<typename Value>
+    [[nodiscard]] bool read(std::span<const std::byte> input, size_t &offset, Value &value) noexcept
+    {
+        if (offset > input.size() || input.size() - offset < sizeof(Value))
+        {
+            return false;
+        }
+        std::memcpy(&value, input.data() + offset, sizeof(Value));
+        offset += sizeof(Value);
+        return true;
+    }
+}// namespace DataLayer::Persistence
 
 template<typename Data>
 struct Serialization
 {
-    constexpr explicit Serialization(const Version &groupVersionInfo, const std::filesystem::path &path, Data &input)
-      : m_dataVariables(input), m_ofileNonPOD(path, std::ios::binary), m_groupVersionInfo(groupVersionInfo)
+    constexpr explicit Serialization(const Version &groupVersionInfo, uint16_t groupId, const std::filesystem::path &path, Data &input)
+      : m_dataVariables(input), m_groupVersionInfo(groupVersionInfo), m_groupId(groupId), m_path(path)
     {}
-
-    ~Serialization()
-    {
-        close();
-    }
-
-    Serialization(const Serialization &) = delete;
-    Serialization &operator=(const Serialization &) = delete;
-    Serialization(Serialization &&) noexcept = delete;
-    Serialization &operator=(Serialization &&) noexcept = delete;
 
     [[nodiscard]] SerializationStatus write()
     {
-        bool ret = false;
-        size_t size = 0;
-
-        m_ofileNonPOD.write(reinterpret_cast<const char *>(&m_groupVersionInfo), sizeof(m_groupVersionInfo));
-        size += sizeof(m_groupVersionInfo);
-
-        return std::apply(
-          [this, &ret, &size](auto &...args) {
-              ((writeImpl(m_ofileNonPOD, args, ret, size)) || ... || true);
-
-              return SerializationStatus{ ret, size };
-          },
-          m_dataVariables);
-    }
-
-    void close()
-    {
-        if (m_ofileNonPOD.is_open())
+        std::vector<std::byte> records;
+        bool success = true;
+        std::apply([&](const auto &...dataPoints) { (appendRecord(records, dataPoints, success), ...); }, m_dataVariables);
+        if (!success)
         {
-            m_ofileNonPOD.close();
+            return { false, 0, SerializationError::InvalidFormat };
         }
+
+        DataLayer::Persistence::Header header{ .groupId = m_groupId, .groupVersion = m_groupVersionInfo, .checksum = DataLayer::Persistence::crc32(records) };
+        std::vector<std::byte> output;
+        DataLayer::Persistence::append(output, header);
+        output.insert(output.end(), records.begin(), records.end());
+
+        const auto temporaryPath = m_path.string() + ".tmp";
+        {
+            std::ofstream outputFile(temporaryPath, std::ios::binary | std::ios::trunc);
+            outputFile.write(reinterpret_cast<const char *>(output.data()), static_cast<std::streamsize>(output.size()));
+            outputFile.flush();
+            if (outputFile.fail())
+            {
+                return { false, output.size(), SerializationError::InvalidFormat };
+            }
+        }
+
+        std::error_code error;
+        std::filesystem::rename(temporaryPath, m_path, error);
+        if (error)
+        {
+            std::filesystem::remove(m_path, error);
+            error.clear();
+            std::filesystem::rename(temporaryPath, m_path, error);
+        }
+        return { !error, output.size(), error ? SerializationError::InvalidFormat : SerializationError::None };
     }
 
   private:
-    bool static writeImpl(std::ofstream &ofile, auto &val, bool &ret, size_t &size)
+    static void appendRecord(std::vector<std::byte> &records, const auto &dataPoint, bool &success)
     {
-        ret = !ofile.fail();
-        if (ofile.fail())
+        const auto value = dataPoint();
+        using Value = std::remove_cvref_t<decltype(value)>;
+        if constexpr (!std::is_trivially_copyable_v<Value>)
         {
-            return true;
+            success = false;
+            return;
         }
-
-        const auto version = val.getVersion();
-        ofile.write(reinterpret_cast<const char *>(&version), sizeof(version));
-        size += sizeof(version);
-        const auto value = val();
-
-        if constexpr (IsString<std::remove_cvref_t<decltype(value)>>)
-        {
-            const auto valueSize = value.size();
-            ofile.write(reinterpret_cast<const char *>(&valueSize), sizeof(valueSize));
-            size += sizeof(valueSize);
-            ofile.write(reinterpret_cast<const char *>(value.data()), valueSize);
-            size += valueSize;
-        }
-        else if constexpr (IsContainer<std::remove_cvref_t<decltype(value)>>)
-        {
-            constexpr auto valueSize = sizeof(std::remove_extent_t<decltype(value)>);
-            ofile.write(reinterpret_cast<const char *>(value.data()), valueSize);
-            size += valueSize;
-        }
-        else
-        {
-            ofile.write(reinterpret_cast<const char *>(&value), sizeof(value));
-            size += sizeof(value);
-        }
-        return false;
+        DataLayer::Persistence::RecordHeader header{ .dataPointId = dataPoint.getId(), .version = dataPoint.getVersion(), .payloadSize = sizeof(Value) };
+        DataLayer::Persistence::append(records, header);
+        DataLayer::Persistence::append(records, value);
     }
 
     Data &m_dataVariables;
-    std::ofstream m_ofileNonPOD;
     Version m_groupVersionInfo;
+    uint16_t m_groupId;
+    std::filesystem::path m_path;
 };
 
 template<typename Data>
 struct Deserialization
 {
-    constexpr explicit Deserialization(const Version &groupVersionInfo, const std::filesystem::path &path, Data &input, bool allowUpgrade)
-      : m_dataVariables(input), m_ifileNonPOD(path, std::ios::binary), m_fileSize(std::filesystem::file_size(path)), m_groupVersionInfo(groupVersionInfo),
-        m_allowUpgrade(allowUpgrade)
+    constexpr explicit Deserialization(const Version &groupVersionInfo, uint16_t groupId, const std::filesystem::path &path, Data &input, bool allowUpgrade)
+      : m_dataVariables(input), m_groupVersionInfo(groupVersionInfo), m_groupId(groupId), m_path(path), m_allowUpgrade(allowUpgrade)
     {}
-
-    ~Deserialization()
-    {
-        if (m_ifileNonPOD.is_open())
-        {
-            m_ifileNonPOD.close();
-        }
-    }
-
-    Deserialization(const Deserialization &) = delete;
-    Deserialization &operator=(const Deserialization &) = delete;
-    Deserialization(Deserialization &&) noexcept = delete;
-    Deserialization &operator=(Deserialization &&) noexcept = delete;
 
     [[nodiscard]] SerializationStatus read()
     {
-        bool ret = true;
-        size_t size = 0;
-        auto error = SerializationError::None;
-
-        Version groupVersionTemp;
-        m_ifileNonPOD.read(reinterpret_cast<char *>(&groupVersionTemp), sizeof(groupVersionTemp));
-        size += sizeof(groupVersionTemp);
-        if ((m_groupVersionInfo > groupVersionTemp) && !m_allowUpgrade)
+        std::ifstream inputFile(m_path, std::ios::binary | std::ios::ate);
+        if (!inputFile)
         {
-            error = SerializationError::GroupVersion;
+            return { false, 0, SerializationError::InvalidFormat };
         }
-        return std::apply(
-          [this, &ret, &size, &error](auto &...args) {
-              ((readImpl(m_ifileNonPOD, args, ret, size, m_fileSize, error)) || ... || true);
+        const auto fileSize = static_cast<size_t>(inputFile.tellg());
+        if (fileSize < sizeof(DataLayer::Persistence::Header) || fileSize > MaxPersistenceFileSize)
+        {
+            return { false, fileSize, SerializationError::InvalidFormat };
+        }
 
-              if ((size < m_fileSize) && (error == SerializationError::None))
-              {
-                  error = SerializationError::NotAllBytesRead;
-              }
-              return SerializationStatus{ ret, size, error };
-          },
-          m_dataVariables);
+        std::vector<std::byte> input(fileSize);
+        inputFile.seekg(0);
+        inputFile.read(reinterpret_cast<char *>(input.data()), static_cast<std::streamsize>(input.size()));
+        if (inputFile.fail())
+        {
+            return { false, 0, SerializationError::InvalidFormat };
+        }
+
+        DataLayer::Persistence::Header header{};
+        size_t offset = 0;
+        if (!DataLayer::Persistence::read(std::span{ input }, offset, header) || header.magic != DataLayer::Persistence::Magic
+            || header.formatVersion != DataLayer::Persistence::FormatVersion)
+        {
+            return { false, input.size(), SerializationError::InvalidFormat };
+        }
+        if (header.groupId != m_groupId)
+        {
+            return { false, input.size(), SerializationError::GroupIdMismatch };
+        }
+
+        const auto records = std::span<const std::byte>{ input }.subspan(offset);
+        if (header.checksum != DataLayer::Persistence::crc32(records))
+        {
+            return { false, input.size(), SerializationError::ChecksumMismatch };
+        }
+
+        SerializationError error = (m_groupVersionInfo > header.groupVersion && !m_allowUpgrade) ? SerializationError::GroupVersion : SerializationError::None;
+        bool success = true;
+        while (offset < input.size())
+        {
+            DataLayer::Persistence::RecordHeader record{};
+            if (!DataLayer::Persistence::read(std::span{ input }, offset, record) || input.size() - offset < record.payloadSize)
+            {
+                return { false, offset, SerializationError::InvalidFormat };
+            }
+            const auto payload = std::span<const std::byte>{ input }.subspan(offset, record.payloadSize);
+            offset += record.payloadSize;
+            std::apply([&](auto &...dataPoints) { (readRecord(dataPoints, record, payload, error, success), ...); }, m_dataVariables);
+        }
+        return { success, input.size(), error };
     }
 
   private:
-    bool static readImpl(std::ifstream &ifile, auto &val, bool &ret, size_t &size, const size_t fileSize, SerializationError &error)
+    static void readRecord(auto &dataPoint, const DataLayer::Persistence::RecordHeader &record, std::span<const std::byte> payload, SerializationError &error, bool &success)
     {
-        ret &= !ifile.fail();
-        if (ifile.fail())
+        if (!dataPoint.matchesId(record.dataPointId))
         {
-            return true;
+            return;
         }
 
-        Version temp;
-        ifile.read(reinterpret_cast<char *>(&temp), sizeof(temp));
-        size += sizeof(temp);
-        auto tempValue = val();
-
-        if constexpr (IsString<std::remove_cvref_t<decltype(tempValue)>>)
+        using Value = std::remove_cvref_t<decltype(dataPoint())>;
+        if constexpr (!std::is_trivially_copyable_v<Value>)
         {
-            size_t valueSize{ 0 };
-            size += sizeof(valueSize);
-            if (fileSize < size)
-            {
-                return false;
-            }
-            ifile.read(reinterpret_cast<char *>(&valueSize), sizeof(valueSize));
-            if (valueSize > MaxDeserializedStringSize)
-            {
-                error = SerializationError::StringTooLarge;
-                ret = false;
-                return true;
-            }
-            tempValue.resize(valueSize);
-            size += valueSize;
-            if (fileSize < size)
-            {
-                return false;
-            }
-            ifile.read(reinterpret_cast<char *>(tempValue.data()), valueSize);
+            success = false;
+            error = SerializationError::InvalidFormat;
+            return;
         }
-        else if constexpr (IsContainer<std::remove_cvref_t<decltype(tempValue)>>)
+
+        Value value{};
+        const bool requiresUpgrade = dataPoint.getVersion() > record.version;
+        if (requiresUpgrade && !dataPoint.getIsUpgradeAllowed())
         {
-            constexpr auto valueSize = sizeof(std::remove_extent_t<decltype(tempValue)>);
-            size += valueSize;
-            if (fileSize < size)
+            success = false;
+            setVersionError(error);
+            return;
+        }
+        if (payload.size() != sizeof(Value))
+        {
+            if (!requiresUpgrade || !dataPoint.tryMigrate(record.version, payload, value))
             {
-                return false;
+                success = false;
+                error = requiresUpgrade ? SerializationError::DatapointVersion : SerializationError::InvalidFormat;
+                return;
             }
-            ifile.read(reinterpret_cast<char *>(tempValue.data()), valueSize);
         }
         else
         {
-            size += sizeof(tempValue);
-            if (fileSize < size)
-            {
-                return false;
-            }
-            ifile.read(reinterpret_cast<char *>(&tempValue), sizeof(tempValue));
+            std::memcpy(&value, payload.data(), sizeof(Value));
         }
-        if ((val.getVersion() > temp) && !val.getIsUpgradeAllowed())
-        {
-            ret = false;
-            switch (error)
-            {
-            case SerializationError::None: {
-                error = SerializationError::DatapointVersion;
-                break;
-            }
-            case SerializationError::GroupVersion: {
-                error = SerializationError::GroupAndDatapointVersion;
-                break;
-            }
-            default:
-                break;
-            }
-            return false;
-        }
-        val = tempValue;
-        return false;
+        dataPoint = value;
+    }
+
+    static void setVersionError(SerializationError &error)
+    {
+        error = error == SerializationError::GroupVersion ? SerializationError::GroupAndDatapointVersion : SerializationError::DatapointVersion;
     }
 
     Data &m_dataVariables;
-    std::ifstream m_ifileNonPOD;
-    size_t m_fileSize;
     Version m_groupVersionInfo;
+    uint16_t m_groupId;
+    std::filesystem::path m_path;
     bool m_allowUpgrade;
 };

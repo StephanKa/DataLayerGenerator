@@ -3,15 +3,26 @@
 #include <cstring>
 #include <groupInfo.h>
 #include <span>
+#include <type_traits>
 
 namespace DataLayer
 {
     // data point definition
 
-    template<typename T, GroupInfo group, uint16_t id, typename Access, auto Version = Version{ 0, 0, 0 }, FixedString Name = { "" }, bool AllowUpgrade = false>
+    template<typename T,
+      GroupInfo group,
+      uint16_t id,
+      typename Access,
+      auto Version = Version{ 0, 0, 0 },
+      FixedString Name = { "" },
+      bool AllowUpgrade = false,
+      auto Migration = nullptr,
+      uint16_t... LegacyIds>
     class DataPoint
     {
       public:
+        using ChangeCallback = void (*)(const T &value, void *context) noexcept;
+
         constexpr static Access TypeAccess{};
 
         consteval DataPoint() = default;
@@ -24,6 +35,11 @@ namespace DataLayer
         [[nodiscard]] constexpr static uint16_t getId() noexcept
         {
             return group.baseId + id;
+        }
+
+        [[nodiscard]] constexpr static bool matchesId(uint32_t dataPointId) noexcept
+        {
+            return dataPointId == getId() || ((dataPointId == group.baseId + LegacyIds) || ...);
         }
 
         [[nodiscard]] constexpr static auto getVersion() noexcept
@@ -106,6 +122,28 @@ namespace DataLayer
             return AllowUpgrade;
         }
 
+        [[nodiscard]] static bool tryMigrate(const Version &sourceVersion, std::span<const std::byte> source, T &destination) noexcept
+        {
+            if constexpr (!std::is_same_v<decltype(Migration), std::nullptr_t>)
+            {
+                static_assert(std::is_trivially_copyable_v<T>);
+                return Migration(sourceVersion, source, std::as_writable_bytes(std::span{ &destination, 1 }));
+            }
+            return false;
+        }
+
+        constexpr void setChangeCallback(ChangeCallback callback, void *context = nullptr) noexcept
+        {
+            m_changeCallback = callback;
+            m_changeContext = context;
+        }
+
+        constexpr void clearChangeCallback() noexcept
+        {
+            m_changeCallback = nullptr;
+            m_changeContext = nullptr;
+        }
+
       private:
         constexpr auto setValue(const T &value)
         {
@@ -113,11 +151,17 @@ namespace DataLayer
             if (result.has_value())
             {
                 m_value = *result;
+                if (m_changeCallback != nullptr)
+                {
+                    m_changeCallback(m_value, m_changeContext);
+                }
                 return Detail::RangeCheck::ok;
             }
             return result.error();
         }
 
         T m_value{};
+        ChangeCallback m_changeCallback{ nullptr };
+        void *m_changeContext{ nullptr };
     };
 }// namespace DataLayer

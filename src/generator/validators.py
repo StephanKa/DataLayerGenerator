@@ -221,6 +221,12 @@ def data_point_validator(data_point_data, struct_list, enum_list, custom_type):
                 raise DatapointException(f"Datapoint has arraySize defined but size is '{dp_array_size}'")
         else:
             temp_dp['arraySize'] = 0
+        if 'renamedFrom' not in temp_dp:
+            temp_dp['renamedFrom'] = []
+        elif dp_id in temp_dp['renamedFrom'] or len(temp_dp['renamedFrom']) != len(set(temp_dp['renamedFrom'])):
+            raise DatapointException(f"Datapoint '{name}' has duplicate or current IDs in renamedFrom")
+        if 'migration' not in temp_dp:
+            temp_dp['migration'] = None
         if 'allowUpgrade' not in temp_dp:
             temp_dp['allowUpgrade'] = 'false'
         elif temp_dp['allowUpgrade']:

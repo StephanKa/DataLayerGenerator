@@ -1,10 +1,16 @@
 #include <catch2/catch_all.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
+#include <fstream>
 #include <include/datalayer.h>
 
 namespace
 {
     constexpr auto EPSILON = 0.1;
+
+    void recordDatapointChange(const Temperature &value, void *context) noexcept
+    {
+        *static_cast<Temperature *>(context) = value;
+    }
 
     constexpr bool operator==(const Temperature &lhs, const Temperature &rhs)
     {
@@ -77,6 +83,19 @@ TEST_CASE("Test datapoints")
         // verify data
         const auto newlyWrittenValue = test.get();
         REQUIRE((newlyWrittenValue == Temperature{ newRaw, newValue }));
+    }
+
+    SECTION("datapoint change callback")
+    {
+        Temperature observed{};
+        constexpr Temperature expected{ .raw = 9876, .value = 12.5F };
+
+        test.setChangeCallback(recordDatapointChange, &observed);
+        REQUIRE(test.set(expected) == DataLayer::Detail::RangeCheck::ok);
+        test.clearChangeCallback();
+
+        REQUIRE(observed.raw == expected.raw);
+        REQUIRE(observed.value == expected.value);
     }
 
     SECTION("datapoint name")
@@ -433,37 +452,47 @@ TEST_CASE("Test datapoints")
 
     SECTION("group file serialization")
     {
-        constexpr size_t expectedSize = 244;
         using namespace std::string_view_literals;
         const auto writeStatus = DefaultGroup.serializeGroup("sample.bin"sv);
-        REQUIRE(writeStatus.size == expectedSize);
         REQUIRE(writeStatus.result);
         REQUIRE(writeStatus.errorCode == SerializationError::None);
-        REQUIRE(std::filesystem::file_size("sample.bin"sv) == expectedSize);
+        REQUIRE(writeStatus.size == std::filesystem::file_size("sample.bin"sv));
     }
 
     SECTION("group file deserialization")
     {
-        constexpr size_t expectedSize = 244;
         using namespace std::string_view_literals;
         const auto writeStatus = DefaultGroup.serializeGroup("sample.bin"sv);
-        REQUIRE(writeStatus.size == expectedSize);
         REQUIRE(writeStatus.result);
         REQUIRE(writeStatus.errorCode == SerializationError::None);
 
         const auto readStatus = DefaultGroup.serializeGroup("sample.bin"sv);
-        REQUIRE(readStatus.size == expectedSize);
+        REQUIRE(readStatus.size == std::filesystem::file_size("sample.bin"sv));
         REQUIRE(readStatus.result);
         REQUIRE(readStatus.errorCode == SerializationError::None);
+    }
+
+    SECTION("group file deserialization rejects corrupt payload")
+    {
+        using namespace std::string_view_literals;
+        REQUIRE(DefaultGroup.serializeGroup("sample.bin"sv).result);
+
+        std::fstream file("sample.bin", std::ios::binary | std::ios::in | std::ios::out);
+        file.seekp(-1, std::ios::end);
+        const char corruptByte = 0;
+        file.write(&corruptByte, 1);
+        file.close();
+
+        const auto readStatus = DefaultGroup.deserializeGroup("sample.bin"sv);
+        REQUIRE_FALSE(readStatus.result);
+        REQUIRE(readStatus.errorCode == SerializationError::ChecksumMismatch);
     }
 
     SECTION("read serialized file to restore saved datapoint data")
     {
         using namespace std::string_view_literals;
 
-        constexpr size_t expectedSize = 244;
         const auto writeStatus = DefaultGroup.serializeGroup("sample.bin"sv);
-        REQUIRE(writeStatus.size == expectedSize);
         REQUIRE(writeStatus.result);
         REQUIRE(writeStatus.errorCode == SerializationError::None);
 
@@ -477,7 +506,7 @@ TEST_CASE("Test datapoints")
         REQUIRE((testWithoutDefaultValue() == testValue));
 
         const auto readStatus = DefaultGroup.deserializeGroup("sample.bin"sv);
-        REQUIRE(readStatus.size == expectedSize);
+        REQUIRE(readStatus.size == writeStatus.size);
         REQUIRE(readStatus.result);
         REQUIRE(readStatus.errorCode == SerializationError::None);
 
@@ -489,14 +518,12 @@ TEST_CASE("Test datapoints")
     {
         using namespace std::string_view_literals;
 
-        constexpr size_t expectedSize = 244;
         const auto writeStatus = DefaultGroup.serializeGroup("sample.bin"sv);
-        REQUIRE(writeStatus.size == expectedSize);
         REQUIRE(writeStatus.result);
         REQUIRE(writeStatus.errorCode == SerializationError::None);
 
         const auto readStatus = SecondGroup.deserializeGroup("sample.bin"sv);
-        REQUIRE(readStatus.size == expectedSize);
+        REQUIRE(readStatus.size == writeStatus.size);
         REQUIRE_FALSE(readStatus.result);
         REQUIRE(readStatus.errorCode == SerializationError::DatapointVersion);
     }
@@ -505,14 +532,12 @@ TEST_CASE("Test datapoints")
     {
         using namespace std::string_view_literals;
 
-        constexpr size_t expectedSize = 32;
         const auto writeStatus = OldGroup.serializeGroup("oldGroupSample.bin"sv);
-        REQUIRE(writeStatus.size == expectedSize);
         REQUIRE(writeStatus.result);
         REQUIRE(writeStatus.errorCode == SerializationError::None);
 
         const auto readStatus = NewerGroup.deserializeGroup("oldGroupSample.bin"sv);
-        REQUIRE(readStatus.size == expectedSize);
+        REQUIRE(readStatus.size == writeStatus.size);
         REQUIRE(readStatus.result);
         REQUIRE(readStatus.errorCode == SerializationError::GroupVersion);
     }
@@ -521,14 +546,12 @@ TEST_CASE("Test datapoints")
     {
         using namespace std::string_view_literals;
 
-        constexpr size_t expectedSize = 32;
         const auto writeStatus = OldGroup.serializeGroup("oldGroupSample.bin"sv);
-        REQUIRE(writeStatus.size == expectedSize);
         REQUIRE(writeStatus.result);
         REQUIRE(writeStatus.errorCode == SerializationError::None);
 
         const auto readStatus = NewerGroupAndDatapoint.deserializeGroup("oldGroupSample.bin"sv);
-        REQUIRE(readStatus.size == expectedSize);
+        REQUIRE(readStatus.size == writeStatus.size);
         REQUIRE_FALSE(readStatus.result);
         REQUIRE(readStatus.errorCode == SerializationError::GroupAndDatapointVersion);
     }
@@ -537,14 +560,12 @@ TEST_CASE("Test datapoints")
     {
         using namespace std::string_view_literals;
 
-        constexpr size_t expectedSize = 32;
         const auto writeStatus = OldGroup.serializeGroup("oldGroupSample.bin"sv);
-        REQUIRE(writeStatus.size == expectedSize);
         REQUIRE(writeStatus.result);
         REQUIRE(writeStatus.errorCode == SerializationError::None);
 
         const auto readStatus = AllowUpgradeGroup.deserializeGroup("oldGroupSample.bin"sv);
-        REQUIRE(readStatus.size == expectedSize);
+        REQUIRE(readStatus.size == writeStatus.size);
         REQUIRE(readStatus.result);
         REQUIRE(readStatus.errorCode == SerializationError::None);
     }
@@ -553,16 +574,13 @@ TEST_CASE("Test datapoints")
     {
         using namespace std::string_view_literals;
 
-        constexpr size_t expectedSize = 52;
         const auto writeStatus = OldGroupMultipleDatapoint.serializeGroup("OldGroupMultipleDatapoint.bin"sv);
-        REQUIRE(writeStatus.size == expectedSize);
         REQUIRE(writeStatus.result);
         REQUIRE(writeStatus.errorCode == SerializationError::None);
 
         const auto readStatus = NewerGroup.deserializeGroup("OldGroupMultipleDatapoint.bin"sv);
-        REQUIRE(readStatus.size < expectedSize);
-        REQUIRE(readStatus.result);
-        REQUIRE(readStatus.errorCode == SerializationError::NotAllBytesRead);
+        REQUIRE_FALSE(readStatus.result);
+        REQUIRE(readStatus.errorCode == SerializationError::GroupIdMismatch);
     }
 
     SECTION("getIsUpgradeAllowed returns false for default datapoint")

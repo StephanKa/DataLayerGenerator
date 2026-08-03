@@ -35,7 +35,7 @@ constinit DataLayer::DataPoint<
     {%- else -%}
         {{ dp.type }}
     {%- endif -%}
-    , {{ dp.group }}Info, 0x{{ "%0x" | format( dp.id | int) }}, Helper::{{ dp.access }}, Version{ {{ dp.version.major }}, {{ dp.version.minor }}, {{ dp.version.build }} }, FixedString{"{{ dp.name }}"}, {{ dp.allowUpgrade }}> {{ dp.name }}
+    , {{ dp.group }}Info, 0x{{ "%0x" | format( dp.id | int) }}, Helper::{{ dp.access }}, Version{ {{ dp.version.major }}, {{ dp.version.minor }}, {{ dp.version.build }} }, FixedString{"{{ dp.name }}"}, {{ dp.allowUpgrade }}, {% if dp.migration %}DataLayer::Migration::{{ dp.migration }}{% else %}nullptr{% endif %}{% for legacy_id in dp.renamedFrom %}, 0x{{ "%0x" | format(legacy_id | int) }}{% endfor %}> {{ dp.name }}
     {%- if 'default' in dp -%}
     ({{ datapoint(dp) }})
 {%- endif %};
@@ -84,6 +84,13 @@ struct {{ struct.name }}
     {{ parameter.value }} {{ parameter.name }};
     {%- endfor %}
 };
+{% endfor %}
+
+{% for dp in data_points if dp.migration -%}
+namespace DataLayer::Migration
+{
+bool {{ dp.migration }}(const Version &sourceVersion, std::span<const std::byte> source, std::span<std::byte> destination) noexcept;
+}
 {% endfor %}
 
 {% if groups | length > 0 -%}

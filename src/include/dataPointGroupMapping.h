@@ -36,7 +36,7 @@ namespace DataLayer
                   bool ret = false;
                   auto check{ Detail::RangeCheck::notChecked };
 
-                  (((dataPointId == args.getId()) && (setter(value, args, ret, check))) || ... || false);
+                  ((args.matchesId(dataPointId) && (setter(value, args, ret, check))) || ... || false);
 
                   return Detail::CheckResult{ .success = ret, .check = check };
               },
@@ -50,7 +50,7 @@ namespace DataLayer
               [&](const auto &...args) {
                   bool ret = false;
 
-                  (((dataPointId == args.getId()) && (getter(value, args, ret))) || ... || false);
+                  ((args.matchesId(dataPointId) && (getter(value, args, ret))) || ... || false);
 
                   return ret;
               },
@@ -61,13 +61,13 @@ namespace DataLayer
 
         [[nodiscard]] SerializationStatus serializeGroup(const std::filesystem::path &path) const
         {
-            Serialization value(group.version, path, datapoints);
+            Serialization value(group.version, group.baseId, path, datapoints);
             return value.write();
         }
 
         [[nodiscard]] SerializationStatus deserializeGroup(const std::filesystem::path &path) const
         {
-            Deserialization value(group.version, path, datapoints, group.allowUpgrade);
+            Deserialization value(group.version, group.baseId, path, datapoints, group.allowUpgrade);
             return value.read();
         }
 
