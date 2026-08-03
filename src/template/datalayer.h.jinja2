@@ -35,7 +35,7 @@ constinit DataLayer::DataPoint<
     {%- else -%}
         {{ dp.type }}
     {%- endif -%}
-    , {{ dp.group }}Info, 0x{{ "%0x" | format( dp.id | int) }}, Helper::{{ dp.access }}, Version{ {{ dp.version.major }}, {{ dp.version.minor }}, {{ dp.version.build }} }, FixedString{"{{ dp.name }}"}, {{ dp.allowUpgrade }}, {% if dp.migration %}DataLayer::Migration::{{ dp.migration }}{% else %}nullptr{% endif %}{% for legacy_id in dp.renamedFrom %}, 0x{{ "%0x" | format(legacy_id | int) }}{% endfor %}> {{ dp.name }}
+    , {{ dp.group }}Info, 0x{{ "%0x" | format( dp.id | int) }}, Helper::{{ dp.access }}, DataLayer::Version{ {{ dp.version.major }}, {{ dp.version.minor }}, {{ dp.version.build }} }, FixedString{"{{ dp.name }}"}, {{ dp.allowUpgrade }}, {% if dp.migration %}DataLayer::Migration::{{ dp.migration }}{% else %}nullptr{% endif %}{% for legacy_id in dp.renamedFrom %}, 0x{{ "%0x" | format(legacy_id | int) }}{% endfor %}> {{ dp.name }}
     {%- if 'default' in dp -%}
     ({{ datapoint(dp) }})
 {%- endif %};
@@ -102,7 +102,7 @@ bool {{ dp.migration }}(const Version &sourceVersion, std::span<const std::byte>
 * {{ group.description }}
 */
 {% endif -%}
-constexpr DataLayer::GroupInfo<{{ group.baseId }}, FixedString{"{{ group.name }}"}, {{ group.allowUpgrade }}, DataLayer::PersistenceType::{{ group.persistence }}, Version{ {{ group.version.major }}, {{ group.version.minor }}, {{ group.version.build }} }> {{ group.name }}Info;
+constexpr DataLayer::GroupInfo<{{ group.baseId }}, FixedString{"{{ group.name }}"}, {{ group.allowUpgrade }}, DataLayer::PersistenceType::{{ group.persistence }}, DataLayer::Version{ {{ group.version.major }}, {{ group.version.minor }}, {{ group.version.build }} }> {{ group.name }}Info;
 {% endfor %}
 
 {%- set namespace_name = namespace(value="") %}

@@ -24,7 +24,7 @@ struct fmt::formatter<SoftwareVersion>
 };
 
 template<>
-struct fmt::formatter<Version>
+struct fmt::formatter<DataLayer::Version>
 {
     template<typename ParseContext>
     constexpr auto parse(ParseContext &ctx)
@@ -33,7 +33,7 @@ struct fmt::formatter<Version>
     }
 
     template<typename FormatContext>
-    auto format(const Version &version, FormatContext &ctx) const
+    auto format(const DataLayer::Version &version, FormatContext &ctx) const
     {
         return fmt::format_to(ctx.out(), "Major: {} Minor: {} Build: {}", version.major, version.minor, version.build);
     }

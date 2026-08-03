@@ -122,7 +122,7 @@ namespace DataLayer
             return AllowUpgrade;
         }
 
-        [[nodiscard]] static bool tryMigrate(const Version &sourceVersion, std::span<const std::byte> source, T &destination) noexcept
+        [[nodiscard]] static bool tryMigrate(const DataLayer::Version &sourceVersion, std::span<const std::byte> source, T &destination) noexcept
         {
             if constexpr (!std::is_same_v<decltype(Migration), std::nullptr_t>)
             {

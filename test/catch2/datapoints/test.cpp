@@ -1,11 +1,69 @@
 #include <catch2/catch_all.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
+#include <filesystem>
 #include <fstream>
 #include <include/datalayer.h>
+
+namespace DataLayer::Migration
+{
+    bool migrateUpgradableDatapoint(const Version &sourceVersion, std::span<const std::byte> source, std::span<std::byte> destination) noexcept
+    {
+        if (sourceVersion != Version{ 1, 0, 0 } || source.size() != sizeof(uint32_t) || destination.size() != sizeof(Temperature))
+        {
+            return false;
+        }
+
+        uint32_t raw{};
+        std::memcpy(&raw, source.data(), sizeof(raw));
+        const Temperature migrated{ .raw = raw, .value = static_cast<float>(raw) / 100.0F };
+        std::memcpy(destination.data(), &migrated, sizeof(migrated));
+        return true;
+    }
+}// namespace DataLayer::Migration
 
 namespace
 {
     constexpr auto EPSILON = 0.1;
+
+    using ByteBuffer = std::vector<std::byte>;
+
+    ByteBuffer readFile(const std::filesystem::path &path)
+    {
+        std::ifstream input(path, std::ios::binary | std::ios::ate);
+        const auto size = static_cast<size_t>(input.tellg());
+        ByteBuffer bytes(size);
+        input.seekg(0);
+        input.read(reinterpret_cast<char *>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
+        return bytes;
+    }
+
+    void writeFile(const std::filesystem::path &path, std::span<const std::byte> bytes)
+    {
+        std::ofstream output(path, std::ios::binary | std::ios::trunc);
+        output.write(reinterpret_cast<const char *>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
+    }
+
+    void refreshChecksum(ByteBuffer &bytes)
+    {
+        DataLayer::Persistence::Header header{};
+        std::memcpy(&header, bytes.data(), sizeof(header));
+        header.checksum = DataLayer::Persistence::crc32(std::span<const std::byte>{ bytes }.subspan(sizeof(header)));
+        std::memcpy(bytes.data(), &header, sizeof(header));
+    }
+
+    ByteBuffer makeFile(uint16_t groupId, DataLayer::Version groupVersion, uint16_t dataPointId, DataLayer::Version dataPointVersion, std::span<const std::byte> payload)
+    {
+        ByteBuffer records;
+        DataLayer::Persistence::RecordHeader record{ .dataPointId = dataPointId, .version = dataPointVersion, .payloadSize = static_cast<uint32_t>(payload.size()) };
+        DataLayer::Persistence::append(records, record);
+        records.insert(records.end(), payload.begin(), payload.end());
+
+        DataLayer::Persistence::Header header{ .groupId = groupId, .groupVersion = groupVersion, .checksum = DataLayer::Persistence::crc32(records) };
+        ByteBuffer file;
+        DataLayer::Persistence::append(file, header);
+        file.insert(file.end(), records.begin(), records.end());
+        return file;
+    }
 
     void recordDatapointChange(const Temperature &value, void *context) noexcept
     {
@@ -43,16 +101,16 @@ TEST_CASE("Test datapoints")
     SECTION("version definition")
     {
         constexpr auto version = test.getVersion();
-        REQUIRE(version.major == 1);
-        REQUIRE(version.minor == 0);
-        REQUIRE(version.build == 22);
+        STATIC_REQUIRE(version.major == 1);
+        STATIC_REQUIRE(version.minor == 0);
+        STATIC_REQUIRE(version.build == 22);
     }
 
     SECTION("datapoint id definition")
     {
         constexpr auto expectedDefaultGroupID = 0x4000;
         constexpr uint16_t expectedDatapointId = 0x4;
-        REQUIRE(DefaultGroupInfo.baseId == expectedDefaultGroupID);
+        STATIC_REQUIRE(DefaultGroupInfo.baseId == expectedDefaultGroupID);
         REQUIRE(test.getId() == (expectedDefaultGroupID + expectedDatapointId));
     }
 
@@ -77,7 +135,7 @@ TEST_CASE("Test datapoints")
         // write new data
         constexpr float newValue{ 123.4F };
         constexpr uint32_t newRaw{ 1234U };
-        const Temperature newData{ newRaw, newValue };
+        constexpr Temperature newData{ newRaw, newValue };
         std::ignore = test.set(newData);
 
         // verify data
@@ -117,11 +175,11 @@ TEST_CASE("Test datapoints")
         // write new data
         constexpr float newValue{ 321.4F };
         constexpr uint32_t newRaw{ 3214U };
-        constexpr Temperature newData{ newRaw, newValue };
+        constexpr Temperature newData{ .raw = newRaw, .value = newValue };
 
-        const auto check = DefaultGroup.setDatapoint(dpId, newData);
-        REQUIRE(check.success);
-        REQUIRE(check.check == DataLayer::Detail::RangeCheck::ok);
+        const auto [success, check] = DefaultGroup.setDatapoint(dpId, newData);
+        REQUIRE(success);
+        REQUIRE(check == DataLayer::Detail::RangeCheck::ok);
         REQUIRE((test() == Temperature{ newRaw, newValue }));
     }
 
@@ -138,9 +196,9 @@ TEST_CASE("Test datapoints")
     SECTION("'testWithoutDefaultValue' version definition")
     {
         constexpr auto version = testWithoutDefaultValue.getVersion();
-        REQUIRE(version.major == 2);
-        REQUIRE(version.minor == 10);
-        REQUIRE(version.build == 223);
+        STATIC_REQUIRE(version.major == 2);
+        STATIC_REQUIRE(version.minor == 10);
+        STATIC_REQUIRE(version.build == 223);
     }
 
     SECTION("datapoint 'testWithoutDefaultValue' access")
@@ -151,9 +209,9 @@ TEST_CASE("Test datapoints")
     SECTION("'testWithoutDefaultValueWriteOnly' version definition")
     {
         constexpr auto version = testWithoutDefaultValueWriteOnly.getVersion();
-        REQUIRE(version.major == 0);
-        REQUIRE(version.minor == 2);
-        REQUIRE(version.build == 3);
+        STATIC_REQUIRE(version.major == 0);
+        STATIC_REQUIRE(version.minor == 2);
+        STATIC_REQUIRE(version.build == 3);
     }
 
     SECTION("datapoint 'testWithoutDefaultValueWriteOnly' access")
@@ -179,10 +237,10 @@ TEST_CASE("Test datapoints")
         // write new data
         constexpr float newValue{ 321.4F };
         constexpr uint32_t newRaw{ 3214U };
-        const Temperature newData{ newRaw, newValue };
-        const auto ret = DefaultGroup.setDatapoint(dpId, newData);
-        REQUIRE(!ret.success);
-        REQUIRE(ret.check == DataLayer::Detail::RangeCheck::notChecked);
+        constexpr Temperature newData{ newRaw, newValue };
+        const auto [success, check] = DefaultGroup.setDatapoint(dpId, newData);
+        REQUIRE(!success);
+        REQUIRE(check == DataLayer::Detail::RangeCheck::notChecked);
     }
 
     SECTION("datapoint 'testWithoutDefaultValue' access, write anyway")
@@ -220,17 +278,17 @@ TEST_CASE("Test datapoints")
         constexpr uint32_t dummyId = 42;
         constexpr Temperature temperatureTest{ .raw = 1234, .value = 11111.F };
 
-        const auto ret = DefaultGroup.setDatapoint(dummyId, temperatureTest);
-        REQUIRE(!ret.success);
-        REQUIRE(ret.check == DataLayer::Detail::RangeCheck::notChecked);
+        constexpr auto ret = DefaultGroup.setDatapoint(dummyId, temperatureTest);
+        STATIC_REQUIRE(!ret.success);
+        STATIC_REQUIRE(ret.check == DataLayer::Detail::RangeCheck::notChecked);
     }
 
     SECTION("datapoint dispatcher setDatapoint() existing with READ_ONLY")
     {
         constexpr Temperature temperatureTest{ .raw = 1234, .value = 11111.F };
-        const auto ret = DefaultGroup.setDatapoint(testWithoutDefaultValue.getId(), temperatureTest);
-        REQUIRE(!ret.success);
-        REQUIRE(ret.check == DataLayer::Detail::RangeCheck::notChecked);
+        const auto [success, check] = DefaultGroup.setDatapoint(testWithoutDefaultValue.getId(), temperatureTest);
+        REQUIRE(!success);
+        REQUIRE(check == DataLayer::Detail::RangeCheck::notChecked);
     }
 
     SECTION("datapoint dispatcher setDatapoint() existing with WRITE_ONLY")
@@ -239,9 +297,9 @@ TEST_CASE("Test datapoints")
         Temperature readValue{};
         REQUIRE(!Dispatcher.getDatapoint(testWithoutDefaultValueWriteOnly.getId(), readValue));
 
-        const auto ret = DefaultGroup.setDatapoint(testWithoutDefaultValueWriteOnly.getId(), temperatureTest);
-        REQUIRE(ret.success);
-        REQUIRE(ret.check == DataLayer::Detail::RangeCheck::ok);
+        const auto [success, check] = DefaultGroup.setDatapoint(testWithoutDefaultValueWriteOnly.getId(), temperatureTest);
+        REQUIRE(success);
+        REQUIRE(check == DataLayer::Detail::RangeCheck::ok);
         REQUIRE((testWithoutDefaultValueWriteOnly() == temperatureTest));
     }
 
@@ -250,9 +308,9 @@ TEST_CASE("Test datapoints")
         constexpr Temperature temperatureTest{ .raw = 1234, .value = 11111.F };
         Temperature readValue{};
         REQUIRE(Dispatcher.getDatapoint(test.getId(), readValue));
-        const auto ret = DefaultGroup.setDatapoint(test.getId(), temperatureTest);
-        REQUIRE(ret.success);
-        REQUIRE(ret.check == DataLayer::Detail::RangeCheck::ok);
+        const auto [success, check] = DefaultGroup.setDatapoint(test.getId(), temperatureTest);
+        REQUIRE(success);
+        REQUIRE(check == DataLayer::Detail::RangeCheck::ok);
         REQUIRE((test() == temperatureTest));
     }
 
@@ -277,7 +335,7 @@ TEST_CASE("Test datapoints")
         constexpr Temperature temperatureTest{ .raw = 1234, .value = 11111.F };
         const auto serializedDatapoint = test.serialize();
         std::array<std::byte, sizeof(Temperature)> initial{};
-        std::copy(serializedDatapoint.begin(), serializedDatapoint.end(), initial.begin());
+        std::ranges::copy(serializedDatapoint, initial.begin());
 
         test = temperatureTest;
         REQUIRE(test.get().raw == temperatureTest.raw);
@@ -290,10 +348,10 @@ TEST_CASE("Test datapoints")
     {
         constexpr Temperature temperatureTest{ .raw = 5555, .value = 123.0F };
         REQUIRE(arrayTest().size() == 10);
-        for (const auto &temp : arrayTest())
+        for (const auto &[raw, value] : arrayTest())
         {
-            REQUIRE(temp.raw == temperatureTest.raw);
-            REQUIRE(temp.value == temperatureTest.value);
+            REQUIRE(raw == temperatureTest.raw);
+            REQUIRE(value == temperatureTest.value);
         }
     }
 
@@ -325,10 +383,10 @@ TEST_CASE("Test datapoints")
 
         REQUIRE(Dispatcher.getDatapoint(arrayTest.getId(), temperatureTest));
         REQUIRE((arrayTest.get().size() == temperatureTest.size()));
-        for (const auto &temp : temperatureTest)
+        for (const auto &[raw, value] : temperatureTest)
         {
-            REQUIRE(temp.raw == expectedTemperature.raw);
-            REQUIRE_THAT(temp.value, Catch::Matchers::WithinRel(static_cast<double>(expectedTemperature.value), EPSILON));
+            REQUIRE(raw == expectedTemperature.raw);
+            REQUIRE_THAT(value, Catch::Matchers::WithinRel(static_cast<double>(expectedTemperature.value), EPSILON));
         }
         REQUIRE(arrayTest.getId() == 5 + DefaultGroupInfo.baseId);
     }
@@ -362,12 +420,11 @@ TEST_CASE("Test datapoints")
     SECTION("datapoint 'arrayTest' get() by index")
     {
         constexpr Temperature expectedTemperature{ .raw = 5555, .value = 123.0F };
-        using Return = std::remove_cvref_t<decltype(arrayTest.get().at(0))>;
-        Return valueTest = arrayTest.get(1);
+        auto [raw, value] = arrayTest.get(1);
 
 
-        REQUIRE(valueTest.raw == expectedTemperature.raw);
-        REQUIRE_THAT(valueTest.value, Catch::Matchers::WithinRel(static_cast<double>(expectedTemperature.value), EPSILON));
+        REQUIRE(raw == expectedTemperature.raw);
+        REQUIRE_THAT(value, Catch::Matchers::WithinRel(static_cast<double>(expectedTemperature.value), EPSILON));
     }
 
     SECTION("datapoint 'arrayTest2' set() by index")
@@ -427,27 +484,27 @@ TEST_CASE("Test datapoints")
     {
         constexpr Temperature internalTempTest{ .raw = 111, .value = 111.1F };
         constexpr Temperature externalTempTest{ .raw = 222, .value = 222.2F };
-        const auto valueTest = structInStructType.get();
-        REQUIRE(internalTempTest.raw == valueTest.internal.raw);
-        REQUIRE_THAT(internalTempTest.value, Catch::Matchers::WithinRel(static_cast<double>(valueTest.internal.value), EPSILON));
+        const auto [external, internal] = structInStructType.get();
+        REQUIRE(internalTempTest.raw == internal.raw);
+        REQUIRE_THAT(internalTempTest.value, Catch::Matchers::WithinRel(static_cast<double>(internal.value), EPSILON));
 
-        REQUIRE(externalTempTest.raw == valueTest.external.raw);
-        REQUIRE_THAT(externalTempTest.value, Catch::Matchers::WithinRel(static_cast<double>(valueTest.external.value), EPSILON));
+        REQUIRE(externalTempTest.raw == external.raw);
+        REQUIRE_THAT(externalTempTest.value, Catch::Matchers::WithinRel(static_cast<double>(external.value), EPSILON));
     }
 
     SECTION("set datapoint 'structInStructType' with nested structs")
     {
         constexpr Environment expectedValue{};
-        const auto ret = DefaultGroup.setDatapoint(structInStructType.getId(), expectedValue);
-        REQUIRE(ret.success);
-        REQUIRE(ret.check == DataLayer::Detail::RangeCheck::ok);
+        const auto [success, check] = DefaultGroup.setDatapoint(structInStructType.getId(), expectedValue);
+        REQUIRE(success);
+        REQUIRE(check == DataLayer::Detail::RangeCheck::ok);
 
-        const auto valueTest = structInStructType.get();
-        REQUIRE(expectedValue.internal.raw == valueTest.internal.raw);
-        REQUIRE_THAT(expectedValue.internal.value, Catch::Matchers::WithinRel(static_cast<double>(valueTest.internal.value), EPSILON));
+        const auto [external, internal] = structInStructType.get();
+        REQUIRE(expectedValue.internal.raw == internal.raw);
+        REQUIRE_THAT(expectedValue.internal.value, Catch::Matchers::WithinRel(static_cast<double>(internal.value), EPSILON));
 
-        REQUIRE(expectedValue.external.raw == valueTest.external.raw);
-        REQUIRE_THAT(expectedValue.external.value, Catch::Matchers::WithinRel(static_cast<double>(valueTest.external.value), EPSILON));
+        REQUIRE(expectedValue.external.raw == external.raw);
+        REQUIRE_THAT(expectedValue.external.value, Catch::Matchers::WithinRel(static_cast<double>(external.value), EPSILON));
     }
 
     SECTION("group file serialization")
@@ -479,7 +536,7 @@ TEST_CASE("Test datapoints")
 
         std::fstream file("sample.bin", std::ios::binary | std::ios::in | std::ios::out);
         file.seekp(-1, std::ios::end);
-        const char corruptByte = 0;
+        constexpr char corruptByte{ 0 };
         file.write(&corruptByte, 1);
         file.close();
 
@@ -488,13 +545,143 @@ TEST_CASE("Test datapoints")
         REQUIRE(readStatus.errorCode == SerializationError::ChecksumMismatch);
     }
 
+    SECTION("group file deserialization rejects an unavailable file")
+    {
+        std::filesystem::remove("missing.bin");
+
+        const auto [result, size, errorCode] = DefaultGroup.deserializeGroup("missing.bin");
+        REQUIRE_FALSE(result);
+        REQUIRE(size == 0);
+        REQUIRE(errorCode == SerializationError::InvalidFormat);
+    }
+
+    SECTION("group file deserialization rejects a byte-swapped format version")
+    {
+        REQUIRE(DefaultGroup.serializeGroup("sample.bin").result);
+        auto bytes = readFile("sample.bin");
+        DataLayer::Persistence::Header header{};
+        std::memcpy(&header, bytes.data(), sizeof(header));
+        header.formatVersion = std::byteswap(header.formatVersion);
+        std::memcpy(bytes.data(), &header, sizeof(header));
+        writeFile("sample.bin", bytes);
+
+        const auto readStatus = DefaultGroup.deserializeGroup("sample.bin");
+        REQUIRE_FALSE(readStatus.result);
+        REQUIRE(readStatus.errorCode == SerializationError::InvalidFormat);
+    }
+
+    SECTION("group file deserialization rejects truncated records with a valid checksum")
+    {
+        REQUIRE(DefaultGroup.serializeGroup("sample.bin").result);
+        auto bytes = readFile("sample.bin");
+        bytes.resize(bytes.size() - 1);
+        refreshChecksum(bytes);
+        writeFile("sample.bin", bytes);
+
+        const auto readStatus = DefaultGroup.deserializeGroup("sample.bin");
+        REQUIRE_FALSE(readStatus.result);
+        REQUIRE(readStatus.errorCode == SerializationError::InvalidFormat);
+    }
+
+    SECTION("group file deserialization rejects oversized record lengths with a valid checksum")
+    {
+        REQUIRE(DefaultGroup.serializeGroup("sample.bin").result);
+        auto bytes = readFile("sample.bin");
+        DataLayer::Persistence::RecordHeader record{};
+        std::memcpy(&record, bytes.data() + sizeof(DataLayer::Persistence::Header), sizeof(record));
+        record.payloadSize = static_cast<uint32_t>(bytes.size());
+        std::memcpy(bytes.data() + sizeof(DataLayer::Persistence::Header), &record, sizeof(record));
+        refreshChecksum(bytes);
+        writeFile("sample.bin", bytes);
+
+        const auto readStatus = DefaultGroup.deserializeGroup("sample.bin");
+        REQUIRE_FALSE(readStatus.result);
+        REQUIRE(readStatus.errorCode == SerializationError::InvalidFormat);
+    }
+
+    SECTION("partial replacement file does not replace a valid persistence file")
+    {
+        constexpr Temperature expected{ .raw = 4711, .value = 123.0F };
+        REQUIRE(DefaultGroup.serializeGroup("sample.bin").result);
+        std::ignore = test.set(Temperature{ .raw = 9999, .value = 99.9F });
+
+        constexpr auto interruptedWrite = std::array{ std::byte{ 0x44 }, std::byte{ 0x4C } };
+        writeFile("sample.bin.tmp", interruptedWrite);
+
+        const auto readStatus = DefaultGroup.deserializeGroup("sample.bin");
+        std::filesystem::remove("sample.bin.tmp");
+        REQUIRE(readStatus.result);
+        REQUIRE(readStatus.errorCode == SerializationError::None);
+        REQUIRE(test().raw == expected.raw);
+        REQUIRE(test().value == expected.value);
+    }
+
+    SECTION("datapoint migration restores an older payload shape")
+    {
+        constexpr uint32_t legacyRaw = 4321;
+        const auto legacyPayload = std::as_bytes(std::span{ &legacyRaw, 1 });
+        const auto bytes = makeFile(AllowUpgradeGroupInfo.baseId, DataLayer::Version{ 1, 0, 0 }, UpgradableDatapoint.getId(), DataLayer::Version{ 1, 0, 0 }, legacyPayload);
+        writeFile("migration.bin", bytes);
+
+        UpgradableDatapoint = Temperature{};
+        const auto readStatus = AllowUpgradeGroup.deserializeGroup("migration.bin");
+        REQUIRE(readStatus.result);
+        REQUIRE(readStatus.errorCode == SerializationError::None);
+        REQUIRE(UpgradableDatapoint().raw == legacyRaw);
+        REQUIRE(UpgradableDatapoint().value == Catch::Approx(43.21F));
+    }
+
+    SECTION("record-byte fuzzing detects every single-byte payload corruption")
+    {
+        REQUIRE(DefaultGroup.serializeGroup("sample.bin").result);
+        const auto original = readFile("sample.bin");
+        constexpr auto recordOffset = sizeof(DataLayer::Persistence::Header);
+
+        for (size_t index = recordOffset; index < original.size(); ++index)
+        {
+            auto mutated = original;
+            mutated[index] ^= std::byte{ 0x01 };
+            writeFile("sample.bin", mutated);
+
+            const auto readStatus = DefaultGroup.deserializeGroup("sample.bin");
+            REQUIRE_FALSE(readStatus.result);
+            REQUIRE(readStatus.errorCode == SerializationError::ChecksumMismatch);
+        }
+    }
+
+    SECTION("generated model persistence round-trips varied values")
+    {
+        for (uint32_t iteration = 1; iteration <= 16; ++iteration)
+        {
+            const Temperature expectedTemperature{ .raw = iteration * 97U, .value = static_cast<float>(iteration) * 1.25F };
+            std::array<int32_t, 10> expectedArray{};
+            for (size_t index = 0; index < expectedArray.size(); ++index)
+            {
+                expectedArray[index] = static_cast<int32_t>(iteration * 100U + index);
+            }
+            REQUIRE(test.set(expectedTemperature) == DataLayer::Detail::RangeCheck::ok);
+            REQUIRE(arrayTest2.set(expectedArray) == DataLayer::Detail::RangeCheck::ok);
+            REQUIRE(DefaultGroup.serializeGroup("round-trip.bin").result);
+
+            std::ignore = test.set(Temperature{});
+            std::ignore = arrayTest2.set({});
+
+            const auto readStatus = DefaultGroup.deserializeGroup("round-trip.bin");
+            REQUIRE(readStatus.result);
+            REQUIRE(readStatus.errorCode == SerializationError::None);
+            REQUIRE(test().raw == expectedTemperature.raw);
+            REQUIRE(test().value == expectedTemperature.value);
+            REQUIRE(arrayTest2() == expectedArray);
+        }
+    }
+
     SECTION("read serialized file to restore saved datapoint data")
     {
         using namespace std::string_view_literals;
 
-        const auto writeStatus = DefaultGroup.serializeGroup("sample.bin"sv);
-        REQUIRE(writeStatus.result);
-        REQUIRE(writeStatus.errorCode == SerializationError::None);
+        const auto [result, size, errorCode] = DefaultGroup.serializeGroup("sample.bin"sv);
+        REQUIRE(result);
+        REQUIRE(errorCode == SerializationError::None);
 
         // write new data
         constexpr Temperature newData{ 1234U, 123.4F };
@@ -506,7 +693,7 @@ TEST_CASE("Test datapoints")
         REQUIRE((testWithoutDefaultValue() == testValue));
 
         const auto readStatus = DefaultGroup.deserializeGroup("sample.bin"sv);
-        REQUIRE(readStatus.size == writeStatus.size);
+        REQUIRE(readStatus.size == size);
         REQUIRE(readStatus.result);
         REQUIRE(readStatus.errorCode == SerializationError::None);
 
@@ -518,56 +705,56 @@ TEST_CASE("Test datapoints")
     {
         using namespace std::string_view_literals;
 
-        const auto writeStatus = DefaultGroup.serializeGroup("sample.bin"sv);
-        REQUIRE(writeStatus.result);
-        REQUIRE(writeStatus.errorCode == SerializationError::None);
+        const auto [writeResult, writeSize, writeErrorCode] = DefaultGroup.serializeGroup("sample.bin"sv);
+        REQUIRE(writeResult);
+        REQUIRE(writeErrorCode == SerializationError::None);
 
-        const auto readStatus = SecondGroup.deserializeGroup("sample.bin"sv);
-        REQUIRE(readStatus.size == writeStatus.size);
-        REQUIRE_FALSE(readStatus.result);
-        REQUIRE(readStatus.errorCode == SerializationError::DatapointVersion);
+        const auto [readResult, readSize, readErrorCode] = SecondGroup.deserializeGroup("sample.bin"sv);
+        REQUIRE(readSize == writeSize);
+        REQUIRE_FALSE(readResult);
+        REQUIRE(readErrorCode == SerializationError::DatapointVersion);
     }
 
     SECTION("test for error in different group version")
     {
         using namespace std::string_view_literals;
 
-        const auto writeStatus = OldGroup.serializeGroup("oldGroupSample.bin"sv);
-        REQUIRE(writeStatus.result);
-        REQUIRE(writeStatus.errorCode == SerializationError::None);
+        const auto [writeResult, writeSize, writeErrorCode] = OldGroup.serializeGroup("oldGroupSample.bin"sv);
+        REQUIRE(writeResult);
+        REQUIRE(writeErrorCode == SerializationError::None);
 
-        const auto readStatus = NewerGroup.deserializeGroup("oldGroupSample.bin"sv);
-        REQUIRE(readStatus.size == writeStatus.size);
-        REQUIRE(readStatus.result);
-        REQUIRE(readStatus.errorCode == SerializationError::GroupVersion);
+        const auto [readResult, readSize, readErrorCode] = NewerGroup.deserializeGroup("oldGroupSample.bin"sv);
+        REQUIRE(readSize == writeSize);
+        REQUIRE(readResult);
+        REQUIRE(readErrorCode == SerializationError::GroupVersion);
     }
 
     SECTION("test for error in different group and datapoint versions")
     {
         using namespace std::string_view_literals;
 
-        const auto writeStatus = OldGroup.serializeGroup("oldGroupSample.bin"sv);
-        REQUIRE(writeStatus.result);
-        REQUIRE(writeStatus.errorCode == SerializationError::None);
+        const auto [writeResult, writeSize, writeErrorCode] = OldGroup.serializeGroup("oldGroupSample.bin"sv);
+        REQUIRE(writeResult);
+        REQUIRE(writeErrorCode == SerializationError::None);
 
-        const auto readStatus = NewerGroupAndDatapoint.deserializeGroup("oldGroupSample.bin"sv);
-        REQUIRE(readStatus.size == writeStatus.size);
-        REQUIRE_FALSE(readStatus.result);
-        REQUIRE(readStatus.errorCode == SerializationError::GroupAndDatapointVersion);
+        const auto [readResult, readSize, readErrorCode] = NewerGroupAndDatapoint.deserializeGroup("oldGroupSample.bin"sv);
+        REQUIRE(readSize == writeSize);
+        REQUIRE_FALSE(readResult);
+        REQUIRE(readErrorCode == SerializationError::GroupAndDatapointVersion);
     }
 
     SECTION("test for none error after update")
     {
         using namespace std::string_view_literals;
 
-        const auto writeStatus = OldGroup.serializeGroup("oldGroupSample.bin"sv);
-        REQUIRE(writeStatus.result);
-        REQUIRE(writeStatus.errorCode == SerializationError::None);
+        const auto [writeResult, writeSize, writeErrorCode] = OldGroup.serializeGroup("oldGroupSample.bin"sv);
+        REQUIRE(writeResult);
+        REQUIRE(writeErrorCode == SerializationError::None);
 
-        const auto readStatus = AllowUpgradeGroup.deserializeGroup("oldGroupSample.bin"sv);
-        REQUIRE(readStatus.size == writeStatus.size);
-        REQUIRE(readStatus.result);
-        REQUIRE(readStatus.errorCode == SerializationError::None);
+        const auto [readResult, readSize, readErrorCode] = AllowUpgradeGroup.deserializeGroup("oldGroupSample.bin"sv);
+        REQUIRE(readSize == writeSize);
+        REQUIRE(readResult);
+        REQUIRE(readErrorCode == SerializationError::None);
     }
 
     SECTION("test for not read all bytes")
@@ -596,14 +783,14 @@ TEST_CASE("Test datapoints")
 
     SECTION("RangeAlias set returns underflow for value below minimum")
     {
-        const auto result = rangeAlias.set(RangeAlias{ 5 });
-        REQUIRE(result == DataLayer::Detail::RangeCheck::underflow);
+        constexpr auto result = rangeAlias.set(RangeAlias{ 5 });
+        STATIC_REQUIRE(result == DataLayer::Detail::RangeCheck::underflow);
     }
 
     SECTION("RangeAlias set returns overflow for value above maximum")
     {
-        const auto result = rangeAlias.set(RangeAlias{ 200 });
-        REQUIRE(result == DataLayer::Detail::RangeCheck::overflow);
+        constexpr auto result = rangeAlias.set(RangeAlias{ 200 });
+        STATIC_REQUIRE(result == DataLayer::Detail::RangeCheck::overflow);
     }
 
     SECTION("RangeAlias set returns ok for value within range")
@@ -644,9 +831,9 @@ TEST_CASE("Test datapoints")
     SECTION("dispatcher setDatapoint() fan-out to datapoint")
     {
         constexpr Temperature newValue{ .raw = 7777, .value = 77.7F };
-        const auto ret = Dispatcher.setDatapoint(test.getId(), newValue);
-        REQUIRE(ret.success);
-        REQUIRE(ret.check == DataLayer::Detail::RangeCheck::notChecked);
+        const auto [success, check] = Dispatcher.setDatapoint(test.getId(), newValue);
+        REQUIRE(success);
+        REQUIRE(check == DataLayer::Detail::RangeCheck::notChecked);
         REQUIRE(test().raw == newValue.raw);
     }
 
@@ -654,7 +841,7 @@ TEST_CASE("Test datapoints")
     {
         constexpr uint32_t unknownId = 0xFFFF;
         constexpr Temperature dummyValue{};
-        const auto ret = Dispatcher.setDatapoint(unknownId, dummyValue);
+        constexpr auto ret = Dispatcher.setDatapoint(unknownId, dummyValue);
         REQUIRE(!ret.success);
     }
 
@@ -681,8 +868,8 @@ TEST_CASE("Test datapoints")
 
         // overwrite with default-constructed Environment
         constexpr Environment zeroed{};
-        const auto setRet = DefaultGroup.setDatapoint(structInStructType.getId(), zeroed);
-        REQUIRE(setRet.success);
+        const auto [success, check] = DefaultGroup.setDatapoint(structInStructType.getId(), zeroed);
+        REQUIRE(success);
         REQUIRE(structInStructType.get().internal.raw == 0);
 
         structInStructType.deserialize(serialized);

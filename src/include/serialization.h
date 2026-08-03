@@ -86,7 +86,7 @@ namespace DataLayer::Persistence
 template<typename Data>
 struct Serialization
 {
-    constexpr explicit Serialization(const Version &groupVersionInfo, uint16_t groupId, const std::filesystem::path &path, Data &input)
+    constexpr explicit Serialization(const DataLayer::Version &groupVersionInfo, uint16_t groupId, const std::filesystem::path &path, Data &input)
       : m_dataVariables(input), m_groupVersionInfo(groupVersionInfo), m_groupId(groupId), m_path(path)
     {}
 
@@ -143,7 +143,7 @@ struct Serialization
     }
 
     Data &m_dataVariables;
-    Version m_groupVersionInfo;
+    DataLayer::Version m_groupVersionInfo;
     uint16_t m_groupId;
     std::filesystem::path m_path;
 };
@@ -151,7 +151,7 @@ struct Serialization
 template<typename Data>
 struct Deserialization
 {
-    constexpr explicit Deserialization(const Version &groupVersionInfo, uint16_t groupId, const std::filesystem::path &path, Data &input, bool allowUpgrade)
+    constexpr explicit Deserialization(const DataLayer::Version &groupVersionInfo, uint16_t groupId, const std::filesystem::path &path, Data &input, bool allowUpgrade)
       : m_dataVariables(input), m_groupVersionInfo(groupVersionInfo), m_groupId(groupId), m_path(path), m_allowUpgrade(allowUpgrade)
     {}
 
@@ -256,7 +256,7 @@ struct Deserialization
     }
 
     Data &m_dataVariables;
-    Version m_groupVersionInfo;
+    DataLayer::Version m_groupVersionInfo;
     uint16_t m_groupId;
     std::filesystem::path m_path;
     bool m_allowUpgrade;

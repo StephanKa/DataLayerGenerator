@@ -13,22 +13,22 @@ namespace DataLayer
         Cyclic,
         OnWrite
     };
-}
 
-struct Version
-{
-    constexpr Version(uint32_t Major, uint32_t Minor, uint32_t Build) : major(Major), minor(Minor), build(Build)
-    {}
+    struct Version
+    {
+        constexpr Version(uint32_t Major, uint32_t Minor, uint32_t Build) : major(Major), minor(Minor), build(Build)
+        {}
 
-    constexpr Version() = default;
+        constexpr Version() = default;
 
-    uint32_t major{};
-    uint32_t minor{};
-    uint32_t build{};
+        uint32_t major{};
+        uint32_t minor{};
+        uint32_t build{};
 
-    constexpr auto operator<=>(const Version &) const = default;
-    constexpr bool operator==(const Version &) const = default;
-};
+        constexpr auto operator<=>(const Version &) const = default;
+        constexpr bool operator==(const Version &) const = default;
+    };
+}// namespace DataLayer
 
 template<size_t N>
 struct FixedString
