@@ -70,7 +70,7 @@ jobs:
              sudo apt install ninja-build ccache ${{ matrix.compiler.pkgs }}
       shell: bash
 
-    - uses: astral-sh/setup-uv@v9
+    - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9
 
     - name: Install conan
       shell: bash
@@ -103,7 +103,7 @@ jobs:
         buildtype: [release]
     steps:
       - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v9
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9
       - name: Install conan
         shell: bash
         run: |
@@ -178,7 +178,7 @@ jobs:
           ~/.cache/pip
         key: ${{ runner.os }}-${{ env.BUILD_TYPE }}-${{ hashFiles('CMakeLists.txt') }}-${{ hashFiles('cmake/Conan.cmake') }}
 
-    - uses: astral-sh/setup-uv@v9
+    - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9
 
     - name: Install conan
       shell: bash
@@ -235,7 +235,7 @@ jobs:
           ~/.cache/pip
         key: ${{ runner.os }}-${{ env.BUILD_TYPE }}-${{ hashFiles('CMakeLists.txt') }}-${{ hashFiles('cmake/Conan.cmake') }}
 
-    - uses: astral-sh/setup-uv@v9
+    - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9
 
     - name: Install conan
       shell: bash
