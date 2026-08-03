@@ -51,6 +51,27 @@ namespace
         std::memcpy(bytes.data(), &header, sizeof(header));
     }
 
+    void setPersistedGroupId(const std::filesystem::path &path, uint16_t sourceGroupId, uint16_t groupId)
+    {
+        auto bytes = readFile(path);
+        DataLayer::Persistence::Header header{};
+        std::memcpy(&header, bytes.data(), sizeof(header));
+        header.groupId = groupId;
+        std::memcpy(bytes.data(), &header, sizeof(header));
+
+        size_t offset = sizeof(header);
+        while (offset < bytes.size())
+        {
+            DataLayer::Persistence::RecordHeader record{};
+            std::memcpy(&record, bytes.data() + offset, sizeof(record));
+            record.dataPointId = static_cast<uint16_t>(groupId + (record.dataPointId - sourceGroupId));
+            std::memcpy(bytes.data() + offset, &record, sizeof(record));
+            offset += sizeof(record) + record.payloadSize;
+        }
+        refreshChecksum(bytes);
+        writeFile(path, bytes);
+    }
+
     ByteBuffer makeFile(uint16_t groupId, DataLayer::Version groupVersion, uint16_t dataPointId, DataLayer::Version dataPointVersion, std::span<const std::byte> payload)
     {
         ByteBuffer records;
@@ -708,6 +729,7 @@ TEST_CASE("Test datapoints")
         const auto [writeResult, writeSize, writeErrorCode] = DefaultGroup.serializeGroup("sample.bin"sv);
         REQUIRE(writeResult);
         REQUIRE(writeErrorCode == SerializationError::None);
+        setPersistedGroupId("sample.bin", DefaultGroupInfo.baseId, SecondGroupInfo.baseId);
 
         const auto [readResult, readSize, readErrorCode] = SecondGroup.deserializeGroup("sample.bin"sv);
         REQUIRE(readSize == writeSize);
@@ -722,6 +744,7 @@ TEST_CASE("Test datapoints")
         const auto [writeResult, writeSize, writeErrorCode] = OldGroup.serializeGroup("oldGroupSample.bin"sv);
         REQUIRE(writeResult);
         REQUIRE(writeErrorCode == SerializationError::None);
+        setPersistedGroupId("oldGroupSample.bin", OldGroupInfo.baseId, NewerGroupInfo.baseId);
 
         const auto [readResult, readSize, readErrorCode] = NewerGroup.deserializeGroup("oldGroupSample.bin"sv);
         REQUIRE(readSize == writeSize);
@@ -736,6 +759,7 @@ TEST_CASE("Test datapoints")
         const auto [writeResult, writeSize, writeErrorCode] = OldGroup.serializeGroup("oldGroupSample.bin"sv);
         REQUIRE(writeResult);
         REQUIRE(writeErrorCode == SerializationError::None);
+        setPersistedGroupId("oldGroupSample.bin", OldGroupInfo.baseId, NewerGroupAndDatapointInfo.baseId);
 
         const auto [readResult, readSize, readErrorCode] = NewerGroupAndDatapoint.deserializeGroup("oldGroupSample.bin"sv);
         REQUIRE(readSize == writeSize);
@@ -750,6 +774,7 @@ TEST_CASE("Test datapoints")
         const auto [writeResult, writeSize, writeErrorCode] = OldGroup.serializeGroup("oldGroupSample.bin"sv);
         REQUIRE(writeResult);
         REQUIRE(writeErrorCode == SerializationError::None);
+        setPersistedGroupId("oldGroupSample.bin", OldGroupInfo.baseId, AllowUpgradeGroupInfo.baseId);
 
         const auto [readResult, readSize, readErrorCode] = AllowUpgradeGroup.deserializeGroup("oldGroupSample.bin"sv);
         REQUIRE(readSize == writeSize);
