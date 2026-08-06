@@ -3,4 +3,5 @@ Flask
 Jinja2
 jsonschema
 ninja
+PyYAML
 setuptools
