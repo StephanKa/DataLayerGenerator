@@ -1,0 +1,28 @@
+:root {
+  --editor-accent: #0d6a63;
+  --editor-ink: #1d2939;
+  --editor-surface: #f4f7f6;
+}
+
+body {
+  background: var(--editor-surface);
+  color: var(--editor-ink);
+}
+
+.nav-pills .nav-link {
+  color: var(--editor-ink);
+  text-align: left;
+}
+
+.nav-pills .nav-link.active {
+  background: var(--editor-accent);
+}
+
+.table tbody tr {
+  cursor: pointer;
+}
+
+.empty-state {
+  color: #667085;
+  text-align: center;
+}

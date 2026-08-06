@@ -155,6 +155,16 @@ python src/generator/generator.py \
   --schema_dir src/generator --check
 ```
 
+For a local browser UI to author canonical JSON models, install the generator requirements and run:
+
+```bash
+python src/generator/model_editor.py --model-dir src/model
+```
+
+Open `http://127.0.0.1:5000`. The editor supports the canonical `groups.json`, `datapoints.json`,
+`structs.json`, `enums.json`, and `types.json` layout; use the generator directly for YAML or custom
+split-file models.
+
 Generated output under `build/generated/`:
 
 | File | Content |

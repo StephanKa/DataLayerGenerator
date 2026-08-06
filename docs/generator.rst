@@ -34,6 +34,23 @@ Invocation
      --schema_dir   src/generator \
      --module_name  my_module        # optional pybind11 module name
 
+  Local Model Editor
+  ------------------
+
+  The optional local model editor provides a browser-based UI for managing groups, datapoints,
+  structs, enums, and alias types. It runs only on the local machine and writes the canonical JSON
+  section files after the full model passes schema and semantic validation. The editor requires this
+  canonical JSON-only layout: ``groups.json``, ``datapoints.json``, ``structs.json``, ``enums.json``,
+  and ``types.json``; use the code generator directly for custom split-file or YAML models.
+
+  .. code-block:: bash
+
+    python src/generator/model_editor.py --model-dir src/model
+
+  Open ``http://127.0.0.1:5000`` in a browser. Use ``--port`` to select a different port, or
+  ``--host`` to select a different network interface. The editor is included in
+  ``src/generator/requirements.txt`` through its Flask dependency.
+
 Arguments:
 
 .. list-table::
