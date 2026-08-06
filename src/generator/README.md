@@ -1,177 +1,54 @@
-# General
+# DataLayerGenerator Python Tools
 
-## Definitions
+This directory contains the JSON/YAML model generator, semantic validators, and the local Flask
+model editor. The canonical model reference is in `../../docs/model.rst`; the project build guide is
+in `../../build.md`.
 
-This generator can read YML and also JSON files.
+## Install
 
-### Enumeration
+From the repository root, install the declared Python dependencies:
 
-The following properties are allowed.
-
-| name   | required | description                                                |
-|--------|----------|------------------------------------------------------------|
-| name   | yes      | the name of the enumeration                                |
-| type   | yes      | describes the underlying datatype                          |
-| values | yes      | list of enum entries                                       |
-| autoId | no       | uses standard auto enumeration without declaring the value |
-
-If it is required to set individual values have a look at following example.
-
-Example:
-
-```json
-{
-  "Enums": [
-    {
-      "name": "Status",
-      "type": "uint32_t",
-      "values": [
-        "Booting",
-        "Starting",
-        "Finished"
-      ],
-      "autoId": true
-    },
-    {
-      "name": "ErrorStates",
-      "type": "uint32_t",
-      "values": [
-        {"Info": 1},
-        {"Warn": 4}
-      ],
-      "autoId": false
-    }
-  ]
-}
+```powershell
+uv venv
+uv pip install --python .venv\Scripts\python.exe -r src\generator\requirements.txt
 ```
 
-This example will generate this C++ code
+## Generate Or Validate
 
-```c++
-enum class Status : uint32_t
-{
-    Booting,
-    Starting,
-    Finished,
-};
+Validate a model without writing generated files:
 
-enum class ErrorStates : uint32_t
-{
-    Info = 1,
-    Warn = 4,
-};
+```powershell
+.\.venv\Scripts\python.exe src\generator\generator.py `
+  --model_dir src\model `
+  --out_dir build `
+  --template_dir src\template `
+  --schema_dir src\generator `
+  --check
 ```
 
-### Structures
+Remove `--check` to generate C++ headers, formatter support, optional Python bindings, and model
+documentation. Model directories can contain JSON, YAML, or a mix of both; the generator merges all
+supported files before schema and semantic validation.
 
-The following properties are allowed.
+## Local Model Editor
 
-| name             | required | description                                                        |
-|------------------|----------|--------------------------------------------------------------------|
-| name             | yes      | the name of the structs                                            |
-| parameter        | yes      | properties which is a list, each variable will be a type of object |
-| parameter - name | yes      | name of the struct variable                                        |
-| parameter - type | yes      | datatype of struct variable                                        |
+Start the browser editor for a canonical JSON model directory:
 
-```json
-{
-  "Structs": [
-    {
-      "name": "Temperature",
-      "parameter": [
-        {"value": "float"},
-        {"raw": "uint32_t"}
-      ]
-    }
-  ]
-}
+```powershell
+.\.venv\Scripts\python.exe src\generator\model_editor.py --model-dir src\model
 ```
 
-This example will generate this C++ code
+Open `http://127.0.0.1:5000`. The editor validates changes before saving and writes atomically, but
+it intentionally supports only `groups.json`, `datapoints.json`, `structs.json`, `enums.json`, and
+`types.json`. Use `generator.py` directly for YAML or custom split-file layouts.
 
-```c++
-struct Temperature
-{
-    float value;
-    uint32_t raw;
-};
+## Tests
+
+Run the local editor API tests with:
+
+```powershell
+.\.venv\Scripts\python.exe test\python\testModelEditor.py
 ```
 
-### Groups
-
-The following properties are allowed.
-
-| name          | required | description                                                                                                                                                                                         |
-|---------------|----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| name          | yes      | the name of the structs                                                                                                                                                                             |
-| persistence   | yes      | the persistence can be described with following<br/>**None - no persistence used<br/>Cyclic - group will be persisted in cyclic manner<br/>OnWrite - will only be persisted if it will be changed** |
-| baseId        | yes      | describes the base id for all datapoints below                                                                                                                                                      |
-| version       | yes      | describes the version where it was created or updated. It is defined as string **\<MAJOR>.\<MINOR>.\<BUILD>**                                                                                       |
-| allowUpgrade  | no       | describes if serialized data can be override group values given the version is higher                                                                                                               |
-
-
-```json
-{
-  "Groups": [
-    {
-      "name": "DefaultGroup",
-      "persistence": "None",
-      "baseId": "0x4000",
-      "version": "1.0.1"
-    }
-  ]
-}
-```
-
-### Data Points
-
-The following properties are allowed.
-
-| name         | required | description                                                                                                    |
-|--------------|----------|----------------------------------------------------------------------------------------------------------------|
-| name         | yes      | the name of the datapoint                                                                                      |
-| group        | yes      | name of the group where the datapoint will be registered                                                       |
-| id           | yes      | id of the datapoint. **NOTE**: that's the id without the offset of the group itself.                           |
-| type         | yes      | defines the datatype for normal values or this can also be a self defined struct                               |
-| default      | no       | defines the initial value of the datapoint, structures can also be defaulted                                   |
-| access       | yes      | describes the access to the datapoint:**<br/>READ_WRITE<br/>READ_ONLY<br/>WRITE_ONLY**                            |
-| namespace    | no       | each datapoint can be moved in separate namespaces otherwise the datapoint will be visible without a namespace |
-| version      | yes      | describes the version where it was created or updated. It is defined as string **\<MAJOR>.\<MINOR>.\<BUILD>**  |
-| arraySize    | no       | describes if the defined type is a std::array, it will define the size of the std::array with defined type     |
-| allowUpgrade | no       | describes if serialized data can be override DP value given the version is higher                              |
-| description  | no       | description of the datapoint can be written in this field                                                      |
-
-```json
-{
-  "Datapoints": [
-    {
-      "name": "test",
-      "group": "DefaultGroup",
-      "id": 1,
-      "type": "int32_t",
-      "default": 4211,
-      "access": "READ_WRITE",
-      "namespace": "Testify",
-      "version": "1.1.1"
-    },
-    {
-      "name": "test3",
-      "group": "DefaultGroup",
-      "id": 3,
-      "type": "int32_t",
-      "access": "READ_WRITE",
-      "version": "1.0.1"
-    },
-    {
-      "name": "test3",
-      "group": "DefaultGroup",
-      "id": 3,
-      "type": "int32_t",
-      "access": "READ_WRITE",
-      "version": "1.0.1",
-      "arraySize": 42
-    }
-  ]
-}
-
-```
+Run the remaining generator and validator tests through the project's configured test workflow in
+`../../build.md`.
