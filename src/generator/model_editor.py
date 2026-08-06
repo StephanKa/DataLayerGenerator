@@ -33,7 +33,7 @@ SECTIONS = tuple(SECTION_FILENAMES)
 def get_arguments():
     """Return command-line arguments for the local editor."""
     parser = argparse.ArgumentParser(description='Open a local browser UI for a DataLayerGenerator model.')
-    parser.add_argument('--model-dir', required=True, help='Directory containing JSON or YAML model files.')
+    parser.add_argument('--model-dir', required=True, help='Directory containing canonical JSON model files.')
     parser.add_argument('--schema-dir', default=Path(__file__).parent,
                         help='Directory containing schema.json (default: this module directory).')
     parser.add_argument('--host', default='127.0.0.1', help='Host interface to bind (default: 127.0.0.1).')
