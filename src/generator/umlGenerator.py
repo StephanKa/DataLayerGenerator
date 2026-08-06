@@ -1,76 +1,123 @@
-"""This module will generate UML diagrams for all datapoints."""
-from constants import BASE_TYPES
+"""This module generates PlantUML diagrams for a validated data-layer model."""
+from collections import defaultdict
+from pathlib import Path
+import re
 
 
-def generate_enumeration(enum_dict):
+def plantuml_alias(prefix, name):
+    """Return a stable PlantUML-safe alias for a model element."""
+    return f'{prefix}_{re.sub(r"[^A-Za-z0-9_]", "_", name)}'
+
+
+def plantuml_label(value):
+    """Return text safely quoted for use as a PlantUML display label."""
+    return str(value).replace('\\', '\\\\').replace('"', '\\"').replace('\n', '\\n')
+
+
+def generate_enumeration(enums):
     """
     General method that will create a list of string in UML format.
 
-    :param enum_dict: dictionary of all enumeration definitions
+    :param enums: validated enumeration definitions
     :return: list of UML enumeration strings
     """
     result = []
-    for data in enum_dict:
-        enum_string = f'enum {data["name"]} {{\n'
-        if len(data['values']) == 0:
-            continue
-        if isinstance(data['values'][0], str):
-            enum_string += '\n'.join(data['values'])
-        if isinstance(data['values'][0], dict):
-            for temp in data['values']:
-                (key, value), = temp.items()
-                enum_string += f'{key} = {value}\n'
-        enum_string += '\n}\n'
-        result.append(enum_string)
+    for enum in enums:
+        members = []
+        for value in enum['values']:
+            if isinstance(value, str):
+                members.append(value)
+            else:
+                members.append(f'{value.name} = {value.value}')
+        alias = plantuml_alias('enum', enum['name'])
+        result.append(f'enum "{plantuml_label(enum["name"])}" as {alias} {{\n'
+                      f'{chr(10).join(members)}\n}}')
     return result
 
 
-def generate_struct(struct_dict):
+def generate_struct(structs):
     """
     General method that will create a list of string in UML format.
 
-    :param struct_dict: dictionary of all struct definitions
+    :param structs: validated struct definitions
     :return: list of UML struct / classes strings
     """
     result = []
-    for data in struct_dict:
-        struct_string = f'class {data["name"]} << data type >> {{\n'
-        for temp in data['parameter']:
-            struct_string += f'{temp.name} {temp.value}\n'
-        struct_string += '}\n'
-        result.append(struct_string)
+    for struct in structs:
+        attributes = '\n'.join(f'{parameter.name}: {parameter.value}' for parameter in struct['parameter'])
+        alias = plantuml_alias('struct', struct['name'])
+        result.append(f'class "{plantuml_label(struct["name"])}" as {alias} <<data type>> {{\n'
+                      f'{attributes}\n}}')
     return result
 
 
-def generate_datapoints(datapoint_dict):
+def generate_types(types):
+    """Generate PlantUML declarations for custom alias types."""
+    result = []
+    for custom_type in types:
+        alias = plantuml_alias('type', custom_type['name'])
+        result.append(f'class "{plantuml_label(custom_type["name"])}" as {alias} <<alias>> {{\n'
+                      f'type: {custom_type["type"]}\n}}')
+    return result
+
+
+def type_alias(type_name, enum_names, struct_names, custom_type_names):
+    """Return the PlantUML alias for a named model type, when one exists."""
+    if type_name in enum_names:
+        return plantuml_alias('enum', type_name)
+    if type_name in struct_names:
+        return plantuml_alias('struct', type_name)
+    if type_name in custom_type_names:
+        return plantuml_alias('type', type_name)
+    return None
+
+
+def generate_datapoints(datapoints, enum_names, struct_names, custom_type_names):
     """
     General method that will create a list of string in UML format.
 
-    :param datapoint_dict: dictionary of all datapoint definitions
-    :return: tuple of lists of UML struct and relationsship
+    :param datapoints: validated datapoint definitions
+    :param enum_names: names of defined enums
+    :param struct_names: names of defined structs
+    :param custom_type_names: names of defined alias types
+    :return: tuple of UML datapoint content and relationships
     """
-    result = dict()
-    relation_ship = []
-    for data in datapoint_dict:
-        namespace = ''
-        group = data['group']
-        if 'namespace' in data and data['namespace'] != '':
-            namespace = f'package {data["namespace"]} {{ \n'
-        dp_string = namespace + f'class {data["name"]} {{\n {data["type"]} \n}}\n'
-        if namespace != '':
-            dp_string += '\n}'
-        if data['type'] not in BASE_TYPES:
-            relation_ship.append(f'{data["name"]} *- {data["type"]}')
+    groups = defaultdict(lambda: defaultdict(list))
+    relationships = []
+    for datapoint in datapoints:
+        namespace = datapoint['namespace']
+        alias = plantuml_alias('datapoint', f'{datapoint["group"]}_{namespace}_{datapoint["name"]}')
+        type_display = datapoint['type']
+        if datapoint['arraySize']:
+            type_display += f'[{datapoint["arraySize"]}]'
+        attributes = [
+            f'type: {type_display}',
+            f'access: {datapoint["access"]}',
+            f'id: {datapoint["id"]:#x}',
+            f'version: {datapoint["version"]}',
+        ]
+        if datapoint['description'] is not None:
+            attributes.append(f'description: {plantuml_label(datapoint["description"])}')
+        groups[datapoint['group']][namespace].append(
+            f'class "{plantuml_label(datapoint["name"])}" as {alias} {{\n'
+            f'{chr(10).join(attributes)}\n}}')
 
-        if group in result:
-            result[group].append(dp_string)
-        else:
-            result[group] = [dp_string]
-    output = ''
-    for group in result:
-        temp = '\n'.join(result[group])
-        output += f'package "{group}" #DDDDDD {{ \n {temp} \n}}\n'
-    return output, relation_ship
+        target_alias = type_alias(datapoint['type'], enum_names, struct_names, custom_type_names)
+        if target_alias is not None:
+            relationships.append(f'{alias} *-- {target_alias}')
+
+    packages = []
+    for group, namespaces in groups.items():
+        members = []
+        for namespace, datapoint_classes in namespaces.items():
+            content = '\n'.join(datapoint_classes)
+            if namespace:
+                members.append(f'package "{plantuml_label(namespace)}" {{\n{content}\n}}')
+            else:
+                members.append(content)
+        packages.append(f'package "{plantuml_label(group)}" #DDDDDD {{\n'
+                        f'{chr(10).join(members)}\n}}')
+    return '\n'.join(packages), relationships
 
 
 class UML:
@@ -79,27 +126,47 @@ class UML:
     START = '@startuml\n'
     END = '@enduml'
 
-    def __init__(self, enum_dict, struct_dict, datapoint_struct):
+    def __init__(self, enums, structs, datapoints, types):
         """Initialize UML class."""
-        self.enum_string = generate_enumeration(enum_dict)
-        self.struct_string = generate_struct(struct_dict)
-        self.datapoint_string, self.relation_ship = generate_datapoints(datapoint_struct)
+        enum_names = {enum['name'] for enum in enums}
+        struct_names = {struct['name'] for struct in structs}
+        custom_type_names = {custom_type['name'] for custom_type in types}
+        self.enum_string = generate_enumeration(enums)
+        self.struct_string = generate_struct(structs)
+        self.type_string = generate_types(types)
+        self.datapoint_string, self.relationships = generate_datapoints(
+            datapoints, enum_names, struct_names, custom_type_names)
+        self.relationships.extend(
+            f'{plantuml_alias("struct", struct["name"])} *-- '
+            f'{plantuml_alias("struct", parameter.value)}'
+            for struct in structs
+            for parameter in struct['parameter']
+            if parameter.value in struct_names
+        )
+        self.relationships = list(dict.fromkeys(self.relationships))
 
     def __str__(self):
         """Return a string of UML content."""
-        return self.START + '\n'.join(self.enum_string) + '\n' + '\n'.join(
-            self.struct_string) + '\n' + self.datapoint_string + '\n'.join(self.relation_ship) + '\n' + self.END
+        sections = [
+            '\n'.join(self.enum_string),
+            '\n'.join(self.struct_string),
+            '\n'.join(self.type_string),
+            self.datapoint_string,
+            '\n'.join(self.relationships),
+        ]
+        return self.START + '\n\n'.join(section for section in sections if section) + '\n' + self.END
 
 
-def generate_uml(enums, structs, datapoint, out_dir):
+def generate_uml(enums, structs, datapoints, types, out_dir):
     """
     General method that will create a list of string in UML format.
 
-    :param enums: dictionary of all enum definitions
-    :param structs: dictionary of all struct definitions
-    :param datapoint: dictionary of all datapoint definitions
-    :param out_dir: path for the generated output
+    :param enums: validated enum definitions
+    :param structs: validated struct definitions
+    :param datapoints: validated datapoint definitions
+    :param types: validated custom type definitions
+    :param out_dir: output directory path
     """
-    d = UML(enums, structs, datapoint)
-    with open(f'{out_dir}/overview.plantuml', 'w') as e:
-        e.write(str(d))
+    output_path = Path(out_dir) / 'overview.plantuml'
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(str(UML(enums, structs, datapoints, types)), encoding='utf-8')

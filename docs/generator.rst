@@ -76,8 +76,9 @@ All files are written under ``<out_dir>/generated/``:
        (only when ``ENABLE_FMT`` is set).
    * - ``datalayer_example/pythonBinding.cpp``
      - pybind11 module source. CMake compiles it when ``ENABLE_PYBIND11`` is set.
-   * - ``doc/*.puml``
-     - PlantUML class diagram sources for the generated data model.
+   * - ``doc/overview.plantuml``
+     - PlantUML class diagram source for the generated data model, including groups, namespaces,
+       datapoint metadata, enums, structs, custom types, and their relationships.
    * - ``doc/overview.csv``
      - CSV listing all datapoints: ID, name, type, access, group, version.
 

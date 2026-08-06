@@ -180,7 +180,7 @@ def main(template_file_name, template_formatter_file_name, python_binding_file_n
     with open(f'{args.out_dir}{PYTHON_FOLDER}/pythonBinding.cpp', 'w') as f:
         f.write(output)
 
-    generate_uml(enums=json_data['Enums'], structs=json_data['Structs'], datapoint=json_data['Datapoints'],
+    generate_uml(enums=enums, structs=structs, datapoints=data_points, types=types,
                  out_dir=f'{args.out_dir}/{DOC_FOLDER}')
 
     group_ids = dict()
