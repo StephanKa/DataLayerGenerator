@@ -253,6 +253,33 @@ on every ``set()`` call and returns :cpp:enum:`DataLayer::Detail::RangeCheck`:
 - ``overflow`` if the value is above ``max``
 - ``ok`` if within range
 
+VS Code Schema Validation
+-------------------------
+
+Associate the bundled ``src/generator/schema.json`` with model files in the workspace settings to
+get completion and validation diagnostics while editing. Create or update ``.vscode/settings.json``
+in the repository root:
+
+.. code-block:: json
+
+   {
+     "json.schemas": [
+       {
+         "fileMatch": ["/src/model/*.json"],
+         "url": "./src/generator/schema.json"
+       }
+     ],
+     "yaml.schemas": {
+       "./src/generator/schema.json": ["src/model/*.yaml", "src/model/*.yml"]
+     }
+   }
+
+JSON Schema support is built into VS Code. For YAML model files, install the `YAML extension by
+Red Hat <https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml>`_. Adjust the
+``fileMatch`` patterns when the model directory is elsewhere. Do not add a ``$schema`` property to
+model files: the generator validates top-level keys strictly, and the editor association keeps that
+metadata out of the model.
+
 YAML Support
 ------------
 
