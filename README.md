@@ -32,6 +32,7 @@ formatters, optional Python bindings, and dependency-free MQTT/CAN adapter bound
 | **Transport boundaries** | Dependency-free typed MQTT and CAN/CAN-FD adapters; applications supply the broker client or CAN driver |
 | **fmt support** | Auto-generated `fmt::formatter<>` for all custom structs and enums (`-DENABLE_FMT=ON`) |
 | **Python bindings** | Auto-generated `pybind11` module (`-DENABLE_PYBIND11=ON`) |
+| **SEGGER RTT monitoring** | Generated PyLink reader decodes model-specific RTT datapoint frames without address-based coupling |
 | **JSON & YAML models** | Write model files in JSON or YAML; mixed directories supported |
 | **Cross-compilation** | ARM Cortex-M4 GCC toolchain included |
 | **Conan package** | Distributable as a Conan `header-library` package with consumer helper CMake function |
@@ -172,8 +173,12 @@ Generated output under `build/generated/`:
 | `include/datalayer.h` | All group infos, types, enums, structs, `constinit` datapoint globals |
 | `include/formatter.h` | `fmt::formatter<>` specialisations for every generated struct and enum |
 | `datalayer_example/pythonBinding.cpp` | pybind11 module source |
+| `datalayer_example/rtt.py` | Optional SEGGER RTT/PyLink reader for model datapoint frames |
 | `doc/*.puml` | PlantUML class diagrams |
 | `doc/overview.csv` | Datapoint overview table |
+
+See the [SEGGER RTT monitoring guide](https://stephanka.github.io/DataLayerGenerator/rtt.html) for the
+target frame protocol and PyLink usage.
 
 ---
 

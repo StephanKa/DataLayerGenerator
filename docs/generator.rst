@@ -93,6 +93,8 @@ All files are written under ``<out_dir>/generated/``:
        (only when ``ENABLE_FMT`` is set).
    * - ``datalayer_example/pythonBinding.cpp``
      - pybind11 module source. CMake compiles it when ``ENABLE_PYBIND11`` is set.
+   * - ``datalayer_example/rtt.py``
+     - PyLink client that decodes the optional SEGGER RTT datapoint frame protocol for this model.
    * - ``doc/overview.plantuml``
      - PlantUML class diagram source for the generated data model, including groups, namespaces,
        datapoint metadata, enums, structs, custom types, and their relationships.
@@ -158,5 +160,7 @@ Three Jinja2 templates drive code generation:
      - ``include/formatter.h`` — ``fmt`` formatters for structs and enums.
    * - ``pythonBinding.jinja2``
      - ``datalayer_example/pythonBinding.cpp`` — pybind11 module source.
+   * - ``rtt.py.jinja2``
+     - ``datalayer_example/rtt.py`` — optional SEGGER RTT/PyLink reader and model-specific decoder map.
 </content>
 </invoke>

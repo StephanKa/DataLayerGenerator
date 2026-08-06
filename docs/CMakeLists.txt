@@ -2,7 +2,7 @@
 #
 # Build dependencies (Python packages):
 #   uv venv
-#   uv pip install --python .venv/bin/python sphinx sphinx-rtd-theme breathe sphinx-copybutton
+#   uv pip install --python .venv/bin/python sphinx sphinx-rtd-theme breathe sphinx-copybutton sphinxcontrib-mermaid
 #
 # Targets produced:
 #   Doxygen   — generates XML from src/include/ headers

@@ -16,6 +16,20 @@ GENERATED_FOLDER = '/generated/include'
 DOC_FOLDER = '/generated/doc'
 PYTHON_FOLDER = '/generated/datalayer_example'
 
+RTT_SCALAR_FORMATS = {
+    'uint8_t': 'B',
+    'uint16_t': 'H',
+    'uint32_t': 'I',
+    'uint64_t': 'Q',
+    'int8_t': 'b',
+    'int16_t': 'h',
+    'int32_t': 'i',
+    'int64_t': 'q',
+    'float': 'f',
+    'double': 'd',
+    'bool': '?',
+}
+
 
 def validate_json(model_data, schema):
     """
@@ -45,6 +59,25 @@ def create_group_data_point_dict(dps):
             name = '{}::{}'.format(dp['namespace'], name)
         temp[group].append(name)
     return temp
+
+
+def create_rtt_datapoints(data_points, groups, enums, types):
+    """Return wire metadata for the generated RTT reader."""
+    group_ids = {group['name']: int(group['baseId'], 0) for group in groups}
+    enum_types = {enum['name']: enum['type'] for enum in enums}
+    aliases = {data_type['name']: data_type['type'] for data_type in types}
+    rtt_datapoints = []
+    for data_point in data_points:
+        wire_type = aliases.get(data_point['type'], enum_types.get(data_point['type'], data_point['type']))
+        name = f"{data_point['namespace']}::{data_point['name']}" if data_point['namespace'] else data_point['name']
+        rtt_datapoints.append({
+            'id': group_ids[data_point['group']] + data_point['id'],
+            'name': name,
+            'type': data_point['type'],
+            'format': RTT_SCALAR_FORMATS.get(wire_type),
+            'array_size': data_point['arraySize'],
+        })
+    return rtt_datapoints
 
 
 def get_args():
@@ -178,6 +211,11 @@ def main(template_file_name, template_formatter_file_name, python_binding_file_n
                              group_data_points_mapping=group_data_points_mapping, prefix_map=PREFIX_MAP,
                              module_name=args.module_name)
     with open(f'{args.out_dir}{PYTHON_FOLDER}/pythonBinding.cpp', 'w') as f:
+        f.write(output)
+
+    template = env.get_template('rtt.py.jinja2')
+    output = template.render(rtt_datapoints=create_rtt_datapoints(data_points, groups, enums, types))
+    with open(f'{args.out_dir}{PYTHON_FOLDER}/rtt.py', 'w', encoding='utf-8') as f:
         f.write(output)
 
     generate_uml(enums=enums, structs=structs, datapoints=data_points, types=types,

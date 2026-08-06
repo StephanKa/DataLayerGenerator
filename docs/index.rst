@@ -25,6 +25,7 @@ and optional Python bindings.
    :caption: Code Generator
 
    generator.rst
+   rtt.rst
 
 .. toctree::
    :maxdepth: 2

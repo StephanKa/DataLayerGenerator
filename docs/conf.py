@@ -3,7 +3,7 @@
 #
 # Install build dependencies:
 #   uv venv
-#   uv pip install --python .venv/bin/python sphinx sphinx-rtd-theme breathe sphinx-copybutton sphinxcontrib-plantuml
+#   uv pip install --python .venv/bin/python sphinx sphinx-rtd-theme breathe sphinx-copybutton sphinxcontrib-mermaid sphinxcontrib-plantuml
 #
 # Build:
 #   sphinx-build -b html docs/ build/docs/sphinx/
@@ -20,6 +20,7 @@ release = '0.0.1'
 extensions = [
     'breathe',
     'sphinx_copybutton',
+    'sphinxcontrib.mermaid',
 ]
 
 # sphinxcontrib.plantuml is optional — only enable when plantuml is available

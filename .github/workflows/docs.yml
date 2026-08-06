@@ -47,6 +47,7 @@ jobs:
             sphinx-rtd-theme \
             breathe \
             sphinx-copybutton \
+            sphinxcontrib-mermaid \
             jinja2 \
             jsonschema \
             pyyaml

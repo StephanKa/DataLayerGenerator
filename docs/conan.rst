@@ -95,7 +95,7 @@ The docs target requires Doxygen and Sphinx.  Enable it by uncommenting
 .. code-block:: bash
 
   uv venv
-  uv pip install --python .venv/bin/python sphinx sphinx-rtd-theme breathe sphinx-copybutton
+  uv pip install --python .venv/bin/python sphinx sphinx-rtd-theme breathe sphinx-copybutton sphinxcontrib-mermaid
 
 Then build:
 

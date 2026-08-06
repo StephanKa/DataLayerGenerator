@@ -1,0 +1,94 @@
+"""Generated SEGGER RTT reader for this DataLayer model.
+
+Frames use little-endian ``<2sBBHH``: ``DL``, protocol version 1, flags,
+datapoint ID, and payload length. The payload follows immediately.
+"""
+from __future__ import annotations
+
+import struct
+from dataclasses import dataclass
+from typing import Callable
+
+
+FRAME_HEADER = struct.Struct('<2sBBHH')
+FRAME_MAGIC = b'DL'
+PROTOCOL_VERSION = 1
+
+
+@dataclass(frozen=True)
+class Datapoint:
+    """Metadata used to decode one RTT frame."""
+
+    name: str
+    value_format: str | None
+    array_size: int
+
+
+DATAPOINTS = {
+{% for datapoint in rtt_datapoints|sort(attribute='id') -%}
+    {{ datapoint.id }}: Datapoint({{ datapoint.name|tojson }}, {% if datapoint.format is none %}None{% else %}{{ datapoint.format|tojson }}{% endif %}, {{ datapoint.array_size }}),
+{% endfor -%}
+}
+
+
+class RttReader:
+    """Incrementally decode DataLayer frames from an RTT byte stream."""
+
+    def __init__(self, read: Callable[[], bytes]):
+        self._read = read
+        self._buffer = bytearray()
+
+    @classmethod
+    def connect(cls, device: str, serial_number: int | None = None, speed_khz: int = 4000,
+                channel: int = 0) -> 'RttReader':
+        """Connect to a target through PyLink and create an RTT reader."""
+        try:
+            import pylink
+        except ImportError as error:
+            raise RuntimeError('Install pylink-square to use the generated RTT reader.') from error
+        jlink = pylink.JLink()
+        jlink.open(serial_no=serial_number)
+        jlink.set_tif(pylink.enums.JLinkInterfaces.SWD)
+        jlink.connect(device, speed=speed_khz)
+        jlink.rtt_start()
+        return cls(lambda: bytes(jlink.rtt_read(channel, 1024)))
+
+    def read(self) -> list[tuple[str, object]]:
+        """Read available RTT bytes and return every complete decoded datapoint."""
+        self._buffer.extend(self._read())
+        values = []
+        while True:
+            frame = self._next_frame()
+            if frame is None:
+                return values
+            data_point_id, payload = frame
+            metadata = DATAPOINTS.get(data_point_id)
+            if metadata is not None:
+                values.append((metadata.name, self._decode(metadata, payload)))
+
+    def _next_frame(self) -> tuple[int, bytes] | None:
+        while len(self._buffer) >= 2 and self._buffer[:2] != FRAME_MAGIC:
+            del self._buffer[0]
+        if len(self._buffer) < FRAME_HEADER.size:
+            return None
+        _, version, _, data_point_id, payload_size = FRAME_HEADER.unpack_from(self._buffer)
+        if version != PROTOCOL_VERSION:
+            del self._buffer[:2]
+            return None
+        frame_size = FRAME_HEADER.size + payload_size
+        if len(self._buffer) < frame_size:
+            return None
+        payload = bytes(self._buffer[FRAME_HEADER.size:frame_size])
+        del self._buffer[:frame_size]
+        return data_point_id, payload
+
+    @staticmethod
+    def _decode(metadata: Datapoint, payload: bytes) -> object:
+        if metadata.value_format is None:
+            return payload
+        value_format = '<' + metadata.value_format * max(metadata.array_size, 1)
+        expected_size = struct.calcsize(value_format)
+        if len(payload) != expected_size:
+            raise ValueError(f'{metadata.name} payload has {len(payload)} bytes; expected {expected_size}.')
+        value = struct.unpack(value_format, payload)
+        return value if metadata.array_size else value[0]
