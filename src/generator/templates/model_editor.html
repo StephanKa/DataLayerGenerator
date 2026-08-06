@@ -5,10 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Data Layer Model Editor</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet">
   <link href="{{ url_for('static', filename='model_editor.css') }}" rel="stylesheet">
+  <script>
+    const storedTheme = localStorage.getItem('datalayer-editor-theme');
+    document.documentElement.dataset.bsTheme = storedTheme ||
+      (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  </script>
 </head>
 <body>
-  <header class="border-bottom bg-white">
+  <header class="editor-header border-bottom">
     <div class="container-fluid px-4 py-3 d-flex flex-wrap align-items-center gap-3">
       <div>
         <h1 class="h4 mb-0">Data Layer Model Editor</h1>
@@ -16,6 +22,10 @@
       </div>
       <div class="ms-auto d-flex align-items-center gap-2">
         <span id="validation-status" class="badge text-bg-secondary">Loading</span>
+        <button id="theme-toggle" class="btn btn-outline-secondary btn-sm" type="button"
+                title="Switch to dark mode" aria-label="Switch to dark mode">
+          <i id="theme-icon" class="bi bi-moon-stars-fill" aria-hidden="true"></i>
+        </button>
         <button id="validate-button" class="btn btn-outline-secondary btn-sm">Validate</button>
         <button id="save-button" class="btn btn-primary btn-sm">Save model</button>
       </div>
@@ -35,7 +45,7 @@
           </div>
           <button id="add-button" class="btn btn-success ms-auto">Add</button>
         </div>
-        <div class="table-responsive border rounded-2 bg-white">
+        <div class="editor-table table-responsive border rounded-2">
           <table class="table table-hover align-middle mb-0">
             <thead id="item-table-header"></thead>
             <tbody id="item-table-body"></tbody>

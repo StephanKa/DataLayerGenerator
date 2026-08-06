@@ -38,6 +38,17 @@ let activeSection = 'Datapoints';
 let editingIndex = null;
 let itemModal;
 
+function setTheme(theme) {
+  const isDark = theme === 'dark';
+  document.documentElement.dataset.bsTheme = theme;
+  localStorage.setItem('datalayer-editor-theme', theme);
+  const toggle = document.querySelector('#theme-toggle');
+  toggle.title = `Switch to ${isDark ? 'light' : 'dark'} mode`;
+  toggle.setAttribute('aria-label', toggle.title);
+  const icon = document.querySelector('#theme-icon');
+  icon.className = `bi bi-${isDark ? 'sun-fill' : 'moon-stars-fill'}`;
+}
+
 function escapeText(value) {
   return value === undefined || value === null ? '' : String(value);
 }
@@ -250,6 +261,10 @@ async function loadModel() {
 
 document.addEventListener('DOMContentLoaded', async () => {
   itemModal = new bootstrap.Modal('#item-modal');
+  setTheme(document.documentElement.dataset.bsTheme);
+  document.querySelector('#theme-toggle').addEventListener('click', () => {
+    setTheme(document.documentElement.dataset.bsTheme === 'dark' ? 'light' : 'dark');
+  });
   document.querySelector('#add-button').addEventListener('click', () => openItemModal(null));
   document.querySelector('#item-form').addEventListener('submit', async (event) => {
     event.preventDefault();

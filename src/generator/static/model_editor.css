@@ -2,11 +2,26 @@
   --editor-accent: #0d6a63;
   --editor-ink: #1d2939;
   --editor-surface: #f4f7f6;
+  --editor-panel: #ffffff;
+  --editor-muted: #667085;
+}
+
+[data-bs-theme="dark"] {
+  --editor-accent: #41b5a6;
+  --editor-ink: #e6eceb;
+  --editor-surface: #16201f;
+  --editor-panel: #202c2a;
+  --editor-muted: #aab9b5;
 }
 
 body {
   background: var(--editor-surface);
   color: var(--editor-ink);
+}
+
+.editor-header,
+.editor-table {
+  background: var(--editor-panel);
 }
 
 .nav-pills .nav-link {
@@ -23,6 +38,6 @@ body {
 }
 
 .empty-state {
-  color: #667085;
+  color: var(--editor-muted);
   text-align: center;
 }
