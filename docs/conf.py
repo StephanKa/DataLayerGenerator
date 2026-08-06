@@ -12,7 +12,7 @@ import os
 
 # -- Project information -----------------------------------------------------
 project = 'DataLayerGenerator'
-copyright = '2025, Kantelberg Stephan'
+copyright = '2026, Kantelberg Stephan'
 author = 'Kantelberg Stephan'
 release = '0.0.1'
 
