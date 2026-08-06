@@ -1,7 +1,8 @@
 # docs/CMakeLists.txt
 #
 # Build dependencies (Python packages):
-#   pip install sphinx sphinx-rtd-theme breathe sphinx-copybutton
+#   uv venv
+#   uv pip install --python .venv/bin/python sphinx sphinx-rtd-theme breathe sphinx-copybutton
 #
 # Targets produced:
 #   Doxygen   — generates XML from src/include/ headers

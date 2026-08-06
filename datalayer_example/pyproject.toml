@@ -1,18 +1,23 @@
 [build-system]
 requires = [
-    "setuptools>=42",
+    "scikit-build-core>=0.10",
     "pybind11>=2.10.0",
 ]
-build-backend = "setuptools.build_meta"
+build-backend = "scikit_build_core.build"
 
-[tool.ruff]
-target-version = "py37"
+[project]
+name = "datalayer-example"
+version = "0.0.1"
+description = "Generated pybind11 bindings for DataLayerGenerator"
+requires-python = ">=3.9"
 
-[tool.ruff.lint]
-extend-select = [
-    "B",   # flake8-bugbear
-    "I",   # isort
-    "PGH", # pygrep-hooks
-    "RUF", # Ruff-specific
-    "UP",  # pyupgrade
-]
+[tool.scikit-build]
+cmake.source-dir = ".."
+cmake.build-dir = "build/{wheel_tag}"
+wheel.packages = []
+
+[tool.scikit-build.cmake.define]
+BUILD_EXAMPLES = "OFF"
+ENABLE_TESTING = "OFF"
+ENABLE_DOCS = "OFF"
+ENABLE_PYBIND11 = "ON"

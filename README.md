@@ -44,7 +44,7 @@ formatters, optional Python bindings, and dependency-free MQTT/CAN adapter bound
 
 - CMake ≥ 3.25
 - C++23 compiler (GCC 13+, Clang 16+, MSVC 2022 17.5+)
-- Python ≥ 3.9 with `pip install jinja2 jsonschema pyyaml`
+- Python ≥ 3.9 and [uv](https://docs.astral.sh/uv/) for virtual environments and Python dependencies
 - [Conan 2.x](https://conan.io/)
 
 ### Build
@@ -167,6 +167,42 @@ Generated output under `build/generated/`:
 
 ---
 
+## Generated Python Bindings
+
+Build the generated extension as a wheel and install it:
+
+```powershell
+uv venv
+uv pip install --python .venv\Scripts\python.exe build
+Push-Location datalayer_example
+uv build
+uv pip install --python ..\.venv\Scripts\python.exe --force-reinstall .\dist\datalayer_example-0.0.1-*.whl
+Pop-Location
+```
+
+The module exposes generated struct classes plus static `get`/`set` methods for each datapoint.
+With the sample model:
+
+```python
+import datalayer_example as dl
+
+dl.Test.set(42)
+print(dl.Test.get())
+
+temperature = dl.Temperature(2350, 23.5)
+temperature.value = 24.0
+dl.Test4.set(temperature)
+
+dl.Arraytest2.set([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+print(dl.Arraytest2.get())
+```
+
+The generated class names follow the datapoint names in the model; use `dir(dl)` to inspect an
+extension generated from a custom model. Set `-DPYBIND11_MODULE_NAME=my_datalayer` when configuring
+CMake to choose a different import name.
+
+---
+
 ## CMake Options
 
 | Option | Default | Description |
@@ -174,6 +210,7 @@ Generated output under `build/generated/`:
 | `ENABLE_FMT` | `OFF` | Enable `fmt` library support; compiles with `-DUSE_FMT` |
 | `ENABLE_FILE_PERSISTENCE` | `OFF` | Enable binary file persistence; compiles with `-DUSE_FILE_PERSISTENCE` |
 | `ENABLE_PYBIND11` | `OFF` | Build pybind11 Python module |
+| `PYBIND11_DISABLE_EXTRAS` | `OFF` | Disable pybind11 LTO/strip extras for faster development builds |
 | `ENABLE_TESTING` | `ON` | Build Catch2 test suite |
 | `ENABLE_DOCS` | `OFF` | Build Sphinx/Doxygen documentation |
 | `DOCS_ONLY` | `OFF` | Skip all C++ targets and Conan — docs build only |
@@ -283,7 +320,8 @@ published automatically to GitHub Pages on every push to `main`:
 To build the docs locally:
 
 ```bash
-pip install sphinx sphinx-rtd-theme breathe sphinx-copybutton
+uv venv
+uv pip install --python .venv/bin/python sphinx sphinx-rtd-theme breathe sphinx-copybutton
 mkdir -p build-docs/doxygen
 sed \
   -e "s|@DOXYGEN_INPUT_DIR@|$(pwd)/src/include|g" \

@@ -19,7 +19,8 @@ Install with:
 
 .. code-block:: bash
 
-   pip install -r src/generator/requirements.txt
+  uv venv
+  uv pip install --python .venv/bin/python -r src/generator/requirements.txt
 
 Invocation
 ----------
@@ -74,7 +75,7 @@ All files are written under ``<out_dir>/generated/``:
      - ``fmt::formatter<>`` specializations for all generated structs and enums
        (only when ``ENABLE_FMT`` is set).
    * - ``datalayer_example/pythonBinding.cpp``
-     - pybind11 module source (only when ``ENABLE_PYBIND11`` is set and ``--module_name`` is given).
+     - pybind11 module source. CMake compiles it when ``ENABLE_PYBIND11`` is set.
    * - ``doc/*.puml``
      - PlantUML class diagram sources for the generated data model.
    * - ``doc/overview.csv``

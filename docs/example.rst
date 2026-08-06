@@ -102,12 +102,74 @@ When ``ENABLE_FILE_PERSISTENCE`` is set:
 Python Bindings
 ---------------
 
-When ``ENABLE_PYBIND11`` is set the generator produces ``pythonBinding.cpp`` and a ``conan_pybind11``
-shared library.  After installing the generated ``datalayer_example`` package:
+When ``ENABLE_PYBIND11`` is set the generator produces ``pythonBinding.cpp`` and CMake builds a
+``datalayer_example`` Python extension. Build and install its wheel from the repository root:
+
+.. code-block:: powershell
+
+   uv venv
+   uv pip install --python .venv\Scripts\python.exe build
+   Push-Location datalayer_example
+   uv build
+   uv pip install --python ..\.venv\Scripts\python.exe --force-reinstall .\dist\datalayer_example-0.0.1-*.whl
+   Pop-Location
+
+The generated module contains one Python class for each model struct and one static ``get``/``set``
+class for each datapoint. The following examples use the model files shipped in ``src/model/``.
+
+Scalar Datapoints
+~~~~~~~~~~~~~~~~~
 
 .. code-block:: python
 
-   import conan_pybind11 as dl
+   import datalayer_example as dl
 
-   dl.test_set(42)
-   print(dl.test_get())   # 42
+   print(dl.__version__)
+   dl.Test.set(42)
+   print(dl.Test.get())   # 42
+
+Struct Datapoints
+~~~~~~~~~~~~~~~~~
+
+``Temperature`` is generated from the model's struct definition. Its fields are regular mutable
+Python attributes. Constructor arguments follow the generated field order, but assigning fields
+after construction is often clearer:
+
+.. code-block:: python
+
+   temperature = dl.Temperature(2350, 23.5)
+   temperature.raw = 2400
+   temperature.value = 24.0
+
+   dl.Test4.set(temperature)
+   current = dl.Test4.get()
+   print(current.raw, current.value)  # 2400 24.0
+
+Nested Struct Datapoints
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+The same pattern works for structs containing other generated structs:
+
+.. code-block:: python
+
+   internal = dl.Temperature(100, 18.5)
+   external = dl.Temperature(200, 21.0)
+   environment = dl.Environment(internal, external)
+
+   dl.Structinstructtype.set(environment)
+   current = dl.Structinstructtype.get()
+   print(current.internal.value, current.external.value)  # 18.5 21.0
+
+Fixed-Size Array Datapoints
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Fixed-size C++ ``std::array`` datapoints accept and return Python sequences. The supplied sequence
+must contain exactly the model's declared number of elements:
+
+.. code-block:: python
+
+   dl.Arraytest2.set([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+   print(dl.Arraytest2.get())
+
+For a custom module name, configure CMake with ``-DPYBIND11_MODULE_NAME=my_datalayer``. Import the
+extension using that exact name after installing it.

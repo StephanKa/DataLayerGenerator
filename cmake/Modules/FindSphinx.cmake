@@ -4,7 +4,7 @@ macro(_Sphinx_find_executable _exe)
     string(TOUPPER "${_exe}" _uc)
     # sphinx-(build|quickstart)-3 x.x.x
     # FIXME: This works on Fedora (and probably most other UNIX like targets).
-    #        Windows targets and PIP installs might need some work.
+    #        Windows targets and uv installs might need some work.
     find_program(
             SPHINX_${_uc}_EXECUTABLE
             NAMES "sphinx-${_exe}-3" "sphinx-${_exe}" "sphinx-${_exe}.exe")
@@ -88,7 +88,7 @@ if(SPHINX_BUILD_EXECUTABLE)
 
     # Locate Python executable
     if(CMAKE_HOST_WIN32)
-        # script-build on Windows located under (when PIP is used):
+        # script-build on Windows located under (when uv is used):
         # C:/Program Files/PythonXX/Scripts
         # C:/Users/username/AppData/Roaming/Python/PythonXX/Sripts
         #

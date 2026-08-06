@@ -20,10 +20,7 @@ RUN apt-get update && apt-get -y dist-upgrade && apt-get -y install --fix-missin
   git \
   lsb-release \
   ninja-build \
-  pipx \
   python3 \
-  python3-pip \
-  python3-setuptools \
   python3-venv \
   shellcheck \
   ssh \
@@ -38,6 +35,8 @@ RUN wget https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cm
     && ./cmake-${CMAKE_VERSION}-linux-x86_64.sh --include-subdir --skip-license \
     && rm cmake-${CMAKE_VERSION}-linux-x86_64.sh
 RUN bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"
+
+RUN wget -qO- https://astral.sh/uv/install.sh | UV_INSTALL_DIR=/usr/local/bin sh
 
 RUN apt-get -y install --fix-missing clang-format clang-tidy clang-${CLANG_COMPILER_VERSION} llvm-${CLANG_COMPILER_VERSION} llvm-${CLANG_COMPILER_VERSION}-dev libclang-${CLANG_COMPILER_VERSION}-dev \
     && apt-get autoremove -y && apt-get clean
@@ -78,7 +77,7 @@ WORKDIR /home/${DEV_USER}
 RUN sed -i 's/\\h/docker/;s/01;32m/01;33m/' /home/${DEV_USER}/.bashrc \
   && mkdir /home/${DEV_USER}/git
 
-RUN pipx install conan
+RUN uv tool install conan
 
 
 FROM cpp-docker-common as cpp-docker-ci
@@ -95,5 +94,5 @@ RUN groupadd -f -g 1000 ${CI_USER} && \
 
 COPY ccache.conf /etc/.
 USER ${CI_USER}
-RUN pipx install conan
+RUN uv tool install conan
 WORKDIR /home/${CI_USER}

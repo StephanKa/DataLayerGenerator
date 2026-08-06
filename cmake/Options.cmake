@@ -12,7 +12,8 @@ OPTION(DOCS_ONLY "Skip all C++ targets and Conan — build documentation only" O
 OPTION(ENABLE_FILE_PERSISTENCE "Enable binary file persistence (serialization)" OFF)
 OPTION(ENABLE_FUZZING "Enable Fuzzing Builds" OFF)
 OPTION(ENABLE_PYBIND11 "Enable pybind11 binding generation" OFF)
-OPTION(ENABLE_VENV "Enable python virtualenv" OFF)
+OPTION(PYBIND11_DISABLE_EXTRAS "Disable pybind11 LTO and strip extras for faster development builds" OFF)
+OPTION(ENABLE_VENV "Create a uv-managed Python virtual environment" OFF)
 
 # sanitizer options
 OPTION(ENABLE_SANITIZER_ADDRESS "Enable address sanitizer" OFF)

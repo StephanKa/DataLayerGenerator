@@ -2,7 +2,8 @@
 # Configuration file for the Sphinx documentation builder.
 #
 # Install build dependencies:
-#   pip install sphinx sphinx-rtd-theme breathe sphinx-copybutton sphinxcontrib-plantuml
+#   uv venv
+#   uv pip install --python .venv/bin/python sphinx sphinx-rtd-theme breathe sphinx-copybutton sphinxcontrib-plantuml
 #
 # Build:
 #   sphinx-build -b html docs/ build/docs/sphinx/

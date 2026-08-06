@@ -1,6 +1,12 @@
-#include <pybind11/stl.h>
-#include "include/datalayer.h"
+#include <array>
+#include <string_view>
+#include <tuple>
+
 #include <pybind11/pybind11.h>
+#include <pybind11/stl/array.h>
+#include <pybind11/stl/string.h>
+
+#include "include/datalayer.h"
 
 {% for dp in data_points|sort(attribute='name')|sort(attribute='namespace') -%}
 struct {{ dp.name | title }}
@@ -25,21 +31,12 @@ PYBIND11_MODULE({{ module_name }}, m)
     {% endfor %}
     {% endif -%}
 
-    m.doc() = R"pbdoc(
-        Pybind11 example plugin
-        -----------------------
-        .. currentmodule:: pybind11_test
-        .. autosummary::
-           :toctree: _generate
-           add
-           subtract
-    )pbdoc";
+    m.doc() = "Generated DataLayer bindings.";
 
     {% for dp in data_points|sort(attribute='name')|sort(attribute='namespace') -%}
     pybind11::class_<{{ dp.name | title }}>(m, "{{ dp.name | title }}")
-            .def(pybind11::init<>())
-            .def("get", &{{ dp.name | title }}::get)
-            .def("set", &{{ dp.name | title }}::set);
+            .def_static("get", &{{ dp.name | title }}::get)
+            .def_static("set", &{{ dp.name | title }}::set);
 
     {% endfor %}
 #ifdef VERSION_INFO
