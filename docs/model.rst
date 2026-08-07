@@ -224,6 +224,17 @@ Defines custom **enum types**.  Two modes:
      ]
    }
 
+  For every generated enum ``Example``, the generated header also declares an ``inline constexpr``
+  ``std::array`` named ``ExampleRange``. It contains the declared enumerators in generated order and
+  can be iterated directly. This includes explicitly assigned, non-consecutive values:
+
+  .. code-block:: cpp
+
+     for (const auto status : StatusRange)
+     {
+       // Use status.
+     }
+
 types.json
 ----------
 

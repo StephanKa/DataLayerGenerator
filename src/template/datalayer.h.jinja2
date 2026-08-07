@@ -1,5 +1,6 @@
 #pragma once
 #include <dispatcher.h>
+#include <array>
 #include <limits>
 
 {% macro datapoint(dp) -%}
@@ -69,6 +70,18 @@ enum class {{ enum.name }} : {{ enum.type }}
 {%- else %}
 {%- for value in enum["values"] | sort(attribute='value') %}
     {{ value.name }} = {{ value.value }},
+{%- endfor %}
+{%- endif %}
+};
+
+constexpr std::array<{{ enum.name }}, {{ enum["values"] | length }}> {{ enum.name }}Range{
+{%- if enum.autoId %}
+{%- for value in enum["values"] %}
+    {{ enum.name }}::{{ value }},
+{%- endfor %}
+{%- else %}
+{%- for value in enum["values"] | sort(attribute='value') %}
+    {{ enum.name }}::{{ value.name }},
 {%- endfor %}
 {%- endif %}
 };

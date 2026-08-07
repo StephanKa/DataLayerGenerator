@@ -44,10 +44,29 @@ TEST_CASE("Test enums")
         static_assert(finished == starting + 1);
     }
 
+    SECTION("enum ranges preserve auto id enumerators")
+    {
+        STATIC_REQUIRE(StatusRange.size() == 3);
+        STATIC_REQUIRE(StatusRange[0] == Status::Booting);
+        STATIC_REQUIRE(StatusRange[1] == Status::Starting);
+        STATIC_REQUIRE(StatusRange[2] == Status::Finished);
+    }
+
     SECTION("enum explicit values are non-consecutive and correct")
     {
         REQUIRE(static_cast<int>(ErrorStates::None) < static_cast<int>(ErrorStates::Info));
         REQUIRE(static_cast<int>(ErrorStates::Info) < static_cast<int>(ErrorStates::Warn));
         REQUIRE(static_cast<int>(ErrorStates::Warn) < static_cast<int>(ErrorStates::Fatal));
+    }
+
+    SECTION("enum ranges preserve sparse explicit enumerators")
+    {
+        STATIC_REQUIRE(ErrorStatesRange.size() == 6);
+        STATIC_REQUIRE(ErrorStatesRange[0] == ErrorStates::None);
+        STATIC_REQUIRE(ErrorStatesRange[1] == ErrorStates::Info);
+        STATIC_REQUIRE(ErrorStatesRange[2] == ErrorStates::Warn);
+        STATIC_REQUIRE(ErrorStatesRange[3] == ErrorStates::Error);
+        STATIC_REQUIRE(ErrorStatesRange[4] == ErrorStates::Critical);
+        STATIC_REQUIRE(ErrorStatesRange[5] == ErrorStates::Fatal);
     }
 }
