@@ -291,6 +291,14 @@ TEST_CASE("Test datapoints")
         REQUIRE((testWithoutDefaultValue.get() == temperatureTest));
     }
 
+    SECTION("datapoint dispatcher get() legacy ID")
+    {
+        constexpr uint32_t legacyId = 0x4006;
+        Temperature temperatureTest{};
+        REQUIRE(Dispatcher.getDatapoint(legacyId, temperatureTest));
+        REQUIRE((test() == temperatureTest));
+    }
+
     SECTION("datapoint dispatcher get() not existing")
     {
         constexpr uint32_t dummyId = 42;

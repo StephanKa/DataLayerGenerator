@@ -66,7 +66,9 @@ ctest --preset gcc-14-release
 ### Benchmarks
 
 The optional Google Benchmark target measures direct datapoint access and runtime dispatcher lookup
-for early, late, and missing IDs. Build it separately in Release mode:
+for early, late, and missing IDs. The generated dispatcher uses a constexpr two-level perfect hash
+for current and legacy IDs, giving deterministic $O(1)$ runtime lookup without heap allocation or
+runtime initialization. Build it separately in Release mode:
 
 ```powershell
 cmake -S . -B build/benchmark -DCMAKE_BUILD_TYPE=Release -DBUILD_EXAMPLES=OFF -DENABLE_TESTING=OFF -DENABLE_BENCHMARKS=ON

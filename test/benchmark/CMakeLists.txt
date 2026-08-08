@@ -14,6 +14,8 @@ ADD_EXECUTABLE(datapoints_benchmark datapoints.cpp)
 
 SET(_GEN_STAMP "${CMAKE_CURRENT_BINARY_DIR}/.datalayer_generated.stamp")
 FILE(GLOB _BENCHMARK_MODEL_FILES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/../catch2/datapoints/model/*")
+FILE(GLOB _BENCHMARK_GENERATOR_FILES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/../../src/generator/*.py")
+FILE(GLOB _BENCHMARK_TEMPLATE_FILES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/../../src/template/*.jinja2")
 ADD_CUSTOM_COMMAND(
     OUTPUT "${_GEN_STAMP}"
     COMMAND ${Python_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/../../src/generator/generator.py
@@ -22,7 +24,7 @@ ADD_CUSTOM_COMMAND(
             --template_dir ${CMAKE_CURRENT_SOURCE_DIR}/../../src/template
             --schema_dir ${CMAKE_CURRENT_SOURCE_DIR}/../../src/generator
     COMMAND ${CMAKE_COMMAND} -E touch "${_GEN_STAMP}"
-    DEPENDS ${_BENCHMARK_MODEL_FILES}
+    DEPENDS ${_BENCHMARK_MODEL_FILES} ${_BENCHMARK_GENERATOR_FILES} ${_BENCHMARK_TEMPLATE_FILES}
     COMMENT "DataLayerGenerator: generating benchmark datalayer"
     VERBATIM
 )

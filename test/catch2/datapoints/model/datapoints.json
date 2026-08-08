@@ -9,6 +9,7 @@
       "group": "DefaultGroup",
       "id": 4,
       "name": "test",
+      "renamedFrom": [6],
       "type": "Temperature",
       "version": "1.0.22"
     },

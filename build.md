@@ -98,11 +98,12 @@ The executable reports the following cases:
 |---|---|
 | `directRead` | A direct `test()` read. This is the type-safe named access baseline and does not perform ID lookup. |
 | `dispatchedRead/16388` | Lookup of `test`, the first datapoint in the first group. |
+| `dispatchedRead/16390` | Lookup of the legacy ID for `test`. |
 | `dispatchedRead/20484` | Lookup of `testSecond`, in the second group. |
 | `dispatchedRead/32770` | Lookup of `Dp2`, a readable datapoint near the end of the fixture. |
 | `dispatchedRead/4294967295` | A missing ID, which exercises a complete unsuccessful lookup. |
 
-`dispatchedRead` reads the ID through a volatile variable, prevents the result from being optimized away, and clobbers memory after each iteration. The dispatcher source traverses groups and datapoints in order, so its worst-case lookup is linear. A sufficiently optimizing compiler can compact a small fixed model into faster comparisons; use production-like model sizes and inspect the target result before inferring a scaling curve.
+`dispatchedRead` reads the ID through a volatile variable, prevents the result from being optimized away, and clobbers memory after each iteration. Runtime dispatch uses a generated two-level FKS perfect hash over every current and legacy ID, so both successful and missing lookup take $O(1)$ time independent of datapoint declaration order. The constexpr table needs no heap or runtime initialization, but consumes ROM; use production-like model sizes to evaluate code size, ROM usage, and timing on the target.
 
 Run benchmarks in a Release build on the target hardware. The checked-in model is a small smoke fixture; generate a representative larger model before drawing conclusions about dispatch scaling.
 

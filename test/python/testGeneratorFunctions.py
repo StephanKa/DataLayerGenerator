@@ -7,6 +7,8 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../.
 import generator  # noqa: F401 — ensures src/generator/ is appended to sys.path
 import generator.generator as _gen_module  # loads generator.py submodule explicitly
 create_group_data_point_dict = _gen_module.create_group_data_point_dict
+create_perfect_hash = _gen_module.create_perfect_hash
+perfect_hash = _gen_module.perfect_hash
 
 
 class TestCreateGroupDataPointDict(unittest.TestCase):
@@ -94,6 +96,61 @@ class TestCreateGroupDataPointDict(unittest.TestCase):
         ]
         result = create_group_data_point_dict(dps)
         self.assertEqual(result['G'], ['first', 'second', 'third'])
+
+
+class TestCreatePerfectHash(unittest.TestCase):
+    """Tests for the generated two-level datapoint ID lookup table."""
+
+    def test_current_and_legacy_ids_resolve_to_their_datapoint(self):
+        """Test current and legacy IDs map to their owning datapoint index."""
+        data_points = [
+            {'group': 'G1', 'id': 1, 'renamedFrom': [7]},
+            {'group': 'G2', 'id': 2, 'renamedFrom': []},
+        ]
+        groups = [
+            {'name': 'G1', 'baseId': '0x1000'},
+            {'name': 'G2', 'baseId': '0x2000'},
+        ]
+
+        result = create_perfect_hash(data_points, groups)
+
+        self.assertEqual(result['bucket_count'], 3)
+        resolved = {}
+        for bucket in result['buckets']:
+            for slot_offset in range(bucket['slot_count']):
+                slot = result['slots'][bucket['offset'] + slot_offset]
+                if slot['occupied']:
+                    resolved[slot['id']] = slot['index']
+        self.assertEqual(resolved, {0x1001: 0, 0x1007: 0, 0x2002: 1})
+
+    def test_every_entry_is_at_its_hashed_slot(self):
+        """Test each populated slot is located by its primary and secondary hash."""
+        data_points = [
+            {'group': 'G', 'id': identifier, 'renamedFrom': []}
+            for identifier in [1, 2, 3, 4, 5, 100, 1000]
+        ]
+        result = create_perfect_hash(data_points, [{'name': 'G', 'baseId': '0x4000'}])
+
+        for bucket_index, bucket in enumerate(result['buckets']):
+            for slot_offset in range(bucket['slot_count']):
+                slot = result['slots'][bucket['offset'] + slot_offset]
+                if slot['occupied']:
+                    self.assertEqual(perfect_hash(slot['id'], 0) % result['bucket_count'], bucket_index)
+                    self.assertEqual(perfect_hash(slot['id'], bucket['seed']) % bucket['slot_count'], slot_offset)
+
+    def test_duplicate_absolute_id_raises(self):
+        """Test colliding absolute IDs are rejected during table generation."""
+        data_points = [
+            {'group': 'G1', 'id': 2, 'renamedFrom': []},
+            {'group': 'G2', 'id': 1, 'renamedFrom': []},
+        ]
+        groups = [
+            {'name': 'G1', 'baseId': '0x1000'},
+            {'name': 'G2', 'baseId': '0x1001'},
+        ]
+
+        with self.assertRaises(_gen_module.DatapointException):
+            create_perfect_hash(data_points, groups)
 
 
 if __name__ == '__main__':

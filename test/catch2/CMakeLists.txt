@@ -4,10 +4,14 @@ FIND_PACKAGE(fmt REQUIRED)
 INCLUDE(CTest)
 INCLUDE(Catch)
 
+FILE(GLOB _TEST_GENERATOR_FILES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/../../src/generator/*.py")
+FILE(GLOB _TEST_TEMPLATE_FILES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/../../src/template/*.jinja2")
+
 FOREACH(TEST_NAME datapoints groups enums)
     ADD_EXECUTABLE(${TEST_NAME}_tests ${TEST_NAME}/test.cpp)
 
     SET(_GEN_STAMP "${CMAKE_CURRENT_BINARY_DIR}/${TEST_NAME}/.datalayer_generated.stamp")
+        FILE(GLOB _TEST_MODEL_FILES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${TEST_NAME}/model/*")
     ADD_CUSTOM_COMMAND(
         OUTPUT  "${_GEN_STAMP}"
         COMMAND ${Python_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/../../src/generator/generator.py
@@ -16,7 +20,7 @@ FOREACH(TEST_NAME datapoints groups enums)
                 --template_dir ${CMAKE_CURRENT_SOURCE_DIR}/../../src/template
                 --schema_dir ${CMAKE_CURRENT_SOURCE_DIR}/../../src/generator
         COMMAND ${CMAKE_COMMAND} -E touch "${_GEN_STAMP}"
-        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${TEST_NAME}/model
+        DEPENDS ${_TEST_MODEL_FILES} ${_TEST_GENERATOR_FILES} ${_TEST_TEMPLATE_FILES}
         COMMENT "DataLayerGenerator: generating test datalayer for ${TEST_NAME}"
         VERBATIM
     )

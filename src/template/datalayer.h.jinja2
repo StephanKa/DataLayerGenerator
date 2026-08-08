@@ -180,10 +180,134 @@ static_assert(0U{% for group in group_data_points_mapping -%}
               "DataLayer datapoint objects exceed DATALAYER_MAX_OBJECT_BYTES");
 #endif
 
-// Dispatcher is responsible to handling all requests and also generates responses
-constexpr DataLayer::Dispatcher Dispatcher { {% for group in group_data_points_mapping -%}
-    {{ group }}{% if not loop.last %}, {% endif %}
-{%- endfor %} };
+// Dispatcher uses a generated two-level perfect hash for current and legacy datapoint IDs.
+struct GeneratedDispatcher
+{
+  private:
+    struct PerfectHashBucket
+    {
+        uint32_t offset;
+        uint32_t slotCount;
+        uint32_t seed;
+    };
+
+    struct PerfectHashSlot
+    {
+        uint32_t id;
+        uint32_t dataPointIndex;
+        bool occupied;
+    };
+
+    static constexpr uint32_t InvalidDataPointIndex = std::numeric_limits<uint32_t>::max();
+    static constexpr std::array<PerfectHashBucket, {{ perfect_hash.buckets | length }}> PerfectHashBuckets{
+{%- for bucket in perfect_hash.buckets %}
+        PerfectHashBucket{ {{ bucket.offset }}, {{ bucket.slot_count }}, {{ bucket.seed }} }{% if not loop.last %},{% endif %}
+{%- endfor %}
+    };
+    static constexpr std::array<PerfectHashSlot, {{ perfect_hash.slots | length }}> PerfectHashSlots{
+{%- for slot in perfect_hash.slots %}
+        PerfectHashSlot{ 0x{{ "%08x" | format(slot.id) }}, {{ slot.index }}, {{ 'true' if slot.occupied else 'false' }} }{% if not loop.last %},{% endif %}
+{%- endfor %}
+    };
+
+    [[nodiscard]] static constexpr uint32_t hash(const uint32_t identifier, const uint32_t seed) noexcept
+    {
+        auto value = identifier ^ seed;
+        value ^= value >> 16U;
+        value *= 0x7feb352dU;
+        value ^= value >> 15U;
+        value *= 0x846ca68bU;
+        return value ^ (value >> 16U);
+    }
+
+    [[nodiscard]] static constexpr uint32_t lookupDataPointIndex(const uint32_t dataPointId) noexcept
+    {
+        if constexpr (PerfectHashBuckets.empty())
+        {
+            return InvalidDataPointIndex;
+        }
+        else
+        {
+            const auto &bucket = PerfectHashBuckets[hash(dataPointId, 0U) % PerfectHashBuckets.size()];
+            if (bucket.slotCount == 0U)
+            {
+                return InvalidDataPointIndex;
+            }
+
+            const auto &slot = PerfectHashSlots[bucket.offset + hash(dataPointId, bucket.seed) % bucket.slotCount];
+            return slot.occupied && slot.id == dataPointId ? slot.dataPointIndex : InvalidDataPointIndex;
+        }
+    }
+
+    template<typename T, typename Datapoint>
+    [[nodiscard]] static constexpr DataLayer::Detail::CheckResult set(const T &value, Datapoint &datapoint)
+    {
+        if constexpr (Helper::WriteConcept<std::remove_cvref_t<decltype(std::remove_cvref_t<Datapoint>::TypeAccess)>>
+                      && std::is_same_v<std::remove_cvref_t<decltype(datapoint())>, std::remove_cvref_t<T>>)
+        {
+            return DataLayer::Detail::CheckResult{ .success = true, .check = datapoint.set(value) };
+        }
+        else
+        {
+            return {};
+        }
+    }
+
+    template<typename T, typename Datapoint>
+    [[nodiscard]] static constexpr bool get(T &value, const Datapoint &datapoint)
+    {
+        if constexpr (Helper::ReadConcept<std::remove_cvref_t<decltype(std::remove_cvref_t<Datapoint>::TypeAccess)>>
+                      && std::is_same_v<std::remove_cvref_t<decltype(datapoint())>, std::remove_cvref_t<T>>)
+        {
+            value = datapoint();
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+  public:
+    void printStructure() const
+    {
+#ifdef USE_FMT
+{%- for group in group_data_points_mapping %}
+        {{ group }}.printDatapoints();
+{%- endfor %}
+#endif
+    }
+
+    template<typename T>
+    [[nodiscard]] constexpr DataLayer::Detail::CheckResult setDatapoint(const uint32_t dataPointId, const T &value) const
+    {
+        switch (lookupDataPointIndex(dataPointId))
+        {
+{%- for datapoint in data_points %}
+            case {{ loop.index0 }}U:
+                return set(value, {% if datapoint.namespace %}{{ datapoint.namespace }}::{% endif %}{{ datapoint.name }});
+{%- endfor %}
+            default:
+                return {};
+        }
+    }
+
+    template<typename T>
+    [[nodiscard]] constexpr bool getDatapoint(const uint32_t dataPointId, T &value) const
+    {
+        switch (lookupDataPointIndex(dataPointId))
+        {
+{%- for datapoint in data_points %}
+            case {{ loop.index0 }}U:
+                return get(value, {% if datapoint.namespace %}{{ datapoint.namespace }}::{% endif %}{{ datapoint.name }});
+{%- endfor %}
+            default:
+                return false;
+        }
+    }
+};
+
+constexpr GeneratedDispatcher Dispatcher{};
 
 #ifdef DATALAYER_DEBUG_EXPORT
 extern "C"

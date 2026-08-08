@@ -31,6 +31,8 @@ Cases
    * - ``dispatchedRead/16388``
      - Reads ``test`` by ID. It is the first datapoint in the first group and represents an early
        successful dispatch.
+   * - ``dispatchedRead/16390``
+     - Reads ``test`` through its ``renamedFrom`` legacy ID.
    * - ``dispatchedRead/20484``
      - Reads ``testSecond`` by ID, which requires progressing to the second group.
    * - ``dispatchedRead/32770``
@@ -47,9 +49,14 @@ Measurement Details
 from being optimized away and clobbers memory after each iteration. The benchmark therefore
 measures an actual runtime ID path rather than a direct call selected from a compile-time constant.
 
-Direct datapoint access is constant-time. In source, the dispatcher visits group mappings and their
-datapoints in declaration order, stopping at a matching ID; an unknown ID visits all of them. This
-makes the source-level worst case linear in the number of groups and datapoints. However, an
-optimizing compiler may simplify comparisons for a small fixed model, so use a model with
-production-like group and datapoint counts and run the benchmark on the deployment hardware before
-making timing or scaling decisions.
+Direct datapoint access is constant-time. Runtime dispatch uses a generated two-level FKS perfect
+hash table containing every current and ``renamedFrom`` absolute ID. It makes two deterministic hash
+probes, validates the ID in the resolved slot, and dispatches directly to the typed datapoint access
+operation. Successful and missing runtime lookups are therefore $O(1)$ and do not depend on group or
+datapoint declaration order.
+
+The generated table is ``constexpr`` and requires no heap allocation or runtime initialization. Its
+secondary tables use squared bucket sizes, which gives linear expected ROM consumption while retaining
+constant lookup time. Models must not assign the same absolute ID to multiple current or legacy
+datapoints; generation rejects that ambiguity. Benchmark a production-sized model on deployment
+hardware to evaluate the resulting code size, ROM usage, and timing.

@@ -9,6 +9,7 @@ from yaml.loader import SafeLoader
 from jinja2 import Environment, FileSystemLoader
 from constants import PREFIX_MAP
 from validators import enum_validator, struct_validator, group_validator, data_point_validator, type_validator
+from validatorException import DatapointException
 from umlGenerator import generate_uml
 from overviewGenerator import generate_overview
 
@@ -29,6 +30,18 @@ RTT_SCALAR_FORMATS = {
     'double': 'd',
     'bool': '?',
 }
+
+PERFECT_HASH_MASK = 0xffffffff
+
+
+def perfect_hash(identifier, seed):
+    """Return a deterministic 32-bit hash for a datapoint identifier and seed."""
+    value = (identifier ^ seed) & PERFECT_HASH_MASK
+    value ^= value >> 16
+    value = (value * 0x7feb352d) & PERFECT_HASH_MASK
+    value ^= value >> 15
+    value = (value * 0x846ca68b) & PERFECT_HASH_MASK
+    return (value ^ (value >> 16)) & PERFECT_HASH_MASK
 
 
 def validate_json(model_data, schema):
@@ -59,6 +72,53 @@ def create_group_data_point_dict(dps):
             name = '{}::{}'.format(dp['namespace'], name)
         temp[group].append(name)
     return temp
+
+
+def create_perfect_hash(data_points, groups):
+    """Build a two-level FKS perfect hash for current and legacy absolute datapoint IDs."""
+    group_ids = {group['name']: int(group['baseId'], 0) for group in groups}
+    entries = []
+    identifiers = set()
+
+    for index, data_point in enumerate(data_points):
+        for relative_id in [data_point['id'], *data_point['renamedFrom']]:
+            identifier = group_ids[data_point['group']] + relative_id
+            if identifier in identifiers:
+                raise DatapointException(f"duplicate absolute datapoint ID '{identifier:#x}'")
+            identifiers.add(identifier)
+            entries.append({'id': identifier, 'index': index})
+
+    bucket_count = len(entries)
+    if bucket_count == 0:
+        return {'bucket_count': 0, 'buckets': [], 'slots': []}
+
+    bucket_entries = [[] for _ in range(bucket_count)]
+    for entry in entries:
+        bucket_entries[perfect_hash(entry['id'], 0) % bucket_count].append(entry)
+
+    buckets = []
+    slots = []
+    for entries_in_bucket in bucket_entries:
+        slot_count = len(entries_in_bucket) ** 2
+        offset = len(slots)
+        if slot_count == 0:
+            buckets.append({'offset': offset, 'slot_count': 0, 'seed': 0})
+            continue
+
+        seed = 0
+        while True:
+            positions = [perfect_hash(entry['id'], seed) % slot_count for entry in entries_in_bucket]
+            if len(positions) == len(set(positions)):
+                break
+            seed += 1
+
+        bucket_slots = [{'id': 0, 'index': 0, 'occupied': False} for _ in range(slot_count)]
+        for entry, position in zip(entries_in_bucket, positions):
+            bucket_slots[position] = {'id': entry['id'], 'index': entry['index'], 'occupied': True}
+        buckets.append({'offset': offset, 'slot_count': slot_count, 'seed': seed})
+        slots.extend(bucket_slots)
+
+    return {'bucket_count': bucket_count, 'buckets': buckets, 'slots': slots}
 
 
 def create_rtt_datapoints(data_points, groups, enums, types):
@@ -174,6 +234,7 @@ def main(template_file_name, template_formatter_file_name, python_binding_file_n
     data_points = data_point_validator(json_data['Datapoints'], struct_names, enums, types)
 
     group_data_points_mapping = create_group_data_point_dict(data_points)
+    perfect_hash_data = create_perfect_hash(data_points, groups)
 
     if args.check:
         report = {
@@ -195,7 +256,8 @@ def main(template_file_name, template_formatter_file_name, python_binding_file_n
 
     template = env.get_template(template_file_name)
     output = template.render(enums=enums, groups=groups, structs=structs, data_points=data_points,
-                             group_data_points_mapping=group_data_points_mapping, prefix_map=PREFIX_MAP, types=types)
+                             group_data_points_mapping=group_data_points_mapping, perfect_hash=perfect_hash_data,
+                             prefix_map=PREFIX_MAP, types=types)
     with open(f'{args.out_dir}{GENERATED_FOLDER}/datalayer.h', 'w') as f:
         f.write(output)
 
