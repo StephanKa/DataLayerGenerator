@@ -21,6 +21,7 @@ namespace DataLayer
     class DataPoint
     {
       public:
+        using ValueType = T;
         using ChangeCallback = void (*)(const T &value, void *context) noexcept;
 
         constexpr static Access TypeAccess{};

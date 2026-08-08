@@ -18,6 +18,7 @@ const fieldDefinitions = {
   Groups: [
     ['name', 'Name', 'text', true], ['persistence', 'Persistence', 'persistence', true],
     ['baseId', 'Base ID', 'text', true], ['version', 'Version', 'text', true],
+    ['maxPayloadBytes', 'Maximum payload bytes', 'number'],
     ['description', 'Description', 'textarea'], ['renamedFrom', 'Prior IDs (JSON array)', 'json'],
     ['migration', 'Migration callback', 'text'], ['allowUpgrade', 'Allow persistence upgrade', 'checkbox'],
   ],

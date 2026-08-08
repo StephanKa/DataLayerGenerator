@@ -1,4 +1,5 @@
 #pragma once
+#include <cstddef>
 #include <cstdint>
 #include <detail.h>
 #ifdef USE_FILE_PERSISTENCE
@@ -8,6 +9,9 @@
 
 namespace DataLayer
 {
+    template<typename Mapping>
+    struct DataPointSize;
+
     template<typename GroupInfo, typename... Datapoints>
     struct GroupDataPointMapping
     {
@@ -95,5 +99,12 @@ namespace DataLayer
             }
             return true;
         }
+    };
+
+    template<typename GroupInfo, typename... Datapoints>
+    struct DataPointSize<GroupDataPointMapping<GroupInfo, Datapoints...>>
+    {
+        static constexpr std::size_t objectBytes = (sizeof(Datapoints) + ... + 0U);
+        static constexpr std::size_t payloadBytes = (sizeof(typename Datapoints::ValueType) + ... + 0U);
     };
 }// namespace DataLayer

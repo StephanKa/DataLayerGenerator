@@ -55,6 +55,36 @@ Defines one or more **groups**.  Each datapoint belongs to exactly one group.  A
    * - ``description``
      - No
      - Human-readable description (informational only).
+  * - ``maxPayloadBytes``
+    - No
+    - Non-negative portable payload-RAM budget for this group. The generated header asserts the
+     sum of its datapoint value sizes does not exceed this limit.
+
+Memory Budgets
+--------------
+
+Use ``maxPayloadBytes`` to keep a group within its model-level payload budget:
+
+.. code-block:: json
+
+  {
+    "name": "CyclicGroup",
+    "persistence": "Cyclic",
+    "baseId": "0x5000",
+    "version": "2.0.0",
+    "maxPayloadBytes": 256
+  }
+
+The assertion counts each stored value, including all array elements, but excludes DataLayer
+bookkeeping. Configure the board-specific full object budget in the consuming CMake target when
+you also want to include the callback and context pointers stored by every ``DataPoint``:
+
+.. code-block:: cmake
+
+  target_compile_definitions(my_firmware PRIVATE DATALAYER_MAX_OBJECT_BYTES=1024)
+
+The generated header asserts this total across all generated datapoints. Both checks are
+compile-time only and add no runtime memory or execution cost.
 
 datapoints.json
 ---------------

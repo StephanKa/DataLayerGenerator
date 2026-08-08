@@ -21,6 +21,10 @@ namespace DataLayer::Migration
     }
 }// namespace DataLayer::Migration
 
+static_assert(DataLayer::DataPointSize<std::remove_cvref_t<decltype(DefaultGroup)>>::payloadBytes > 0);
+static_assert(
+  DataLayer::DataPointSize<std::remove_cvref_t<decltype(DefaultGroup)>>::objectBytes >= DataLayer::DataPointSize<std::remove_cvref_t<decltype(DefaultGroup)>>::payloadBytes);
+
 namespace
 {
     constexpr auto EPSILON = 0.1;

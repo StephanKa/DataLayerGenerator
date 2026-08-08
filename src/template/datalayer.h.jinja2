@@ -1,7 +1,9 @@
 #pragma once
 #include <dispatcher.h>
 #include <array>
+#include <cstddef>
 #include <limits>
+#include <type_traits>
 
 #ifdef DATALAYER_DEBUG_EXPORT
 namespace DataLayer::Debug
@@ -163,6 +165,20 @@ constexpr DataLayer::GroupDataPointMapping {{ group  }} { {{ group }}Info, {% fo
     {{ parameter }}{% if not loop.last %}, {% endif %}
     {%- endfor %} };
 {%- endfor %}
+
+{% for group in groups if group.maxPayloadBytes is not none -%}
+{% if group.name in group_data_points_mapping -%}
+static_assert(DataLayer::DataPointSize<std::remove_cvref_t<decltype({{ group.name }})>>::payloadBytes <= {{ group.maxPayloadBytes }},
+              "{{ group.name }} datapoint payload exceeds maxPayloadBytes");
+{% endif -%}
+{% endfor %}
+
+#ifdef DATALAYER_MAX_OBJECT_BYTES
+static_assert(0U{% for group in group_data_points_mapping -%}
+    + DataLayer::DataPointSize<std::remove_cvref_t<decltype({{ group }})>>::objectBytes
+{%- endfor %}) <= DATALAYER_MAX_OBJECT_BYTES,
+              "DataLayer datapoint objects exceed DATALAYER_MAX_OBJECT_BYTES");
+#endif
 
 // Dispatcher is responsible to handling all requests and also generates responses
 constexpr DataLayer::Dispatcher Dispatcher { {% for group in group_data_points_mapping -%}

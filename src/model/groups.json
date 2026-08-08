@@ -5,6 +5,7 @@
       "persistence": "None",
       "baseId": "0x4000",
       "version": "1.0.1",
+      "maxPayloadBytes": 1024,
       "description": "Default group which can always be used and has no purpose."
     },
     {

@@ -120,6 +120,12 @@ def group_validator(group_data):
         check_names[temp_group['name']] = None
         if 'description' not in temp_group:
             temp_group['description'] = None
+        if 'maxPayloadBytes' not in temp_group:
+            temp_group['maxPayloadBytes'] = None
+        elif (isinstance(temp_group['maxPayloadBytes'], bool)
+              or not isinstance(temp_group['maxPayloadBytes'], int)
+              or temp_group['maxPayloadBytes'] < 0):
+            raise GroupException('Group maxPayloadBytes must be a non-negative integer')
         if temp_group['persistence'] not in SUPPORTED_PERSISTENCE:
             raise GroupException(f"Persistence type '{temp_group['persistence']}' is not supported")
         if temp_group['baseId'] in base_id:

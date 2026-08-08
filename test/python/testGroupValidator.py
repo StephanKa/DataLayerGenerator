@@ -74,6 +74,20 @@ class TestGroupValidator(unittest.TestCase):
         result = generator.group_validator(test_data)
         self.assertIsNone(result[0]['description'])
 
+    def test_max_payload_bytes_is_retained(self):
+        """Test that a valid maxPayloadBytes value is retained."""
+        test_data = [{'name': 'G', 'persistence': 'None', 'baseId': '0x1000', 'version': '1.0.0',
+                      'maxPayloadBytes': 128}]
+        result = generator.group_validator(test_data)
+        self.assertEqual(result[0]['maxPayloadBytes'], 128)
+
+    def test_invalid_max_payload_bytes_raises(self):
+        """Test that negative and non-integer payload budgets are rejected."""
+        for max_payload_bytes in [-1, 1.5, True]:
+            test_data = [{'name': 'G', 'persistence': 'None', 'baseId': '0x1000', 'version': '1.0.0',
+                          'maxPayloadBytes': max_payload_bytes}]
+            self.assertRaises(generator.GroupException, generator.group_validator, test_data)
+
     def test_version_parsed_to_object(self):
         """Test that the version string is replaced by a Version-like object."""
         test_data = [{'name': 'G', 'persistence': 'None', 'baseId': '0x1000', 'version': '2.3.4'}]
