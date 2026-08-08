@@ -82,6 +82,30 @@ ctest --test-dir build/debug/windows-2022-debug --output-on-failure -R "^datapoi
 
 Adjust the build directory to the selected preset. `cmake --preset <name>` prints the configured binary directory.
 
+## Benchmarks
+
+The optional `datapoints_benchmark` target uses Google Benchmark to measure direct datapoint reads and runtime dispatcher lookup for early, late, and unknown IDs. It is independent of the Catch2 suite and fetches Google Benchmark only when enabled:
+
+```powershell
+cmake -S . -B build/benchmark -DCMAKE_BUILD_TYPE=Release -DBUILD_EXAMPLES=OFF -DENABLE_TESTING=OFF -DENABLE_BENCHMARKS=ON
+cmake --build build/benchmark --config Release --target datapoints_benchmark
+.\build\benchmark\test\benchmark\Release\datapoints_benchmark.exe
+```
+
+The executable reports the following cases:
+
+| Benchmark | What it measures |
+|---|---|
+| `directRead` | A direct `test()` read. This is the type-safe named access baseline and does not perform ID lookup. |
+| `dispatchedRead/16388` | Lookup of `test`, the first datapoint in the first group. |
+| `dispatchedRead/20484` | Lookup of `testSecond`, in the second group. |
+| `dispatchedRead/32770` | Lookup of `Dp2`, a readable datapoint near the end of the fixture. |
+| `dispatchedRead/4294967295` | A missing ID, which exercises a complete unsuccessful lookup. |
+
+`dispatchedRead` reads the ID through a volatile variable, prevents the result from being optimized away, and clobbers memory after each iteration. The dispatcher source traverses groups and datapoints in order, so its worst-case lookup is linear. A sufficiently optimizing compiler can compact a small fixed model into faster comparisons; use production-like model sizes and inspect the target result before inferring a scaling curve.
+
+Run benchmarks in a Release build on the target hardware. The checked-in model is a small smoke fixture; generate a representative larger model before drawing conclusions about dispatch scaling.
+
 ## Generator Checks
 
 Validate a model without writing generated files:

@@ -63,6 +63,19 @@ cmake --build --preset gcc-14-release
 ctest --preset gcc-14-release
 ```
 
+### Benchmarks
+
+The optional Google Benchmark target measures direct datapoint access and runtime dispatcher lookup
+for early, late, and missing IDs. Build it separately in Release mode:
+
+```powershell
+cmake -S . -B build/benchmark -DCMAKE_BUILD_TYPE=Release -DBUILD_EXAMPLES=OFF -DENABLE_TESTING=OFF -DENABLE_BENCHMARKS=ON
+cmake --build build/benchmark --config Release --target datapoints_benchmark
+.\build\benchmark\test\benchmark\Release\datapoints_benchmark.exe
+```
+
+See the [benchmark documentation](https://stephanka.github.io/DataLayerGenerator/benchmark.html) for each case and guidance on interpreting results.
+
 ### Docker (alternative)
 
 ```bash

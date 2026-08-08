@@ -26,6 +26,7 @@ and optional Python bindings.
 
    generator.rst
    rtt.rst
+   benchmark.rst
 
 .. toctree::
    :maxdepth: 2
