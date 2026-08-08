@@ -31,16 +31,10 @@ Usage example:
 Type Concepts
 -------------
 
-Used internally by :cpp:struct:`DataLayer::DataPoint` and the serialization layer to branch on
-container vs. scalar types.
+Used internally by :cpp:struct:`DataLayer::DataPoint` and the serialization layer to identify
+array-like types. ``std::string`` is intentionally excluded.
 
 .. doxygenconcept:: DataLayer::Detail::IsArray
-
-Used by :cpp:struct:`Serialization` and :cpp:struct:`Deserialization` to handle ``std::string``
-and ``std::string_view`` fields differently from fixed-size containers.
-
-.. doxygenconcept:: IsContainer
-.. doxygenconcept:: IsString
 
 Range Concept
 -------------

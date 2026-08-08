@@ -15,7 +15,7 @@ fields.  It supports ``!=`` and ``>`` comparisons and is used in two places:
 - As a **datapoint version** on individual :cpp:struct:`DataLayer::DataPoint` instances — used to skip
   deserializing a single datapoint when only its version changed (when ``AllowUpgrade`` is set).
 
-.. doxygenstruct:: Version
+.. doxygenstruct:: DataLayer::Version
    :members:
 
 FixedString
