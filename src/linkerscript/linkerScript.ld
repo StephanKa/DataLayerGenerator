@@ -148,6 +148,15 @@ SECTIONS
   } > FLASH
   __exidx_end = .;
 
+  .datalayer_debug :
+  {
+    . = ALIGN(4);
+    __datalayer_debug_start = .;
+    KEEP(*(.datalayer_debug))
+    . = ALIGN(4);
+    __datalayer_debug_end = .;
+  } > FLASH
+
   .copy.table :
   {
     . = ALIGN(4);

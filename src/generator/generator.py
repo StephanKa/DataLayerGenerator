@@ -76,6 +76,7 @@ def create_rtt_datapoints(data_points, groups, enums, types):
             'type': data_point['type'],
             'format': RTT_SCALAR_FORMATS.get(wire_type),
             'array_size': data_point['arraySize'],
+            'access': data_point['access'],
         })
     return rtt_datapoints
 
@@ -214,7 +215,10 @@ def main(template_file_name, template_formatter_file_name, python_binding_file_n
         f.write(output)
 
     template = env.get_template('rtt.py.jinja2')
-    output = template.render(rtt_datapoints=create_rtt_datapoints(data_points, groups, enums, types))
+    rtt_datapoints = create_rtt_datapoints(data_points, groups, enums, types)
+    output = template.render(rtt_datapoints=rtt_datapoints,
+                             debug_datapoints=[data_point for data_point in rtt_datapoints
+                                               if data_point['access'] != 'WRITE_ONLY'])
     with open(f'{args.out_dir}{PYTHON_FOLDER}/rtt.py', 'w', encoding='utf-8') as f:
         f.write(output)
 

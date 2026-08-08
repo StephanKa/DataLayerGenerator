@@ -95,11 +95,24 @@ IF(CMAKE_CROSSCOMPILING)
             DataLayerGenerator::DataLayerGenerator)
 
     SET_TARGET_PROPERTIES(${PROJECT_NAME} PROPERTIES SUFFIX ".elf")
+    SET(_DATALAYER_MAP_FILE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.map")
     TARGET_LINK_OPTIONS(${PROJECT_NAME}
                         PRIVATE
                         -T${CMAKE_CURRENT_SOURCE_DIR}/linkerscript/linkerScript.ld
-                        -Wl,-Map=${PROJECT_NAME}.map
+                        -Wl,-Map=${_DATALAYER_MAP_FILE}
     )
+
+    IF(CMAKE_BUILD_TYPE STREQUAL "Debug")
+        TARGET_COMPILE_DEFINITIONS(${PROJECT_NAME} PRIVATE DATALAYER_DEBUG_EXPORT)
+        SET(_DATALAYER_DEBUG_MANIFEST "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.debug.json")
+        ADD_CUSTOM_COMMAND(TARGET ${PROJECT_NAME} POST_BUILD
+                           COMMAND ${Python_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/create_debug_manifest.py
+                                   --map ${_DATALAYER_MAP_FILE}
+                                   --output ${_DATALAYER_DEBUG_MANIFEST}
+                           COMMENT "DataLayerGenerator: creating J-Link debug manifest"
+                           VERBATIM)
+        ADD_CUSTOM_TARGET(${PROJECT_NAME}DebugManifest DEPENDS ${PROJECT_NAME})
+    ENDIF()
 
     ADD_CUSTOM_COMMAND(TARGET ${PROJECT_NAME} POST_BUILD
                        COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_BINARY_DIR}/generated ${CMAKE_BINARY_DIR}/install/generated)

@@ -53,6 +53,13 @@ namespace DataLayer
             return m_value;
         }
 
+#ifdef DATALAYER_DEBUG_EXPORT
+        [[nodiscard]] constexpr const T *debugValueAddress() const noexcept
+        {
+            return &m_value;
+        }
+#endif
+
         // function to write anyway
         constexpr DataPoint &operator=(const T &value)
         {

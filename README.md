@@ -33,6 +33,7 @@ formatters, optional Python bindings, and dependency-free MQTT/CAN adapter bound
 | **fmt support** | Auto-generated `fmt::formatter<>` for all custom structs and enums (`-DENABLE_FMT=ON`) |
 | **Python bindings** | Auto-generated `pybind11` module (`-DENABLE_PYBIND11=ON`) |
 | **SEGGER RTT monitoring** | Generated PyLink reader decodes model-specific RTT datapoint frames without address-based coupling |
+| **J-Link debug inspection** | ARM GNU Debug builds export readable datapoint addresses for generated PyLink memory inspection; absent from Release firmware |
 | **JSON & YAML models** | Write model files in JSON or YAML; mixed directories supported |
 | **Cross-compilation** | ARM Cortex-M4 GCC toolchain included |
 | **Conan package** | Distributable as a Conan `header-library` package with consumer helper CMake function |

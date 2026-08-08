@@ -107,3 +107,25 @@ Then create the generated reader with the target device name and consume availab
 ``RttReader.read()`` is non-blocking with respect to framing: it retains partial RTT data internally and
 returns only complete frames. Unknown IDs are skipped, allowing the host to tolerate target-side
 datapoints not present in its generated model.
+
+Debug Memory Inspection
+-----------------------
+
+ARM GNU Debug builds export readable datapoint value addresses in a retained ``.datalayer_debug``
+linker section. The ``DatalayerGeneratorExampleDebugManifest`` target writes a sibling
+``DatalayerGeneratorExample.debug.json`` file containing the table address extracted from the linker
+map. This feature is neither compiled nor linked in Release builds.
+
+Pass the manifest's ``tableAddress`` to ``DebugMemoryReader`` to inspect values through a J-Link
+probe. It is intended for development only: values are not an atomic snapshot, and write-only
+datapoints are intentionally omitted.
+
+.. code-block:: python
+
+   import json
+   from rtt import DebugMemoryReader
+
+   manifest = json.loads(open('DatalayerGeneratorExample.debug.json', encoding='utf-8').read())
+   reader = DebugMemoryReader.connect('STM32F407VG', manifest['tableAddress'])
+   for name, value in reader.read():
+     print(f'{name}: {value}')

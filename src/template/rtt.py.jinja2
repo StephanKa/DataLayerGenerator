@@ -13,6 +13,8 @@ from typing import Callable
 FRAME_HEADER = struct.Struct('<2sBBHH')
 FRAME_MAGIC = b'DL'
 PROTOCOL_VERSION = 1
+DEBUG_ENTRY = struct.Struct('<HHI')
+DEBUG_ENTRY_COUNT = {{ debug_datapoints | length }}
 
 
 @dataclass(frozen=True)
@@ -92,3 +94,37 @@ class RttReader:
             raise ValueError(f'{metadata.name} payload has {len(payload)} bytes; expected {expected_size}.')
         value = struct.unpack(value_format, payload)
         return value if metadata.array_size else value[0]
+
+
+class DebugMemoryReader:
+    """Read debug-only DataLayer datapoint values through a J-Link probe."""
+
+    def __init__(self, read_memory: Callable[[int, int], bytes], table_address: int):
+        self._read_memory = read_memory
+        self._table_address = table_address
+
+    @classmethod
+    def connect(cls, device: str, table_address: int, serial_number: int | None = None,
+                speed_khz: int = 4000) -> 'DebugMemoryReader':
+        """Connect through PyLink and read the generated debug export table."""
+        try:
+            import pylink
+        except ImportError as error:
+            raise RuntimeError('Install pylink-square to use the generated debug memory reader.') from error
+        jlink = pylink.JLink()
+        jlink.open(serial_no=serial_number)
+        jlink.set_tif(pylink.enums.JLinkInterfaces.SWD)
+        jlink.connect(device, speed=speed_khz)
+        return cls(lambda address, size: bytes(jlink.memory_read(address, size, nbits=8)), table_address)
+
+    def read(self) -> list[tuple[str, object]]:
+        """Read and decode every readable datapoint exported by a debug target."""
+        entries = self._read_memory(self._table_address, DEBUG_ENTRY_COUNT * DEBUG_ENTRY.size)
+        values = []
+        for offset in range(0, len(entries), DEBUG_ENTRY.size):
+            data_point_id, payload_size, address = DEBUG_ENTRY.unpack_from(entries, offset)
+            metadata = DATAPOINTS.get(data_point_id)
+            if metadata is not None:
+                payload = self._read_memory(address, payload_size)
+                values.append((metadata.name, RttReader._decode(metadata, payload)))
+        return values

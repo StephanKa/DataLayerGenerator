@@ -37,6 +37,31 @@ class TestRttGenerator(unittest.TestCase):
             self.assertEqual(reader.read(), [])
             self.assertEqual(reader.read(), [('Testify::test', 4211)])
 
+    def test_generated_debug_reader_decodes_memory_export(self):
+        """The debug reader decodes a readable datapoint through its export entry."""
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            output_directory = Path(temporary_directory)
+            subprocess.run([
+                sys.executable, str(ROOT / 'src/generator/generator.py'),
+                '--model_dir', str(ROOT / 'src/model'),
+                '--out_dir', str(output_directory),
+                '--template_dir', str(ROOT / 'src/template'),
+                '--schema_dir', str(ROOT / 'src/generator'),
+            ], check=True)
+            module_path = output_directory / 'generated/datalayer_example/rtt.py'
+            specification = importlib.util.spec_from_file_location('generated_debug', module_path)
+            module = importlib.util.module_from_spec(specification)
+            sys.modules[specification.name] = module
+            specification.loader.exec_module(module)
+
+            table_address = 0x08001000
+            value_address = 0x20000100
+            table = module.DEBUG_ENTRY.pack(0x4001, 4, value_address)
+            memory = {table_address: table, value_address: (4211).to_bytes(4, 'little', signed=True)}
+            reader = module.DebugMemoryReader(lambda address, size: memory[address][:size], table_address)
+
+            self.assertEqual(reader.read(), [('Testify::test', 4211)])
+
 
 if __name__ == '__main__':
     unittest.main()
