@@ -7,6 +7,7 @@
 #include <groupInfo.h>
 #include <ranges>
 #include <span>
+#include <trace.h>
 #include <type_traits>
 
 namespace DataLayer
@@ -216,6 +217,16 @@ namespace DataLayer
                   [this](const ChangeObserver &observer) { observer.callback(m_value, observer.context); });
                 return Detail::RangeCheck::ok;
             }
+#ifdef USE_TRACE_HOOKS
+            if (!std::is_constant_evaluated())
+            {
+                Trace::emit({ .kind = Trace::EventKind::RangeRejected,
+                  .source = Trace::Source::Core,
+                  .identifier = getId(),
+                  .detail = static_cast<uint32_t>(result.error()),
+                  .success = false });
+            }
+#endif
             return result.error();
         }
 

@@ -1,8 +1,34 @@
+#ifdef USE_TRACE_HOOKS
+namespace DataLayer::Trace
+{
+    struct Record;
+}
+
+void captureTrace(const DataLayer::Trace::Record &record) noexcept;
+#define DATALAYER_TRACE_HOOK(record) captureTrace(record)
+#endif
+
 #include <catch2/catch_all.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 #include <filesystem>
 #include <fstream>
 #include <include/datalayer.h>
+
+#ifdef USE_TRACE_HOOKS
+namespace
+{
+    std::array<DataLayer::Trace::Record, 4> traceRecords{};
+    size_t traceRecordCount{};
+}// namespace
+
+void captureTrace(const DataLayer::Trace::Record &record) noexcept
+{
+    if (traceRecordCount < traceRecords.size())
+    {
+        traceRecords[traceRecordCount++] = record;
+    }
+}
+#endif
 
 namespace DataLayer::Migration
 {
@@ -1009,6 +1035,27 @@ TEST_CASE("Test datapoints")
         constexpr auto ret = Dispatcher.setDatapoint(unknownId, dummyValue);
         REQUIRE(!ret.success);
     }
+
+#ifdef USE_TRACE_HOOKS
+    SECTION("trace hooks report rejected and range-invalid writes")
+    {
+        traceRecordCount = 0;
+        constexpr uint32_t unknownId = 0xFFFF;
+        constexpr Temperature temperature{};
+
+        REQUIRE_FALSE(Dispatcher.setDatapoint(unknownId, temperature).success);
+        REQUIRE(traceRecordCount == 1);
+        REQUIRE(traceRecords[0].kind == DataLayer::Trace::EventKind::WriteRejected);
+        REQUIRE(traceRecords[0].source == DataLayer::Trace::Source::Core);
+        REQUIRE(traceRecords[0].identifier == unknownId);
+
+        std::ignore = rangeAlias.set(RangeAlias{ 1 });
+        REQUIRE(traceRecordCount == 2);
+        REQUIRE(traceRecords[1].kind == DataLayer::Trace::EventKind::RangeRejected);
+        REQUIRE(traceRecords[1].identifier == rangeAlias.getId());
+        REQUIRE(traceRecords[1].detail == static_cast<uint32_t>(DataLayer::Detail::RangeCheck::underflow));
+    }
+#endif
 
     SECTION("arrayTest serialize and deserialize roundtrip")
     {

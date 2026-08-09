@@ -5,6 +5,7 @@
 #include <dispatcher.h>
 #include <span>
 #include <string_view>
+#include <trace.h>
 #include <type_traits>
 
 namespace DataLayer::Mqtt
@@ -36,7 +37,7 @@ namespace DataLayer::Mqtt
         {
             static_assert(std::is_trivially_copyable_v<T>, "MQTT binary transport requires a trivially copyable value");
             const auto payload = std::as_bytes(std::span{ &value, 1 });
-            return m_client.publish(topic, payload, retain) ? Result::ok : Result::publishFailed;
+            return traceResult(0, m_client.publish(topic, payload, retain) ? Result::ok : Result::publishFailed);
         }
 
         template<typename T>
@@ -45,15 +46,27 @@ namespace DataLayer::Mqtt
             static_assert(std::is_trivially_copyable_v<T>, "MQTT binary transport requires a trivially copyable value");
             if (payload.size() != sizeof(T))
             {
-                return Result::invalidPayload;
+                return traceResult(dataPointId, Result::invalidPayload);
             }
 
             T value{};
             std::memcpy(&value, payload.data(), sizeof(T));
-            return m_dispatcher.setDatapoint(dataPointId, value).success ? Result::ok : Result::rejected;
+            return traceResult(dataPointId, m_dispatcher.setDatapoint(dataPointId, value).success ? Result::ok : Result::rejected);
         }
 
       private:
+        static Result traceResult(uint32_t identifier, Result result) noexcept
+        {
+#ifdef USE_TRACE_HOOKS
+            Trace::emit({ .kind = Trace::EventKind::Transport,
+              .source = Trace::Source::Mqtt,
+              .identifier = identifier,
+              .detail = static_cast<uint32_t>(result),
+              .success = result == Result::ok });
+#endif
+            return result;
+        }
+
         Client &m_client;
         DispatcherType &m_dispatcher;
     };

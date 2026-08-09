@@ -10,6 +10,25 @@ Both adapters use the in-memory representation of the value. Peers must therefor
 floating-point representation, struct layout, and model versions. For interoperable protocols, define
 an application-level payload encoding before sending values to another architecture.
 
+Trace Hooks
+-----------
+
+Set ``-DENABLE_TRACE_HOOKS=ON`` and define ``DATALAYER_TRACE_HOOK(record)`` before including any
+DataLayer header to receive lightweight, application-owned instrumentation. The macro receives a
+``DataLayer::Trace::Record`` with an event kind, source, identifier, detail code, and success flag.
+No trace calls are compiled when the option is disabled.
+
+.. code-block:: cpp
+
+   void recordTrace(const DataLayer::Trace::Record& record) noexcept;
+   #define DATALAYER_TRACE_HOOK(record) recordTrace(record)
+   #include <datalayer.h>
+
+Rejected mapping/dispatcher writes emit ``WriteRejected``; direct range failures emit
+``RangeRejected``; failed group serialization/deserialization emits ``PersistenceError``; and each
+CAN or MQTT publish/apply operation emits ``Transport``. ``detail`` contains the corresponding
+``RangeCheck``, ``SerializationError``, CAN ``Result``, or MQTT ``Result`` enum value.
+
 Change Notifications
 --------------------
 

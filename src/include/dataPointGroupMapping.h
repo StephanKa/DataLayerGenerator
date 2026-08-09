@@ -8,10 +8,14 @@
 #ifdef USE_FILE_PERSISTENCE
 #include <serialization.h>
 #endif
+#include <trace.h>
 #include <tuple>
 
 namespace DataLayer
 {
+    template<typename... GroupInfos>
+    struct Dispatcher;
+
 #ifdef USE_TRANSACTIONAL_UPDATES
     template<typename T>
     struct DatapointUpdate
@@ -50,16 +54,11 @@ namespace DataLayer
         template<typename T>
         [[nodiscard]] constexpr Detail::CheckResult setDatapoint(uint32_t dataPointId, const T &value) const
         {
-            return std::apply(
-              [&](auto &...args) {
-                  bool ret = false;
-                  auto check{ Detail::RangeCheck::notChecked };
-
-                  ((args.matchesId(dataPointId) && (setter(value, args, ret, check))) || ... || false);
-
-                  return Detail::CheckResult{ .success = ret, .check = check };
-              },
-              datapoints);
+            const auto result = setDatapointWithoutTrace(dataPointId, value);
+#ifdef USE_TRACE_HOOKS
+            traceRejectedWrite(dataPointId, result);
+#endif
+            return result;
         }
 
         template<typename T>
@@ -110,30 +109,79 @@ namespace DataLayer
         [[nodiscard]] SerializationStatus serializeGroup(const std::filesystem::path &path) const
         {
             Serialization value(group.version, group.baseId, path, datapoints);
-            return value.write();
+            return tracePersistence(value.write());
         }
 
         [[nodiscard]] SerializationStatus deserializeGroup(const std::filesystem::path &path) const
         {
             Deserialization value(group.version, group.baseId, path, datapoints, group.allowUpgrade);
-            return value.read();
+            return tracePersistence(value.read());
         }
 
         template<DataLayer::Persistence::StorageBackend Backend>
         [[nodiscard]] SerializationStatus serializeGroup(Backend &backend) const
         {
-            return DataLayer::Persistence::serialize(backend, group.version, group.baseId, datapoints);
+            return tracePersistence(DataLayer::Persistence::serialize(backend, group.version, group.baseId, datapoints));
         }
 
         template<DataLayer::Persistence::StorageBackend Backend>
         [[nodiscard]] SerializationStatus deserializeGroup(const Backend &backend) const
         {
-            return DataLayer::Persistence::deserialize(backend, group.version, group.baseId, datapoints, group.allowUpgrade);
+            return tracePersistence(DataLayer::Persistence::deserialize(backend, group.version, group.baseId, datapoints, group.allowUpgrade));
         }
 
 #endif
 
       private:
+        template<typename...>
+        friend struct Dispatcher;
+
+        template<typename T>
+        [[nodiscard]] constexpr Detail::CheckResult setDatapointWithoutTrace(uint32_t dataPointId, const T &value) const
+        {
+            return std::apply(
+              [&](auto &...args) {
+                  bool ret = false;
+                  auto check{ Detail::RangeCheck::notChecked };
+
+                  ((args.matchesId(dataPointId) && (setter(value, args, ret, check))) || ... || false);
+
+                  return Detail::CheckResult{ .success = ret, .check = check };
+              },
+              datapoints);
+        }
+
+#ifdef USE_TRACE_HOOKS
+        constexpr static void traceRejectedWrite(uint32_t dataPointId, const Detail::CheckResult &result)
+        {
+            if (!result.success && !std::is_constant_evaluated())
+            {
+                Trace::emit({ .kind = Trace::EventKind::WriteRejected,
+                  .source = Trace::Source::Core,
+                  .identifier = dataPointId,
+                  .detail = static_cast<uint32_t>(result.check),
+                  .success = false });
+            }
+        }
+#endif
+
+#ifdef USE_FILE_PERSISTENCE
+        constexpr SerializationStatus tracePersistence(SerializationStatus status) const
+        {
+#ifdef USE_TRACE_HOOKS
+            if (!status.result)
+            {
+                Trace::emit({ .kind = Trace::EventKind::PersistenceError,
+                  .source = Trace::Source::Persistence,
+                  .identifier = group.baseId,
+                  .detail = static_cast<uint32_t>(status.errorCode),
+                  .success = false });
+            }
+#endif
+            return status;
+        }
+#endif
+
 #ifdef USE_TRANSACTIONAL_UPDATES
         constexpr bool validateUpdate(const auto &update, Detail::RangeCheck &check) const
         {

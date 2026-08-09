@@ -6,6 +6,7 @@
 #include <cstring>
 #include <dispatcher.h>
 #include <span>
+#include <trace.h>
 #include <type_traits>
 
 namespace DataLayer::Can
@@ -51,12 +52,12 @@ namespace DataLayer::Can
             static_assert(std::is_trivially_copyable_v<T>, "CAN transport requires a trivially copyable value");
             if constexpr (sizeof(T) > PayloadCapacity)
             {
-                return Result::payloadTooLarge;
+                return traceResult(identifier, Result::payloadTooLarge);
             }
 
             Frame frame{ .identifier = identifier, .length = static_cast<uint8_t>(sizeof(T)) };
             std::memcpy(frame.payload.data(), &value, sizeof(T));
-            return m_bus.send(frame) ? Result::ok : Result::sendFailed;
+            return traceResult(identifier, m_bus.send(frame) ? Result::ok : Result::sendFailed);
         }
 
         template<typename T>
@@ -65,15 +66,27 @@ namespace DataLayer::Can
             static_assert(std::is_trivially_copyable_v<T>, "CAN transport requires a trivially copyable value");
             if (frame.length != sizeof(T) || frame.length > PayloadCapacity)
             {
-                return Result::invalidPayload;
+                return traceResult(frame.identifier, Result::invalidPayload);
             }
 
             T value{};
             std::memcpy(&value, frame.payload.data(), sizeof(T));
-            return m_dispatcher.setDatapoint(frame.identifier, value).success ? Result::ok : Result::rejected;
+            return traceResult(frame.identifier, m_dispatcher.setDatapoint(frame.identifier, value).success ? Result::ok : Result::rejected);
         }
 
       private:
+        static Result traceResult(uint32_t identifier, Result result) noexcept
+        {
+#ifdef USE_TRACE_HOOKS
+            Trace::emit({ .kind = Trace::EventKind::Transport,
+              .source = Trace::Source::Can,
+              .identifier = identifier,
+              .detail = static_cast<uint32_t>(result),
+              .success = result == Result::ok });
+#endif
+            return result;
+        }
+
         Bus &m_bus;
         DispatcherType &m_dispatcher;
     };

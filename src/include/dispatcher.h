@@ -9,6 +9,7 @@
 #include <detail.h>
 #include <groupInfo.h>
 #include <helper.h>
+#include <trace.h>
 #include <type_traits>
 #ifdef USE_FILE_PERSISTENCE
 #include <serialization.h>
@@ -36,7 +37,7 @@ namespace DataLayer
         template<typename T>
         [[nodiscard]] constexpr Detail::CheckResult setDatapoint(uint32_t dataPointId, const T &value) const
         {
-            return std::apply(
+            const auto result = std::apply(
               [&](auto &...args) {
                   bool ret = false;
                   auto check{ Detail::RangeCheck::notChecked };
@@ -44,6 +45,17 @@ namespace DataLayer
                   return Detail::CheckResult{ ret, check };
               },
               groups);
+#ifdef USE_TRACE_HOOKS
+            if (!result.success && !std::is_constant_evaluated())
+            {
+                Trace::emit({ .kind = Trace::EventKind::WriteRejected,
+                  .source = Trace::Source::Core,
+                  .identifier = dataPointId,
+                  .detail = static_cast<uint32_t>(result.check),
+                  .success = false });
+            }
+#endif
+            return result;
         }
 
         template<typename T>
@@ -61,7 +73,7 @@ namespace DataLayer
       private:
         constexpr static bool setter(const uint32_t dataPointId, const auto &value, [[maybe_unused]] auto &args, [[maybe_unused]] bool &ret, Detail::RangeCheck &check)
         {
-            const auto returnCheck = args.setDatapoint(dataPointId, value);
+            const auto returnCheck = args.setDatapointWithoutTrace(dataPointId, value);
             check = returnCheck.check;
             ret |= returnCheck.success;
             return !ret;
