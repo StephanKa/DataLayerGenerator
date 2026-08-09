@@ -28,8 +28,10 @@ Validate a model without writing generated files:
 
 Remove `--check` to generate C++ headers, formatter support, optional Python bindings, and model
 documentation. Generation also writes ``generated/doc/model-metadata.json`` for host tools and
-``generated/test/modelTests.h`` with Catch2 model-contract checks. Model directories can contain JSON,
-YAML, or a mix of both; the generator merges all supported files before schema and semantic validation.
+``generated/test/modelTests.h`` with Catch2 test vectors for IDs, legacy IDs, access permissions,
+serialization sizes, type range boundaries, and group persistence metadata. Model directories can
+contain JSON, YAML, or a mix of both; the generator merges all supported files before schema and
+semantic validation.
 
 ## Model Compatibility Report
 

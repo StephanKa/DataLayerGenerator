@@ -33,7 +33,9 @@ class TestRttGenerator(unittest.TestCase):
 
             self.assertEqual(metadata['formatVersion'], 1)
             self.assertGreater(metadata['summary']['datapoints'], 0)
-            self.assertIn('Generated model contract', contract)
+            self.assertIn('Generated model identifier contract', contract)
+            self.assertIn('Generated model access and serialization contract', contract)
+            self.assertIn('Generated model range contract', contract)
             self.assertIn('namespace DataLayer::Model', datalayer_header)
             self.assertIn('findDatapoint', datalayer_header)
 

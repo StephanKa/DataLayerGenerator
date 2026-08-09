@@ -104,7 +104,8 @@ All files are written under ``<out_dir>/generated/``:
      - Machine-readable catalog of groups, global datapoint IDs, legacy IDs, types, access, versions,
        enums, structs, aliases, and model counts.
    * - ``test/modelTests.h``
-     - Catch2 model-contract checks for generated group metadata and current and legacy datapoint IDs.
+     - Catch2 vectors derived from group persistence and versions, current and legacy datapoint IDs,
+       access permissions, serialization sizes, and alias range boundaries.
 
 C++ Model Introspection
 -----------------------

@@ -2,7 +2,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <include/datalayer.h>
 
-TEST_CASE("Generated model contract", "[generated][model]")
+TEST_CASE("Generated model persistence contract", "[generated][model][persistence]")
 {
 {% for group in metadata.groups %}
     SECTION("group {{ group.name }} metadata")
@@ -12,8 +12,13 @@ TEST_CASE("Generated model contract", "[generated][model]")
         STATIC_REQUIRE(version.major == {{ group.version.split('.')[0] }});
         STATIC_REQUIRE(version.minor == {{ group.version.split('.')[1] }});
         STATIC_REQUIRE(version.build == {{ group.version.split('.')[2] }});
+        STATIC_REQUIRE({{ group.name }}Info.persist == DataLayer::PersistenceType::{{ group.persistence }});
     }
 {% endfor %}
+}
+
+TEST_CASE("Generated model identifier contract", "[generated][model][identifier]")
+{
 {% for datapoint in metadata.datapoints %}
     SECTION("datapoint {{ datapoint.qualifiedName }} identifiers")
     {
@@ -22,6 +27,42 @@ TEST_CASE("Generated model contract", "[generated][model]")
 {% for legacy_id in datapoint.legacyGlobalIds %}
         STATIC_REQUIRE({{ datapoint.qualifiedName }}.matchesId(0x{{ "%04x" | format(legacy_id) }}));
 {% endfor %}
+    }
+{% endfor %}
+}
+
+TEST_CASE("Generated model access and serialization contract", "[generated][model][access][serialization]")
+{
+{% for datapoint in metadata.datapoints %}
+    SECTION("datapoint {{ datapoint.qualifiedName }} access")
+    {
+{% if datapoint.access == 'READ_ONLY' %}
+    STATIC_REQUIRE(Helper::ReadConcept<std::remove_cvref_t<decltype({{ datapoint.qualifiedName }}.TypeAccess)>>);
+    STATIC_REQUIRE_FALSE(Helper::WriteConcept<std::remove_cvref_t<decltype({{ datapoint.qualifiedName }}.TypeAccess)>>);
+{% elif datapoint.access == 'WRITE_ONLY' %}
+    STATIC_REQUIRE_FALSE(Helper::ReadConcept<std::remove_cvref_t<decltype({{ datapoint.qualifiedName }}.TypeAccess)>>);
+    STATIC_REQUIRE(Helper::WriteConcept<std::remove_cvref_t<decltype({{ datapoint.qualifiedName }}.TypeAccess)>>);
+{% else %}
+    STATIC_REQUIRE(Helper::ReadConcept<std::remove_cvref_t<decltype({{ datapoint.qualifiedName }}.TypeAccess)>>);
+    STATIC_REQUIRE(Helper::WriteConcept<std::remove_cvref_t<decltype({{ datapoint.qualifiedName }}.TypeAccess)>>);
+{% endif %}
+{% if datapoint.access != 'WRITE_ONLY' %}
+    const auto serialized = {{ datapoint.qualifiedName }}.serialize();
+    REQUIRE(serialized.size() == sizeof({{ datapoint.qualifiedName }}()));
+{% else %}
+    STATIC_REQUIRE_FALSE(requires { {{ datapoint.qualifiedName }}.serialize(); });
+{% endif %}
+    }
+{% endfor %}
+}
+
+TEST_CASE("Generated model range contract", "[generated][model][range]")
+{
+{% for type in metadata.types %}
+    SECTION("type {{ type.name }} accepts range boundaries")
+    {
+    REQUIRE(DataLayer::Detail::checkValue({{ type.name }}{ {{ type.name }}::Minimum }).has_value());
+    REQUIRE(DataLayer::Detail::checkValue({{ type.name }}{ {{ type.name }}::Maximum }).has_value());
     }
 {% endfor %}
 }
