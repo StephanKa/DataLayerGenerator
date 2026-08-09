@@ -100,6 +100,27 @@ All files are written under ``<out_dir>/generated/``:
        datapoint metadata, enums, structs, custom types, and their relationships.
    * - ``doc/overview.csv``
      - CSV listing all datapoints: ID, name, type, access, group, version.
+   * - ``doc/model-metadata.json``
+     - Machine-readable catalog of groups, global datapoint IDs, legacy IDs, types, access, versions,
+       enums, structs, aliases, and model counts.
+   * - ``test/modelTests.h``
+     - Catch2 model-contract checks for generated group metadata and current and legacy datapoint IDs.
+
+Model Compatibility
+-------------------
+
+``compatibilityReport.py`` compares a current model with a validated baseline and writes a JSON report.
+It identifies breaking group removals or base-ID changes, removed datapoints, changed datapoint IDs or
+types, and removed read or write access. It also records compatible additions, retained legacy IDs, and
+datapoint version changes.
+
+.. code-block:: bash
+
+   python src/generator/compatibilityReport.py \
+     --previous-model path/to/previous-model \
+     --current-model src/model \
+     --schema-dir src/generator \
+     --output build/compatibility-report.json
 
 CMake Integration
 -----------------

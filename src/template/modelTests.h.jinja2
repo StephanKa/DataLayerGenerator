@@ -1,0 +1,27 @@
+#pragma once
+#include <catch2/catch_test_macros.hpp>
+#include <include/datalayer.h>
+
+TEST_CASE("Generated model contract", "[generated][model]")
+{
+{% for group in metadata.groups %}
+    SECTION("group {{ group.name }} metadata")
+    {
+        STATIC_REQUIRE({{ group.name }}Info.baseId == 0x{{ "%04x" | format(group.baseId) }});
+        constexpr auto version = {{ group.name }}Info.version;
+        STATIC_REQUIRE(version.major == {{ group.version.split('.')[0] }});
+        STATIC_REQUIRE(version.minor == {{ group.version.split('.')[1] }});
+        STATIC_REQUIRE(version.build == {{ group.version.split('.')[2] }});
+    }
+{% endfor %}
+{% for datapoint in metadata.datapoints %}
+    SECTION("datapoint {{ datapoint.qualifiedName }} identifiers")
+    {
+        STATIC_REQUIRE({{ datapoint.qualifiedName }}.getId() == 0x{{ "%04x" | format(datapoint.globalId) }});
+        STATIC_REQUIRE({{ datapoint.qualifiedName }}.matchesId(0x{{ "%04x" | format(datapoint.globalId) }}));
+{% for legacy_id in datapoint.legacyGlobalIds %}
+        STATIC_REQUIRE({{ datapoint.qualifiedName }}.matchesId(0x{{ "%04x" | format(legacy_id) }}));
+{% endfor %}
+    }
+{% endfor %}
+}

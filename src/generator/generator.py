@@ -5,6 +5,7 @@ import sys
 import jsonschema
 import argparse
 import yaml
+from types import SimpleNamespace
 from yaml.loader import SafeLoader
 from jinja2 import Environment, FileSystemLoader
 from constants import PREFIX_MAP
@@ -12,6 +13,7 @@ from validators import enum_validator, struct_validator, group_validator, data_p
 from validatorException import DatapointException
 from umlGenerator import generate_uml
 from overviewGenerator import generate_overview
+from modelMetadata import create_model_metadata
 
 GENERATED_FOLDER = '/generated/include'
 DOC_FOLDER = '/generated/doc'
@@ -205,6 +207,22 @@ def read_model_files(args):
     return json_data
 
 
+def load_validated_model(model_dir, schema_dir):
+    """Load, schema-validate, and semantically validate a model directory."""
+    with open(f'{schema_dir}/schema.json') as f:
+        datalayer_schema = json.load(f)
+
+    json_data = read_model_files(SimpleNamespace(model_dir=model_dir, convert=False))
+    validate_json(json_data, datalayer_schema)
+
+    enums = enum_validator(json_data['Enums'])
+    types = type_validator(json_data['Types'])
+    groups = group_validator(json_data['Groups'])
+    structs, struct_names = struct_validator(json_data['Structs'])
+    data_points = data_point_validator(json_data['Datapoints'], struct_names, enums, types)
+    return {'enums': enums, 'types': types, 'groups': groups, 'structs': structs, 'data_points': data_points}
+
+
 def main(template_file_name, template_formatter_file_name, python_binding_file_name):
     """
     Execute all work for parsing and validating.
@@ -214,27 +232,19 @@ def main(template_file_name, template_formatter_file_name, python_binding_file_n
     :param python_binding_file_name: defines the python binding template
     """
     args = get_args()
-    with open(f'{args.schema_dir}/schema.json') as f:
-        datalayer_schema = json.load(f)
-
     file_loader = FileSystemLoader(f'{args.template_dir}')
     env = Environment(loader=file_loader)
 
-    json_data = read_model_files(args)
-
-    # validate json scheme
-    validate_json(json_data, datalayer_schema)
-
-    # validate all defined sections
-
-    enums = enum_validator(json_data['Enums'])
-    types = type_validator(json_data['Types'])
-    groups = group_validator(json_data['Groups'])
-    structs, struct_names = struct_validator(json_data['Structs'])
-    data_points = data_point_validator(json_data['Datapoints'], struct_names, enums, types)
+    model = load_validated_model(args.model_dir, args.schema_dir)
+    enums = model['enums']
+    types = model['types']
+    groups = model['groups']
+    structs = model['structs']
+    data_points = model['data_points']
 
     group_data_points_mapping = create_group_data_point_dict(data_points)
     perfect_hash_data = create_perfect_hash(data_points, groups)
+    model_metadata = create_model_metadata(enums, groups, structs, data_points, types)
 
     if args.check:
         report = {
@@ -253,6 +263,9 @@ def main(template_file_name, template_formatter_file_name, python_binding_file_n
                  f'{args.out_dir}{PYTHON_FOLDER}']:
         if not os.path.exists(path):
             os.makedirs(path)
+
+    with open(f'{args.out_dir}{DOC_FOLDER}/model-metadata.json', 'w', encoding='utf-8') as f:
+        json.dump(model_metadata, f, indent=2)
 
     template = env.get_template(template_file_name)
     output = template.render(enums=enums, groups=groups, structs=structs, data_points=data_points,
@@ -284,6 +297,14 @@ def main(template_file_name, template_formatter_file_name, python_binding_file_n
     with open(f'{args.out_dir}{PYTHON_FOLDER}/rtt.py', 'w', encoding='utf-8') as f:
         f.write(output)
 
+    template = env.get_template('modelTests.h.jinja2')
+    output = template.render(metadata=model_metadata)
+    generated_test_directory = f'{args.out_dir}/generated/test'
+    if not os.path.exists(generated_test_directory):
+        os.makedirs(generated_test_directory)
+    with open(f'{generated_test_directory}/modelTests.h', 'w', encoding='utf-8') as f:
+        f.write(output)
+
     generate_uml(enums=enums, structs=structs, datapoints=data_points, types=types,
                  out_dir=f'{args.out_dir}/{DOC_FOLDER}')
 
@@ -291,7 +312,7 @@ def main(template_file_name, template_formatter_file_name, python_binding_file_n
     for group in groups:
         group_ids[group['name']] = int(group['baseId'], 0)
 
-    generate_overview(path=f'{args.out_dir}/{DOC_FOLDER}', group_ids=group_ids, data_point_id=json_data['Datapoints'])
+    generate_overview(path=f'{args.out_dir}/{DOC_FOLDER}', group_ids=group_ids, data_point_id=data_points)
 
 
 if __name__ == '__main__':

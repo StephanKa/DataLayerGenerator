@@ -27,8 +27,24 @@ Validate a model without writing generated files:
 ```
 
 Remove `--check` to generate C++ headers, formatter support, optional Python bindings, and model
-documentation. Model directories can contain JSON, YAML, or a mix of both; the generator merges all
-supported files before schema and semantic validation.
+documentation. Generation also writes ``generated/doc/model-metadata.json`` for host tools and
+``generated/test/modelTests.h`` with Catch2 model-contract checks. Model directories can contain JSON,
+YAML, or a mix of both; the generator merges all supported files before schema and semantic validation.
+
+## Model Compatibility Report
+
+Compare a current model to a validated baseline before releasing a model update:
+
+```powershell
+.\.venv\Scripts\python.exe src\generator\compatibilityReport.py `
+  --previous-model path\to\previous-model `
+  --current-model src\model `
+  --schema-dir src\generator `
+  --output build\compatibility-report.json
+```
+
+The JSON report lists breaking removals, ID or type changes, lost read/write access, and compatible
+additions, retained legacy IDs, and version changes.
 
 ## Local Model Editor
 

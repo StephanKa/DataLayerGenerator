@@ -1,5 +1,6 @@
 """Tests for the generated SEGGER RTT reader."""
 import importlib.util
+import json
 import subprocess
 import sys
 import tempfile
@@ -12,6 +13,26 @@ ROOT = Path(__file__).resolve().parents[2]
 
 class TestRttGenerator(unittest.TestCase):
     """Verify the RTT template is generated and decodes model values."""
+
+    def test_generator_emits_metadata_and_model_contract(self):
+        """The generator emits host metadata and Catch2 contract checks for every model."""
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            output_directory = Path(temporary_directory)
+            subprocess.run([
+                sys.executable, str(ROOT / 'src/generator/generator.py'),
+                '--model_dir', str(ROOT / 'src/model'),
+                '--out_dir', str(output_directory),
+                '--template_dir', str(ROOT / 'src/template'),
+                '--schema_dir', str(ROOT / 'src/generator'),
+            ], check=True)
+
+            with (output_directory / 'generated/doc/model-metadata.json').open(encoding='utf-8') as metadata_file:
+                metadata = json.load(metadata_file)
+            contract = (output_directory / 'generated/test/modelTests.h').read_text(encoding='utf-8')
+
+            self.assertEqual(metadata['formatVersion'], 1)
+            self.assertGreater(metadata['summary']['datapoints'], 0)
+            self.assertIn('Generated model contract', contract)
 
     def test_generated_reader_decodes_split_scalar_frame(self):
         """The reader waits for a complete frame and decodes its scalar payload."""
