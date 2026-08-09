@@ -244,6 +244,7 @@ CMake to choose a different import name.
 | `ENABLE_FILE_PERSISTENCE` | `OFF` | Enable binary file persistence; compiles with `-DUSE_FILE_PERSISTENCE` |
 | `ENABLE_TRANSACTIONAL_UPDATES` | `OFF` | Enable all-or-none group update batches; compiles with `-DUSE_TRANSACTIONAL_UPDATES` |
 | `ENABLE_TRACE_HOOKS` | `OFF` | Enable compile-time trace hook call sites; compiles with `-DUSE_TRACE_HOOKS` |
+| `ENABLE_IPO_PROCESSORS` | `OFF` | Enable generated input-process-output processor wrappers; compiles with `-DUSE_IPO_PROCESSORS` |
 | `ENABLE_PYBIND11` | `OFF` | Build pybind11 Python module |
 | `PYBIND11_DISABLE_EXTRAS` | `OFF` | Disable pybind11 LTO/strip extras for faster development builds |
 | `ENABLE_TESTING` | `ON` | Build Catch2 test suite |

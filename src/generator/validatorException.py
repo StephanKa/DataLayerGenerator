@@ -29,3 +29,9 @@ class TypeException(Exception):
     """User defined exception for faulty type definitions."""
 
     pass
+
+
+class ProcessorException(Exception):
+    """User defined exception for faulty IPO processor definitions."""
+
+    pass

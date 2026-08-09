@@ -43,6 +43,15 @@
       "version": "1.0.1"
     },
     {
+      "name": "ipoOutput",
+      "group": "DefaultGroup",
+      "id": 43,
+      "type": "int32_t",
+      "default": 0,
+      "access": "READ_WRITE",
+      "version": "1.0.0"
+    },
+    {
       "name": "arrayTest2",
       "group": "DefaultGroup",
       "id": 7,

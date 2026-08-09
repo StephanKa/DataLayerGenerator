@@ -3,7 +3,7 @@ Model File Reference
 
 The data model is described in JSON (or YAML) files placed in a single directory.  All files in the
 directory are merged before validation, so you can split the model across as many files as you like.
-Only the top-level keys ``Groups``, ``Datapoints``, ``Structs``, ``Enums``, and ``Types`` are
+Only the top-level keys ``Groups``, ``Datapoints``, ``Processors``, ``Structs``, ``Enums``, and ``Types`` are
 recognised.
 
 groups.json
@@ -188,6 +188,66 @@ generator declares the callback in ``DataLayer::Migration``; the application mus
    }
 
 The callback must return ``false`` when it cannot migrate the supplied bytes.
+
+processors.json
+---------------
+
+Defines optional input-process-output declarations. Processors are generated only when consumers
+enable ``-DENABLE_IPO_PROCESSORS=ON``. The processor's application function remains application-owned:
+the generator declares it in ``DataLayer::Ipo::Application`` and does not impose a scheduler, task,
+or allocation strategy.
+
+.. code-block:: json
+
+   {
+     "Processors": [
+       {
+         "name": "TemperatureControl",
+         "function": "updateTemperatureControl",
+         "inputs": ["Plant::setpoint", "Plant::measuredTemperature"],
+         "outputs": ["Plant::heaterCommand"],
+         "execution": "on_change"
+       }
+     ]
+   }
+
+``name`` and ``function`` must be unique C++ identifiers. ``inputs`` and ``outputs`` use generated
+datapoint names, including ``namespace::name`` when applicable. Inputs must not be ``WRITE_ONLY``;
+outputs must not be ``READ_ONLY``; a datapoint cannot be both for the same processor. The generator
+also rejects duplicate references and cycles in the graph formed when one processor output feeds
+another processor input.
+
+``execution`` defaults to ``"manual"``. A manual processor exposes ``process()`` only; call it at a
+known point in the application's control loop. An ``"on_change"`` processor also exposes
+``initialize()`` and ``processIfChanged()``. Call ``initialize()`` once during startup and check its
+return value: it registers one existing allocation-free observer per input and can fail if an input's
+observer capacity is already exhausted. Input writes only mark the processor dirty;
+``processIfChanged()`` invokes the application function once and returns ``true`` when work ran.
+
+.. code-block:: cpp
+
+   void DataLayer::Ipo::Application::updateTemperatureControl() noexcept
+   {
+       const auto setpoint = Plant::setpoint();
+       const auto measured = Plant::measuredTemperature();
+       std::ignore = Plant::heaterCommand.set(calculateCommand(setpoint, measured));
+   }
+
+   bool initializeControl()
+   {
+       return DataLayer::Ipo::TemperatureControl::initialize();
+   }
+
+   void controlLoop()
+   {
+       DataLayer::Ipo::TemperatureControl::processIfChanged();
+   }
+
+The dirty flag is deliberately not synchronized. The application owns task, interrupt, and lock
+policy: call ``processIfChanged()`` from one scheduling context, protect concurrent input writes as
+required by the target, and avoid declaring outputs that indirectly cause input writes. Processors
+do not run inline in a datapoint callback, so transactional input batches can complete before the
+next scheduled processing pass.
 
 structs.json
 ------------

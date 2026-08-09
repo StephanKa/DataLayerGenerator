@@ -24,6 +24,8 @@ Key properties:
   (enabled with ``-DENABLE_TRANSACTIONAL_UPDATES=ON``).
 - Optional compile-time trace hooks for rejected writes, range failures, persistence errors, and
   CAN/MQTT traffic (enabled with ``-DENABLE_TRACE_HOOKS=ON``).
+- Optional generated input-process-output processor wrappers with explicit application scheduling
+  (enabled with ``-DENABLE_IPO_PROCESSORS=ON``).
 - Optional allocation-free change observers, plus application-owned MQTT and CAN/CAN-FD adapters.
 - Optional ``fmt`` formatters for all generated structs and enums (enabled with ``-DENABLE_FMT=ON``).
 - Optional Python bindings via ``pybind11`` (enabled with ``-DENABLE_PYBIND11=ON``).

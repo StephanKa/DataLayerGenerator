@@ -1,0 +1,11 @@
+{
+  "Processors": [
+    {
+      "name": "TestProcessor",
+      "function": "updateTestProcessor",
+      "inputs": ["test"],
+      "outputs": ["ipoOutput"],
+      "execution": "on_change"
+    }
+  ]
+}

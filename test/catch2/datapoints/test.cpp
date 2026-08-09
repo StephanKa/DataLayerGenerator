@@ -14,6 +14,13 @@ void captureTrace(const DataLayer::Trace::Record &record) noexcept;
 #include <fstream>
 #include <include/datalayer.h>
 
+#ifdef USE_IPO_PROCESSORS
+void DataLayer::Ipo::Application::updateTestProcessor() noexcept
+{
+    std::ignore = ipoOutput.set(test().raw);
+}
+#endif
+
 #ifdef USE_TRACE_HOOKS
 namespace
 {
@@ -1035,6 +1042,20 @@ TEST_CASE("Test datapoints")
         constexpr auto ret = Dispatcher.setDatapoint(unknownId, dummyValue);
         REQUIRE(!ret.success);
     }
+
+#ifdef USE_IPO_PROCESSORS
+    SECTION("on-change IPO processor runs once after an input write")
+    {
+        constexpr Temperature input{ .raw = 3141, .value = 31.41F };
+        REQUIRE(DataLayer::Ipo::TestProcessor::initialize());
+        REQUIRE_FALSE(DataLayer::Ipo::TestProcessor::processIfChanged());
+
+        std::ignore = test.set(input);
+        REQUIRE(DataLayer::Ipo::TestProcessor::processIfChanged());
+        REQUIRE(ipoOutput() == input.raw);
+        REQUIRE_FALSE(DataLayer::Ipo::TestProcessor::processIfChanged());
+    }
+#endif
 
 #ifdef USE_TRACE_HOOKS
     SECTION("trace hooks report rejected and range-invalid writes")

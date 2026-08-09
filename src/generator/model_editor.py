@@ -15,21 +15,22 @@ if __package__:
     from . import validators as validators_module
     from .constants import BASE_ACCESS, BASE_TYPES, PREFIX_MAP, SUPPORTED_PERSISTENCE
     from .generator import create_group_data_point_dict, create_perfect_hash, read_model_files, validate_json
-    from .validatorException import DatapointException, EnumException, GroupException, StructException, TypeException
-    from .validators import data_point_validator, enum_validator, group_validator, struct_validator, type_validator
+    from .validatorException import DatapointException, EnumException, GroupException, StructException, TypeException, ProcessorException
+    from .validators import data_point_validator, enum_validator, group_validator, struct_validator, type_validator, processor_validator
 else:
     import generator as generator_module
     import validators as validators_module
     from constants import BASE_ACCESS, BASE_TYPES, PREFIX_MAP, SUPPORTED_PERSISTENCE
     from generator import create_group_data_point_dict, create_perfect_hash, read_model_files, validate_json
-    from validatorException import DatapointException, EnumException, GroupException, StructException, TypeException
-    from validators import data_point_validator, enum_validator, group_validator, struct_validator, type_validator
+    from validatorException import DatapointException, EnumException, GroupException, StructException, TypeException, ProcessorException
+    from validators import data_point_validator, enum_validator, group_validator, struct_validator, type_validator, processor_validator
 
 SECTION_FILENAMES = {
     'Enums': 'enums.json',
     'Groups': 'groups.json',
     'Structs': 'structs.json',
     'Datapoints': 'datapoints.json',
+    'Processors': 'processors.json',
     'Types': 'types.json',
 }
 SECTIONS = tuple(SECTION_FILENAMES)
@@ -52,12 +53,14 @@ MODEL_VALIDATION_ERRORS = (
     GroupException,
     StructException,
     TypeException,
+    ProcessorException,
     generator_module.DatapointException,
     validators_module.DatapointException,
     validators_module.EnumException,
     validators_module.GroupException,
     validators_module.StructException,
     validators_module.TypeException,
+    validators_module.ProcessorException,
     ValidationError,
     ValueError,
 )
@@ -94,13 +97,14 @@ def validated_sections(model, schema):
     groups = group_validator(candidate['Groups'])
     structs, struct_names = struct_validator(candidate['Structs'])
     data_points = data_point_validator(candidate['Datapoints'], struct_names, enums, types)
-    return candidate, enums, types, groups, structs, data_points
+    processors = processor_validator(candidate['Processors'], data_points)
+    return candidate, enums, types, groups, structs, data_points, processors
 
 
 def validate_model(model, schema):
     """Validate model syntax and the generator's cross-reference rules."""
     try:
-        candidate, enums, types, groups, _, _ = validated_sections(model, schema)
+        candidate, enums, types, groups, _, _, processors = validated_sections(model, schema)
     except MODEL_VALIDATION_ERRORS as error:
         return {'valid': False, 'error': str(error)}
     return {
@@ -111,6 +115,7 @@ def validate_model(model, schema):
             'structs': len(candidate['Structs']),
             'enums': len(enums),
             'types': len(types),
+            'processors': len(processors),
         },
     }
 
@@ -285,7 +290,7 @@ def model_metadata(model):
 
 def render_header_preview(model, schema):
     """Render the generated C++ header in memory without writing model output."""
-    _, enums, types, groups, structs, data_points = validated_sections(model, schema)
+    _, enums, types, groups, structs, data_points, processors = validated_sections(model, schema)
     template_directory = Path(__file__).parent.parent / 'template'
     template = Environment(loader=FileSystemLoader(template_directory)).get_template('datalayer.h.jinja2')
     return template.render(
@@ -297,6 +302,7 @@ def render_header_preview(model, schema):
         perfect_hash=create_perfect_hash(data_points, groups),
         prefix_map=PREFIX_MAP,
         types=types,
+        processors=processors,
     )
 
 

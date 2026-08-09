@@ -168,6 +168,60 @@ constexpr DataLayer::GroupDataPointMapping {{ group  }} { {{ group }}Info, {% fo
     {%- endfor %} };
 {%- endfor %}
 
+#ifdef USE_IPO_PROCESSORS
+namespace DataLayer::Ipo::Application
+{
+{% for processor in processors -%}
+    void {{ processor.function }}() noexcept;
+{% endfor %}
+}
+
+namespace DataLayer::Ipo
+{
+{% for processor in processors -%}
+    struct {{ processor.name }}
+    {
+        static void process() noexcept
+        {
+            Application::{{ processor.function }}();
+        }
+
+{% if processor.execution == 'on_change' -%}
+        [[nodiscard]] static bool initialize() noexcept
+        {
+            bool result = true;
+{% for input in processor.inputs -%}
+            result = {{ input }}.addChangeCallback(&markInput{{ loop.index0 }}) && result;
+{% endfor %}
+            return result;
+        }
+
+        [[nodiscard]] static bool processIfChanged() noexcept
+        {
+            if (!dirty)
+            {
+                return false;
+            }
+            dirty = false;
+            process();
+            return true;
+        }
+
+      private:
+{% for input in processor.inputs -%}
+        static void markInput{{ loop.index0 }}(const decltype({{ input }}()) &, void *) noexcept
+        {
+            dirty = true;
+        }
+{% endfor %}
+        inline static bool dirty{};
+{% endif -%}
+    };
+
+{% endfor -%}
+}// namespace DataLayer::Ipo
+#endif
+
 namespace DataLayer::Model
 {
     enum class Access : uint8_t

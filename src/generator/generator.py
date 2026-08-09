@@ -9,7 +9,7 @@ from types import SimpleNamespace
 from yaml.loader import SafeLoader
 from jinja2 import Environment, FileSystemLoader
 from constants import PREFIX_MAP
-from validators import enum_validator, struct_validator, group_validator, data_point_validator, type_validator
+from validators import enum_validator, struct_validator, group_validator, data_point_validator, type_validator, processor_validator
 from validatorException import DatapointException
 from umlGenerator import generate_uml
 from overviewGenerator import generate_overview
@@ -174,7 +174,7 @@ def read_model_files(args):
 
     :return: json_data of all JSON files
     """
-    json_data = {'Enums': [], 'Groups': [], 'Structs': [], 'Datapoints': [], 'Types': []}
+    json_data = {'Enums': [], 'Groups': [], 'Structs': [], 'Datapoints': [], 'Processors': [], 'Types': []}
     for root, dirs, files in os.walk(f'{args.model_dir}'):
         for name in files:
             tmp_dict = None
@@ -202,6 +202,8 @@ def read_model_files(args):
                 json_data['Structs'].extend(tmp_dict['Structs'])
             if 'Datapoints' in tmp_dict:
                 json_data['Datapoints'].extend(tmp_dict['Datapoints'])
+            if 'Processors' in tmp_dict:
+                json_data['Processors'].extend(tmp_dict['Processors'])
             if 'Types' in tmp_dict:
                 json_data['Types'].extend(tmp_dict['Types'])
     return json_data
@@ -220,7 +222,8 @@ def load_validated_model(model_dir, schema_dir):
     groups = group_validator(json_data['Groups'])
     structs, struct_names = struct_validator(json_data['Structs'])
     data_points = data_point_validator(json_data['Datapoints'], struct_names, enums, types)
-    return {'enums': enums, 'types': types, 'groups': groups, 'structs': structs, 'data_points': data_points}
+    processors = processor_validator(json_data['Processors'], data_points)
+    return {'enums': enums, 'types': types, 'groups': groups, 'structs': structs, 'data_points': data_points, 'processors': processors}
 
 
 def main(template_file_name, template_formatter_file_name, python_binding_file_name):
@@ -241,6 +244,7 @@ def main(template_file_name, template_formatter_file_name, python_binding_file_n
     groups = model['groups']
     structs = model['structs']
     data_points = model['data_points']
+    processors = model['processors']
 
     group_data_points_mapping = create_group_data_point_dict(data_points)
     perfect_hash_data = create_perfect_hash(data_points, groups)
@@ -254,6 +258,7 @@ def main(template_file_name, template_formatter_file_name, python_binding_file_n
             'structs': len(structs),
             'enums': len(enums),
             'types': len(types),
+            'processors': len(processors),
         }
         print(json.dumps(report, sort_keys=True))
         return
@@ -270,7 +275,7 @@ def main(template_file_name, template_formatter_file_name, python_binding_file_n
     template = env.get_template(template_file_name)
     output = template.render(enums=enums, groups=groups, structs=structs, data_points=data_points,
                              group_data_points_mapping=group_data_points_mapping, perfect_hash=perfect_hash_data,
-                             prefix_map=PREFIX_MAP, types=types)
+                             prefix_map=PREFIX_MAP, types=types, processors=processors)
     with open(f'{args.out_dir}{GENERATED_FOLDER}/datalayer.h', 'w') as f:
         f.write(output)
 

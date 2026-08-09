@@ -1,6 +1,7 @@
-"""This module whols all defined validators for enum, group, struct and data points."""
+"""This module holds all defined validators for model sections."""
+import re
 from constants import BASE_ACCESS, BASE_TYPES, SUPPORTED_PERSISTENCE, PREFIX_MAP
-from validatorException import EnumException, StructException, GroupException, DatapointException, TypeException
+from validatorException import EnumException, StructException, GroupException, DatapointException, TypeException, ProcessorException
 
 
 class ParameterList:
@@ -269,3 +270,67 @@ def type_validator(type_data):
             elif temp_group['min'] > temp_group['max']:
                 raise TypeException(f"For min and max wrong: max({temp_group['max']}) and min({temp_group['min']})")
     return type_data
+
+
+def processor_validator(processor_data, data_points):
+    """Validate IPO processor references, access rules, and dependency cycles."""
+    datapoints = {
+        f"{item['namespace']}::{item['name']}" if item['namespace'] else item['name']: item
+        for item in data_points
+    }
+    names = set()
+    functions = set()
+    identifier = re.compile(r'^[A-Za-z_][A-Za-z0-9_]*$')
+
+    for processor in processor_data:
+        name = processor['name']
+        function = processor['function']
+        if not identifier.fullmatch(name) or not identifier.fullmatch(function):
+            raise ProcessorException('Processor names and functions must be valid C++ identifiers')
+        if name in names:
+            raise ProcessorException(f"Processor '{name}' is already defined")
+        if function in functions:
+            raise ProcessorException(f"Processor function '{function}' is already used")
+        names.add(name)
+        functions.add(function)
+        processor['execution'] = processor.get('execution', 'manual')
+        if processor['execution'] not in ('manual', 'on_change'):
+            raise ProcessorException(f"Processor '{name}' execution must be 'manual' or 'on_change'")
+        if len(processor['inputs']) != len(set(processor['inputs'])) or len(processor['outputs']) != len(set(processor['outputs'])):
+            raise ProcessorException(f"Processor '{name}' has duplicate inputs or outputs")
+        if set(processor['inputs']) & set(processor['outputs']):
+            raise ProcessorException(f"Processor '{name}' cannot use a datapoint as both input and output")
+        for input_name in processor['inputs']:
+            datapoint = datapoints.get(input_name)
+            if datapoint is None:
+                raise ProcessorException(f"Processor '{name}' input '{input_name}' does not exist")
+            if datapoint['access'] == 'WRITE_ONLY':
+                raise ProcessorException(f"Processor '{name}' input '{input_name}' is WRITE_ONLY")
+        for output_name in processor['outputs']:
+            datapoint = datapoints.get(output_name)
+            if datapoint is None:
+                raise ProcessorException(f"Processor '{name}' output '{output_name}' does not exist")
+            if datapoint['access'] == 'READ_ONLY':
+                raise ProcessorException(f"Processor '{name}' output '{output_name}' is READ_ONLY")
+
+    produced_by = {output: processor['name'] for processor in processor_data for output in processor['outputs']}
+    dependencies = {
+        processor['name']: {produced_by[input_name] for input_name in processor['inputs'] if input_name in produced_by}
+        for processor in processor_data
+    }
+    visited = set()
+    active = set()
+
+    def visit(name):
+        if name in active:
+            raise ProcessorException(f"IPO processor dependency cycle includes '{name}'")
+        if name not in visited:
+            active.add(name)
+            for dependency in dependencies[name]:
+                visit(dependency)
+            active.remove(name)
+            visited.add(name)
+
+    for processor_name in dependencies:
+        visit(processor_name)
+    return processor_data

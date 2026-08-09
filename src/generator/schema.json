@@ -139,6 +139,22 @@
         }
       ]
     },
+    "Processors": {
+      "type": "array",
+      "items": [
+        {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_]*$" },
+            "function": { "type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_]*$" },
+            "inputs": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+            "outputs": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+            "execution": { "type": "string", "enum": ["manual", "on_change"] }
+          },
+          "required": ["name", "function", "inputs", "outputs"]
+        }
+      ]
+    },
     "Types": {
       "type": "array",
       "items": [

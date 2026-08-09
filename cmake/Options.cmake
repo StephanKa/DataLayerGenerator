@@ -13,6 +13,7 @@ OPTION(DOCS_ONLY "Skip all C++ targets and Conan — build documentation only" O
 OPTION(ENABLE_FILE_PERSISTENCE "Enable binary file persistence (serialization)" OFF)
 OPTION(ENABLE_TRANSACTIONAL_UPDATES "Enable all-or-none group datapoint updates" OFF)
 OPTION(ENABLE_TRACE_HOOKS "Enable compile-time trace hook call sites" OFF)
+OPTION(ENABLE_IPO_PROCESSORS "Enable generated input-process-output processor wrappers" OFF)
 OPTION(ENABLE_FUZZING "Enable Fuzzing Builds" OFF)
 OPTION(ENABLE_PYBIND11 "Enable pybind11 binding generation" OFF)
 OPTION(PYBIND11_DISABLE_EXTRAS "Disable pybind11 LTO and strip extras for faster development builds" OFF)
