@@ -13,19 +13,24 @@ an application-level payload encoding before sending values to another architect
 Change Notifications
 --------------------
 
-Every datapoint accepts one optional allocation-free callback. It is invoked after a successful write,
-including writes that enter through a group mapping or dispatcher.
+Every datapoint supports up to four allocation-free observers. They are invoked after a successful
+write, including writes that enter through a group mapping or dispatcher. ``setChangeCallback`` keeps
+its original single-callback behavior by replacing every registered observer.
 
 .. code-block:: cpp
 
    void onTemperature(const Temperature& value, void* context) noexcept;
 
    temperature.setChangeCallback(onTemperature, applicationContext);
+   temperature.addChangeCallback(publishTemperature, telemetryContext);
    std::ignore = temperature.set(Temperature{ .raw = 2310, .value = 23.1f });
-   temperature.clearChangeCallback();
+   temperature.removeChangeCallback(publishTemperature, telemetryContext);
+   temperature.clearChangeCallbacks();
 
-The caller owns callback lifetime, synchronization, and ISR/thread-safety decisions. The callback is
-not invoked when a range check rejects the value.
+``addChangeCallback`` returns ``false`` for a null callback or when all four slots are occupied;
+registering the same callback/context pair more than once is idempotent. The caller owns callback
+lifetime, synchronization, and ISR/thread-safety decisions. Observers are not invoked when a range
+check rejects the value.
 
 MQTT
 ----

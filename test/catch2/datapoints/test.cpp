@@ -95,6 +95,11 @@ namespace
         *static_cast<Temperature *>(context) = value;
     }
 
+    void countDatapointChange(const Temperature &, void *context) noexcept
+    {
+        ++*static_cast<size_t *>(context);
+    }
+
     constexpr bool operator==(const Temperature &lhs, const Temperature &rhs)
     {
         return (lhs.raw == rhs.raw) && (static_cast<double>(std::fabs(lhs.value - rhs.value)) <= EPSILON);
@@ -179,6 +184,32 @@ TEST_CASE("Test datapoints")
 
         REQUIRE(observed.raw == expected.raw);
         REQUIRE(observed.value == expected.value);
+    }
+
+    SECTION("datapoint change observers")
+    {
+        std::array<size_t, decltype(test)::ObserverCapacity> notificationCounts{};
+        for (auto &notificationCount : notificationCounts)
+        {
+            REQUIRE(test.addChangeCallback(countDatapointChange, &notificationCount));
+        }
+        REQUIRE_FALSE(test.addChangeCallback(countDatapointChange, nullptr));
+
+        REQUIRE(test.set(Temperature{ .raw = 9876, .value = 12.5F }) == DataLayer::Detail::RangeCheck::ok);
+        for (const auto notificationCount : notificationCounts)
+        {
+            REQUIRE(notificationCount == 1);
+        }
+
+        REQUIRE(test.removeChangeCallback(countDatapointChange, &notificationCounts[0]));
+        REQUIRE_FALSE(test.removeChangeCallback(countDatapointChange, &notificationCounts[0]));
+        REQUIRE(test.set(Temperature{ .raw = 4321, .value = 21.5F }) == DataLayer::Detail::RangeCheck::ok);
+        REQUIRE(notificationCounts[0] == 1);
+        for (size_t index = 1; index < notificationCounts.size(); ++index)
+        {
+            REQUIRE(notificationCounts[index] == 2);
+        }
+        test.clearChangeCallbacks();
     }
 
     SECTION("datapoint name")

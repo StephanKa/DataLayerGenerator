@@ -20,7 +20,7 @@ Key properties:
 - Versioning metadata is embedded in groups and individual datapoints to support EEPROM upgrade paths.
 - Optional ``DLG1`` file persistence with CRC32, length-delimited records, and group identity checks
   (enabled with ``-DENABLE_FILE_PERSISTENCE=ON``).
-- Optional allocation-free change callbacks, plus application-owned MQTT and CAN/CAN-FD adapters.
+- Optional allocation-free change observers, plus application-owned MQTT and CAN/CAN-FD adapters.
 - Optional ``fmt`` formatters for all generated structs and enums (enabled with ``-DENABLE_FMT=ON``).
 - Optional Python bindings via ``pybind11`` (enabled with ``-DENABLE_PYBIND11=ON``).
 - Cross-compilation support for ARM Cortex-M4 (GCC ARM toolchain).

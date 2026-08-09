@@ -77,7 +77,7 @@ Use ``maxPayloadBytes`` to keep a group within its model-level payload budget:
 
 The assertion counts each stored value, including all array elements, but excludes DataLayer
 bookkeeping. Configure the board-specific full object budget in the consuming CMake target when
-you also want to include the callback and context pointers stored by every ``DataPoint``:
+you also want to include the four observer callback/context slots stored by every ``DataPoint``:
 
 .. code-block:: cmake
 

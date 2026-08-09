@@ -1,7 +1,11 @@
 #pragma once
+#include <algorithm>
+#include <array>
 #include <cstdint>
 #include <cstring>
+#include <detail.h>
 #include <groupInfo.h>
+#include <ranges>
 #include <span>
 #include <type_traits>
 
@@ -23,6 +27,16 @@ namespace DataLayer
       public:
         using ValueType = T;
         using ChangeCallback = void (*)(const T &value, void *context) noexcept;
+
+      private:
+        struct ChangeObserver
+        {
+            ChangeCallback callback{};
+            void *context{};
+        };
+
+      public:
+        static constexpr std::size_t ObserverCapacity{ 4U };
 
         constexpr static Access TypeAccess{};
 
@@ -142,14 +156,53 @@ namespace DataLayer
 
         constexpr void setChangeCallback(ChangeCallback callback, void *context = nullptr) noexcept
         {
-            m_changeCallback = callback;
-            m_changeContext = context;
+            clearChangeCallbacks();
+            std::ignore = addChangeCallback(callback, context);
         }
 
         constexpr void clearChangeCallback() noexcept
         {
-            m_changeCallback = nullptr;
-            m_changeContext = nullptr;
+            clearChangeCallbacks();
+        }
+
+        [[nodiscard]] constexpr bool addChangeCallback(ChangeCallback callback, void *context = nullptr) noexcept
+        {
+            if (callback == nullptr)
+            {
+                return false;
+            }
+
+            const auto existingObserver =
+              std::ranges::find_if(m_changeCallbacks, [callback, context](const ChangeObserver &observer) { return observer.callback == callback && observer.context == context; });
+            if (existingObserver != m_changeCallbacks.end())
+            {
+                return true;
+            }
+
+            const auto availableObserver = std::ranges::find_if(m_changeCallbacks, [](const ChangeObserver &observer) { return observer.callback == nullptr; });
+            if (availableObserver == m_changeCallbacks.end())
+            {
+                return false;
+            }
+            *availableObserver = ChangeObserver{ .callback = callback, .context = context };
+            return true;
+        }
+
+        [[nodiscard]] constexpr bool removeChangeCallback(ChangeCallback callback, void *context = nullptr) noexcept
+        {
+            const auto observer = std::ranges::find_if(
+              m_changeCallbacks, [callback, context](const ChangeObserver &candidate) { return candidate.callback == callback && candidate.context == context; });
+            if (observer == m_changeCallbacks.end())
+            {
+                return false;
+            }
+            *observer = {};
+            return true;
+        }
+
+        constexpr void clearChangeCallbacks() noexcept
+        {
+            m_changeCallbacks = {};
         }
 
       private:
@@ -159,17 +212,14 @@ namespace DataLayer
             if (result.has_value())
             {
                 m_value = *result;
-                if (m_changeCallback != nullptr)
-                {
-                    m_changeCallback(m_value, m_changeContext);
-                }
+                std::ranges::for_each(m_changeCallbacks | std::views::filter([](const ChangeObserver &observer) { return observer.callback != nullptr; }),
+                  [this](const ChangeObserver &observer) { observer.callback(m_value, observer.context); });
                 return Detail::RangeCheck::ok;
             }
             return result.error();
         }
 
         T m_value{};
-        ChangeCallback m_changeCallback{ nullptr };
-        void *m_changeContext{ nullptr };
+        std::array<ChangeObserver, ObserverCapacity> m_changeCallbacks{};
     };
 }// namespace DataLayer
