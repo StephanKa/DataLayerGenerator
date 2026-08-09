@@ -47,6 +47,27 @@ class TestModelEditor(unittest.TestCase):
         self.assertTrue(data['validation']['valid'])
         self.assertEqual(data['metadata']['groups'], ['Main'])
         self.assertEqual(data['metadata']['nextIds']['Main'], 1)
+        self.assertEqual(data['metadata']['analysis']['collisions'], [])
+
+    def test_analysis_reports_collisions_and_payload_budget(self):
+        """Analysis reports unsaved relative ID collisions and budget overflow."""
+        model = valid_model()
+        model['Groups'][0]['maxPayloadBytes'] = 4
+        model['Datapoints'].append({'name': 'pressure', 'group': 'Main', 'id': 0, 'type': 'int32_t',
+                                    'access': 'READ_ONLY', 'version': '1.0.0'})
+        response = self.client.post('/api/analyze', json={'model': model})
+        analysis = response.get_json()['metadata']['analysis']
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(analysis['collisions'][0]['kind'], 'relative')
+        self.assertTrue(analysis['payloadBudgets'][0]['overBudget'])
+        self.assertEqual(analysis['references']['groups'][0]['datapoints'], ['temperature', 'pressure'])
+
+    def test_preview_renders_header_without_writing_files(self):
+        """Preview returns generated C++ without persisting the submitted model."""
+        response = self.client.post('/api/preview', json={'model': valid_model()})
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.get_json()['valid'])
+        self.assertIn('struct GeneratedDispatcher', response.get_json()['header'])
 
     def test_invalid_model_is_not_written(self):
         """Saving an invalid model reports the error without modifying source files."""

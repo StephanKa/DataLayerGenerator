@@ -6,7 +6,7 @@
   <title>Data Layer Model Editor</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet">
-  <link href="{{ url_for('static', filename='model_editor.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='model_editor.css', v=asset_version) }}" rel="stylesheet">
   <script>
     const storedTheme = localStorage.getItem('datalayer-editor-theme');
     document.documentElement.dataset.bsTheme = storedTheme ||
@@ -26,6 +26,10 @@
                 title="Switch to dark mode" aria-label="Switch to dark mode">
           <i id="theme-icon" class="bi bi-moon-stars-fill" aria-hidden="true"></i>
         </button>
+        <button id="preview-button" class="btn btn-outline-secondary btn-sm" type="button">
+          <i class="bi bi-file-earmark-code" aria-hidden="true"></i>
+          Preview header
+        </button>
         <button id="validate-button" class="btn btn-outline-secondary btn-sm">Validate</button>
         <button id="save-button" class="btn btn-primary btn-sm">Save model</button>
       </div>
@@ -37,7 +41,7 @@
       <aside class="col-lg-3 col-xl-2">
         <nav id="section-navigation" class="nav nav-pills flex-column gap-1"></nav>
       </aside>
-      <section class="col-lg-9 col-xl-10">
+      <section class="col-lg-6 col-xl-7">
         <div class="d-flex align-items-center mb-3">
           <div>
             <h2 id="section-title" class="h4 mb-0"></h2>
@@ -52,6 +56,30 @@
           </table>
         </div>
       </section>
+      <aside class="col-lg-3">
+        <div class="analysis-panel border">
+          <div class="analysis-heading border-bottom">
+            <h2 class="h6 mb-0">Model analysis</h2>
+          </div>
+          <section class="analysis-section">
+            <h3 class="analysis-label">ID ranges</h3>
+            <div id="id-range-list" class="analysis-list"></div>
+            <div id="collision-list" class="analysis-list mt-2"></div>
+          </section>
+          <section class="analysis-section border-top">
+            <h3 class="analysis-label">Payload budgets</h3>
+            <div id="payload-budget-list" class="analysis-list"></div>
+          </section>
+          <section class="analysis-section border-top">
+            <h3 class="analysis-label">Migrations</h3>
+            <div id="migration-list" class="analysis-list"></div>
+          </section>
+          <section class="analysis-section border-top">
+            <h3 class="analysis-label">References</h3>
+            <div id="reference-list" class="analysis-list"></div>
+          </section>
+        </div>
+      </aside>
     </div>
   </main>
 
@@ -71,7 +99,18 @@
       </form>
     </div>
   </div>
+  <div class="modal fade" id="preview-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 class="modal-title fs-5">Generated datalayer.h preview</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <pre id="header-preview" class="header-preview mb-0"></pre>
+      </div>
+    </div>
+  </div>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="{{ url_for('static', filename='model_editor.js') }}"></script>
+  <script src="{{ url_for('static', filename='model_editor.js', v=asset_version) }}"></script>
 </body>
 </html>

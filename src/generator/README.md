@@ -60,6 +60,11 @@ Open `http://127.0.0.1:5000`. The editor validates changes before saving and wri
 it intentionally supports only `groups.json`, `datapoints.json`, `structs.json`, `enums.json`, and
 `types.json`. Use `generator.py` directly for YAML or custom split-file layouts.
 
+The editor's analysis pane updates for unsaved edits. It displays group ID ranges and collisions,
+portable payload estimates against `maxPayloadBytes`, migration callback inventory, and navigable
+group/type/datapoint references. **Preview header** validates the current model and renders
+`datalayer.h` in memory without writing generated files.
+
 ## Tests
 
 Run the local editor API tests with:

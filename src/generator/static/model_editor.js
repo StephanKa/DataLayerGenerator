@@ -38,6 +38,7 @@ let metadata = {};
 let activeSection = 'Datapoints';
 let editingIndex = null;
 let itemModal;
+let previewModal;
 
 function setTheme(theme) {
   const isDark = theme === 'dark';
@@ -131,11 +132,119 @@ function renderTable() {
   }));
 }
 
+function formatIdentifier(value) {
+  return value === null || value === undefined ? 'Incomplete' : `0x${value.toString(16).padStart(4, '0')}`;
+}
+
+function replaceWithEmpty(container, message) {
+  const empty = document.createElement('div');
+  empty.className = 'analysis-empty';
+  empty.textContent = message;
+  container.replaceChildren(empty);
+}
+
+function createAnalysisRow(label, detail) {
+  const row = document.createElement('div');
+  row.className = 'analysis-row';
+  const labelElement = document.createElement('span');
+  labelElement.textContent = label;
+  const detailElement = document.createElement('code');
+  detailElement.textContent = detail;
+  row.append(labelElement, detailElement);
+  return row;
+}
+
+function openReference(section, name) {
+  const index = model[section].findIndex((item) => item.name === name);
+  if (index < 0) return;
+  activeSection = section;
+  render();
+  openItemModal(index);
+}
+
+function createReferenceButton(section, name) {
+  const button = document.createElement('button');
+  button.className = 'btn btn-sm btn-outline-secondary reference-button';
+  button.type = 'button';
+  button.textContent = name;
+  button.title = `Open ${name}`;
+  button.addEventListener('click', () => openReference(section, name));
+  return button;
+}
+
+function typeSection(name) {
+  for (const section of ['Structs', 'Enums', 'Types']) {
+    if (model[section].some((item) => item.name === name)) return section;
+  }
+  return null;
+}
+
+function renderAnalysis() {
+  const analysis = metadata.analysis || {};
+  const ranges = document.querySelector('#id-range-list');
+  const collisions = document.querySelector('#collision-list');
+  const budgets = document.querySelector('#payload-budget-list');
+  const migrations = document.querySelector('#migration-list');
+  const references = document.querySelector('#reference-list');
+
+  if (!analysis.idRanges?.length) replaceWithEmpty(ranges, 'No groups defined.');
+  else ranges.replaceChildren(...analysis.idRanges.map((range) =>
+    createAnalysisRow(range.group, range.start === null ? 'No datapoints' : `${formatIdentifier(range.start)} - ${formatIdentifier(range.end)}`)));
+
+  if (!analysis.collisions?.length) replaceWithEmpty(collisions, 'No ID collisions.');
+  else collisions.replaceChildren(...analysis.collisions.map((collision) => {
+    const item = document.createElement('div');
+    item.className = 'text-danger small';
+    const scope = collision.group ? `${collision.group} ` : '';
+    item.textContent = `${scope}${collision.kind} collision at ${formatIdentifier(collision.id)}: ${collision.datapoints.join(', ')}`;
+    return item;
+  }));
+
+  if (!analysis.payloadBudgets?.length) replaceWithEmpty(budgets, 'No groups defined.');
+  else budgets.replaceChildren(...analysis.payloadBudgets.map((budget) => {
+    const container = document.createElement('div');
+    const usage = budget.usedBytes === null ? 'Unknown' : `${budget.usedBytes} B`;
+    const maximum = budget.maxBytes === null ? 'Unbounded' : `${budget.maxBytes} B`;
+    container.append(createAnalysisRow(budget.group, `${usage} / ${maximum}`));
+    if (budget.maxBytes !== null && budget.usedBytes !== null) {
+      const meter = document.createElement('div');
+      meter.className = 'progress budget-meter';
+      const bar = document.createElement('div');
+      bar.className = `progress-bar ${budget.overBudget ? 'bg-danger' : 'bg-success'}`;
+      bar.style.width = `${Math.min(100, budget.usedBytes / budget.maxBytes * 100)}%`;
+      bar.setAttribute('aria-label', `${budget.group} payload usage`);
+      bar.setAttribute('aria-valuenow', budget.usedBytes);
+      bar.setAttribute('aria-valuemin', '0');
+      bar.setAttribute('aria-valuemax', budget.maxBytes);
+      meter.append(bar);
+      container.append(meter);
+    }
+    return container;
+  }));
+
+  if (!analysis.migrations?.length) replaceWithEmpty(migrations, 'No migration callbacks.');
+  else migrations.replaceChildren(...analysis.migrations.map((migration) => createAnalysisRow(
+    `${migration.section}: ${migration.name}`, migration.migration)));
+
+  const referenceItems = [];
+  for (const group of analysis.references?.groups || []) {
+    referenceItems.push(createReferenceButton('Groups', group.name));
+    for (const datapoint of group.datapoints) referenceItems.push(createReferenceButton('Datapoints', datapoint));
+  }
+  for (const type of analysis.references?.types || []) {
+    const section = typeSection(type.name);
+    if (section) referenceItems.push(createReferenceButton(section, type.name));
+  }
+  if (!referenceItems.length) replaceWithEmpty(references, 'No references to browse.');
+  else references.replaceChildren(...referenceItems);
+}
+
 function render() {
   document.querySelector('#section-title').textContent = activeSection;
   document.querySelector('#section-description').textContent = sectionDescriptions[activeSection];
   renderNavigation();
   renderTable();
+  renderAnalysis();
 }
 
 function defaultItem(section) {
@@ -250,6 +359,27 @@ async function requestValidation() {
   return validation;
 }
 
+async function refreshAnalysis() {
+  const response = await fetch('/api/analyze', {
+    method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({model}),
+  });
+  if (!response.ok) throw new Error('Unable to analyze the current model.');
+  const result = await response.json();
+  metadata = result.metadata;
+  updateStatus(result.validation);
+}
+
+async function previewHeader() {
+  const response = await fetch('/api/preview', {
+    method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({model}),
+  });
+  const result = await response.json();
+  updateStatus(result);
+  if (!response.ok) return;
+  document.querySelector('#header-preview').textContent = result.header;
+  previewModal.show();
+}
+
 async function loadModel() {
   const response = await fetch('/api/model');
   if (!response.ok) throw new Error('Unable to load the model.');
@@ -261,12 +391,14 @@ async function loadModel() {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-  itemModal = new bootstrap.Modal('#item-modal');
+  itemModal = new bootstrap.Modal(document.querySelector('#item-modal'));
+  previewModal = new bootstrap.Modal(document.querySelector('#preview-modal'));
   setTheme(document.documentElement.dataset.bsTheme);
   document.querySelector('#theme-toggle').addEventListener('click', () => {
     setTheme(document.documentElement.dataset.bsTheme === 'dark' ? 'light' : 'dark');
   });
   document.querySelector('#add-button').addEventListener('click', () => openItemModal(null));
+  document.querySelector('#preview-button').addEventListener('click', previewHeader);
   document.querySelector('#item-form').addEventListener('submit', async (event) => {
     event.preventDefault();
     try {
@@ -274,6 +406,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (editingIndex === null) model[activeSection].push(item);
       else model[activeSection][editingIndex] = item;
       itemModal.hide();
+      await refreshAnalysis();
       render();
       await requestValidation();
     } catch (error) {
@@ -283,6 +416,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.querySelector('#delete-button').addEventListener('click', async () => {
     model[activeSection].splice(editingIndex, 1);
     itemModal.hide();
+    await refreshAnalysis();
     render();
     await requestValidation();
   });

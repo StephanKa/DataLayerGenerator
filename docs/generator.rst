@@ -51,6 +51,12 @@ Invocation
   ``--host`` to select a different network interface. The editor is included in
   ``src/generator/requirements.txt`` through its Flask dependency.
 
+  The editor analyzes unsaved changes before they are written. Its analysis pane shows group ID
+  ranges and collisions, portable payload estimates against ``maxPayloadBytes``, configured
+  migrations, and navigable group/type/datapoint references. The existing migration and upgrade
+  fields can be edited directly in the Group and Datapoint forms. **Preview header** validates the
+  current model and renders ``datalayer.h`` in memory without creating generated output files.
+
 Arguments:
 
 .. list-table::

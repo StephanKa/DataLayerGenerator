@@ -20,7 +20,8 @@ body {
 }
 
 .editor-header,
-.editor-table {
+.editor-table,
+.analysis-panel {
   background: var(--editor-panel);
 }
 
@@ -40,4 +41,66 @@ body {
 .empty-state {
   color: var(--editor-muted);
   text-align: center;
+}
+
+.analysis-panel {
+  min-height: 16rem;
+}
+
+.analysis-heading,
+.analysis-section {
+  padding: 0.85rem 1rem;
+}
+
+.analysis-label {
+  color: var(--editor-muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  margin-bottom: 0.65rem;
+  text-transform: uppercase;
+}
+
+.analysis-list {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.analysis-row {
+  align-items: center;
+  display: flex;
+  gap: 0.5rem;
+  justify-content: space-between;
+  min-width: 0;
+}
+
+.analysis-row code {
+  color: var(--editor-ink);
+  font-size: 0.75rem;
+}
+
+.analysis-empty {
+  color: var(--editor-muted);
+  font-size: 0.875rem;
+}
+
+.reference-button {
+  font-size: 0.8rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.budget-meter {
+  height: 0.45rem;
+}
+
+.header-preview {
+  background: var(--bs-tertiary-bg);
+  color: var(--editor-ink);
+  font-size: 0.78rem;
+  max-height: 70vh;
+  overflow: auto;
+  padding: 1rem;
+  white-space: pre;
 }
