@@ -71,6 +71,22 @@ The ``src/include/`` headers provide the type machinery:
            └── canAdapter.h
              └── DataLayer::Can::Adapter<Dispatcher>
 
+  Dispatcher, Group, and Datapoint Dependencies
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  .. mermaid::
+
+     classDiagram
+         class Dispatcher
+         class GroupDataPointMapping
+         class GroupInfo
+         class DataPoint
+
+         Dispatcher --> GroupDataPointMapping : routes by datapoint ID
+         GroupDataPointMapping --> GroupInfo : references group
+         GroupDataPointMapping --> DataPoint : references datapoints
+         DataPoint ..> GroupInfo : template group metadata
+
 C++ Framework API
 -----------------
 
