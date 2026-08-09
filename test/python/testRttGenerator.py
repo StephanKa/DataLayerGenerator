@@ -29,10 +29,13 @@ class TestRttGenerator(unittest.TestCase):
             with (output_directory / 'generated/doc/model-metadata.json').open(encoding='utf-8') as metadata_file:
                 metadata = json.load(metadata_file)
             contract = (output_directory / 'generated/test/modelTests.h').read_text(encoding='utf-8')
+            datalayer_header = (output_directory / 'generated/include/datalayer.h').read_text(encoding='utf-8')
 
             self.assertEqual(metadata['formatVersion'], 1)
             self.assertGreater(metadata['summary']['datapoints'], 0)
             self.assertIn('Generated model contract', contract)
+            self.assertIn('namespace DataLayer::Model', datalayer_header)
+            self.assertIn('findDatapoint', datalayer_header)
 
     def test_generated_reader_decodes_split_scalar_frame(self):
         """The reader waits for a complete frame and decodes its scalar payload."""

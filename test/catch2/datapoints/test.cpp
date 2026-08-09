@@ -187,6 +187,26 @@ TEST_CASE("Test datapoints")
         REQUIRE(test.name == "test"s);
     }
 
+    SECTION("generated model introspection")
+    {
+        STATIC_REQUIRE(DataLayer::Model::groups.size() == 8);
+        STATIC_REQUIRE(DataLayer::Model::datapoints.size() > 0);
+
+        const auto *group = DataLayer::Model::findGroup("DefaultGroup");
+        REQUIRE(group != nullptr);
+        REQUIRE(group->baseId == DefaultGroupInfo.baseId);
+
+        const auto *datapoint = DataLayer::Model::findDatapoint(test.getId());
+        REQUIRE(datapoint != nullptr);
+        REQUIRE(datapoint->qualifiedName == "test");
+        REQUIRE(datapoint->group == "DefaultGroup");
+        REQUIRE(datapoint->type == "Temperature");
+        REQUIRE(datapoint->access == DataLayer::Model::Access::ReadWrite);
+
+        const auto *legacyDatapoint = DataLayer::Model::findDatapoint(0x4006);
+        REQUIRE(legacyDatapoint == datapoint);
+    }
+
     SECTION("datapoint set via group")
     {
         const auto initialValue = test.get();

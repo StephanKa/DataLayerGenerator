@@ -186,7 +186,7 @@ Generated output under `build/generated/`:
 
 | File | Content |
 |---|---|
-| `include/datalayer.h` | All group infos, types, enums, structs, `constinit` datapoint globals |
+| `include/datalayer.h` | All group infos, types, enums, structs, `constinit` datapoint globals, and the `DataLayer::Model` constexpr introspection catalog |
 | `include/formatter.h` | `fmt::formatter<>` specialisations for every generated struct and enum |
 | `datalayer_example/pythonBinding.cpp` | pybind11 module source |
 | `datalayer_example/rtt.py` | Optional SEGGER RTT/PyLink reader for model datapoint frames |

@@ -106,6 +106,18 @@ All files are written under ``<out_dir>/generated/``:
    * - ``test/modelTests.h``
      - Catch2 model-contract checks for generated group metadata and current and legacy datapoint IDs.
 
+C++ Model Introspection
+-----------------------
+
+``include/datalayer.h`` exposes a constexpr catalog in ``DataLayer::Model``. ``groups`` and
+``datapoints`` are ``std::array`` instances that can be iterated at compile time or runtime without
+parsing generated C++ names. Group descriptors contain the group name, base ID, version, persistence,
+and upgrade flag. Datapoint descriptors contain names, group, type label, relative and global IDs,
+legacy global IDs, version, access, and array size.
+
+``findGroup(name)`` and ``findDatapoint(global_id)`` provide constexpr lookup helpers. Datapoint lookup
+accepts both current and legacy global IDs.
+
 Model Compatibility
 -------------------
 

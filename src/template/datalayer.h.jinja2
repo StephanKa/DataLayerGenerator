@@ -3,6 +3,8 @@
 #include <array>
 #include <cstddef>
 #include <limits>
+#include <span>
+#include <string_view>
 #include <type_traits>
 
 #ifdef DATALAYER_DEBUG_EXPORT
@@ -165,6 +167,88 @@ constexpr DataLayer::GroupDataPointMapping {{ group  }} { {{ group }}Info, {% fo
     {{ parameter }}{% if not loop.last %}, {% endif %}
     {%- endfor %} };
 {%- endfor %}
+
+namespace DataLayer::Model
+{
+    enum class Access : uint8_t
+    {
+        ReadOnly,
+        WriteOnly,
+        ReadWrite
+    };
+
+    struct GroupDescriptor
+    {
+        std::string_view name;
+        uint16_t baseId;
+        Version version;
+        PersistenceType persistence;
+        bool allowUpgrade;
+    };
+
+    struct DatapointDescriptor
+    {
+        std::string_view name;
+        std::string_view qualifiedName;
+        std::string_view group;
+        std::string_view type;
+        uint16_t id;
+        uint32_t globalId;
+        std::span<const uint32_t> legacyIds;
+        Version version;
+        Access access;
+        size_t arraySize;
+    };
+
+{% for datapoint in data_points %}
+    inline constexpr std::array<uint32_t, {{ datapoint.renamedFrom | length }}> DatapointLegacyIds{{ loop.index0 }}{
+{%- for legacy_id in datapoint.renamedFrom %}
+        0x{{ "%04x" | format(groups | selectattr('name', 'equalto', datapoint.group) | map(attribute='baseId') | first | int(base=0) + legacy_id) }}{% if not loop.last %},{% endif %}
+{%- endfor %}
+    };
+{% endfor %}
+    inline constexpr std::array<GroupDescriptor, {{ groups | length }}> groups{
+{%- for group in groups %}
+        GroupDescriptor{ "{{ group.name }}", {{ group.baseId }}, Version{ {{ group.version.major }}, {{ group.version.minor }}, {{ group.version.build }} }, PersistenceType::{{ group.persistence }}, {{ group.allowUpgrade }} }{% if not loop.last %},{% endif %}
+{%- endfor %}
+    };
+    inline constexpr std::array<DatapointDescriptor, {{ data_points | length }}> datapoints{
+{%- for datapoint in data_points %}
+        DatapointDescriptor{ "{{ datapoint.name }}", "{% if datapoint.namespace %}{{ datapoint.namespace }}::{% endif %}{{ datapoint.name }}", "{{ datapoint.group }}", "{{ datapoint.type }}", 0x{{ "%04x" | format(datapoint.id) }}, 0x{{ "%04x" | format(groups | selectattr('name', 'equalto', datapoint.group) | map(attribute='baseId') | first | int(base=0) + datapoint.id) }}, std::span<const uint32_t>{ DatapointLegacyIds{{ loop.index0 }} }, Version{ {{ datapoint.version.major }}, {{ datapoint.version.minor }}, {{ datapoint.version.build }} }, Access::{% if datapoint.access == 'READ_ONLY' %}ReadOnly{% elif datapoint.access == 'WRITE_ONLY' %}WriteOnly{% else %}ReadWrite{% endif %}, {{ datapoint.arraySize }}U }{% if not loop.last %},{% endif %}
+{%- endfor %}
+    };
+
+    [[nodiscard]] constexpr const GroupDescriptor *findGroup(const std::string_view name) noexcept
+    {
+        for (const auto &group : groups)
+        {
+            if (group.name == name)
+            {
+                return &group;
+            }
+        }
+        return nullptr;
+    }
+
+    [[nodiscard]] constexpr const DatapointDescriptor *findDatapoint(const uint32_t dataPointId) noexcept
+    {
+        for (const auto &datapoint : datapoints)
+        {
+            if (datapoint.globalId == dataPointId)
+            {
+                return &datapoint;
+            }
+            for (const auto legacyId : datapoint.legacyIds)
+            {
+                if (legacyId == dataPointId)
+                {
+                    return &datapoint;
+                }
+            }
+        }
+        return nullptr;
+    }
+}// namespace DataLayer::Model
 
 {% for group in groups if group.maxPayloadBytes is not none -%}
 {% if group.name in group_data_points_mapping -%}
