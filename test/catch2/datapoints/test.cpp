@@ -95,6 +95,32 @@ namespace
         *static_cast<Temperature *>(context) = value;
     }
 
+    struct MemoryBackend
+    {
+        std::vector<std::byte> bytes;
+
+        [[nodiscard]] bool write(const std::span<const std::byte> input)
+        {
+            bytes.assign(input.begin(), input.end());
+            return true;
+        }
+
+        [[nodiscard]] std::optional<size_t> size() const
+        {
+            return bytes.empty() ? std::nullopt : std::optional{ bytes.size() };
+        }
+
+        [[nodiscard]] bool read(const std::span<std::byte> output) const
+        {
+            if (output.size() != bytes.size())
+            {
+                return false;
+            }
+            std::memcpy(output.data(), bytes.data(), output.size());
+            return true;
+        }
+    };
+
     void countDatapointChange(const Temperature &, void *context) noexcept
     {
         ++*static_cast<size_t *>(context);
@@ -611,6 +637,23 @@ TEST_CASE("Test datapoints")
         REQUIRE(readStatus.size == std::filesystem::file_size("sample.bin"sv));
         REQUIRE(readStatus.result);
         REQUIRE(readStatus.errorCode == SerializationError::None);
+    }
+
+    SECTION("group backend serialization")
+    {
+        static_assert(DataLayer::Persistence::StorageBackend<MemoryBackend>);
+        MemoryBackend backend;
+        const auto expected = test();
+
+        const auto writeStatus = DefaultGroup.serializeGroup(backend);
+        REQUIRE(writeStatus.result);
+        REQUIRE(writeStatus.size == backend.bytes.size());
+
+        std::ignore = test.set(Temperature{ .raw = 9876, .value = 98.76F });
+        const auto readStatus = DefaultGroup.deserializeGroup(backend);
+        REQUIRE(readStatus.result);
+        REQUIRE(readStatus.errorCode == SerializationError::None);
+        REQUIRE(test() == expected);
     }
 
     SECTION("group file deserialization rejects corrupt payload")

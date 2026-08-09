@@ -1,10 +1,13 @@
 #pragma once
 
 #include <array>
+#include <concepts>
 #include <cstring>
 #include <filesystem>
 #include <fstream>
 #include <helper.h>
+#include <limits>
+#include <optional>
 #include <tuple>
 #include <vector>
 
@@ -81,54 +84,67 @@ namespace DataLayer::Persistence
         offset += sizeof(Value);
         return true;
     }
-}// namespace DataLayer::Persistence
 
-template<typename Data>
-struct Serialization
-{
-    constexpr explicit Serialization(const DataLayer::Version &groupVersionInfo, uint16_t groupId, const std::filesystem::path &path, Data &input)
-      : m_dataVariables(input), m_groupVersionInfo(groupVersionInfo), m_groupId(groupId), m_path(path)
-    {}
+    template<typename Backend>
+    concept StorageBackend = requires(Backend &backend, const Backend &readBackend, std::span<const std::byte> output, std::span<std::byte> input) {
+        { backend.write(output) } -> std::convertible_to<bool>;
+        { readBackend.size() } -> std::same_as<std::optional<size_t>>;
+        { readBackend.read(input) } -> std::convertible_to<bool>;
+    };
 
-    [[nodiscard]] SerializationStatus write()
+    class FileBackend
     {
-        std::vector<std::byte> records;
-        bool success = true;
-        std::apply([&](const auto &...dataPoints) { (appendRecord(records, dataPoints, success), ...); }, m_dataVariables);
-        if (!success)
-        {
-            return { .result = false, .size = 0, .errorCode = SerializationError::InvalidFormat };
-        }
+      public:
+        explicit FileBackend(std::filesystem::path path) : m_path(std::move(path))
+        {}
 
-        DataLayer::Persistence::Header header{ .groupId = m_groupId, .groupVersion = m_groupVersionInfo, .checksum = DataLayer::Persistence::crc32(records) };
-        std::vector<std::byte> output;
-        DataLayer::Persistence::append(output, header);
-        output.insert(output.end(), records.begin(), records.end());
-
-        const auto temporaryPath = m_path.string() + ".tmp";
+        [[nodiscard]] bool write(const std::span<const std::byte> output)
         {
-            std::ofstream outputFile(temporaryPath, std::ios::binary | std::ios::trunc);
-            outputFile.write(reinterpret_cast<const char *>(output.data()), static_cast<std::streamsize>(output.size()));
-            outputFile.flush();
-            if (outputFile.fail())
+            const auto temporaryPath = m_path.string() + ".tmp";
             {
-                return { .result = false, .size = output.size(), .errorCode = SerializationError::InvalidFormat };
+                std::ofstream outputFile(temporaryPath, std::ios::binary | std::ios::trunc);
+                outputFile.write(reinterpret_cast<const char *>(output.data()), static_cast<std::streamsize>(output.size()));
+                outputFile.flush();
+                if (outputFile.fail())
+                {
+                    return false;
+                }
             }
-        }
 
-        std::error_code error;
-        std::filesystem::rename(temporaryPath, m_path, error);
-        if (error)
-        {
-            std::filesystem::remove(m_path, error);
-            error.clear();
+            std::error_code error;
             std::filesystem::rename(temporaryPath, m_path, error);
+            if (error)
+            {
+                std::filesystem::remove(m_path, error);
+                error.clear();
+                std::filesystem::rename(temporaryPath, m_path, error);
+            }
+            return !error;
         }
-        return { .result = !error, .size = output.size(), .errorCode = error ? SerializationError::InvalidFormat : SerializationError::None };
-    }
 
-  private:
-    static void appendRecord(std::vector<std::byte> &records, const auto &dataPoint, bool &success)
+        [[nodiscard]] std::optional<size_t> size() const
+        {
+            std::error_code error;
+            const auto result = std::filesystem::file_size(m_path, error);
+            if (error || result > std::numeric_limits<size_t>::max())
+            {
+                return std::nullopt;
+            }
+            return static_cast<size_t>(result);
+        }
+
+        [[nodiscard]] bool read(const std::span<std::byte> input) const
+        {
+            std::ifstream inputFile(m_path, std::ios::binary);
+            inputFile.read(reinterpret_cast<char *>(input.data()), static_cast<std::streamsize>(input.size()));
+            return !inputFile.fail();
+        }
+
+      private:
+        std::filesystem::path m_path;
+    };
+
+    inline void appendRecord(std::vector<std::byte> &records, const auto &dataPoint, bool &success)
     {
         const auto value = dataPoint();
         using Value = std::remove_cvref_t<decltype(value)>;
@@ -137,81 +153,17 @@ struct Serialization
             success = false;
             return;
         }
-        const DataLayer::Persistence::RecordHeader header{ .dataPointId = dataPoint.getId(), .version = dataPoint.getVersion(), .payloadSize = sizeof(Value) };
-        DataLayer::Persistence::append(records, header);
-        DataLayer::Persistence::append(records, value);
+        const RecordHeader header{ .dataPointId = dataPoint.getId(), .version = dataPoint.getVersion(), .payloadSize = sizeof(Value) };
+        append(records, header);
+        append(records, value);
     }
 
-    Data &m_dataVariables;
-    DataLayer::Version m_groupVersionInfo;
-    uint16_t m_groupId;
-    std::filesystem::path m_path;
-};
-
-template<typename Data>
-struct Deserialization
-{
-    constexpr explicit Deserialization(const DataLayer::Version &groupVersionInfo, uint16_t groupId, const std::filesystem::path &path, Data &input, bool allowUpgrade)
-      : m_dataVariables(input), m_groupVersionInfo(groupVersionInfo), m_groupId(groupId), m_path(path), m_allowUpgrade(allowUpgrade)
-    {}
-
-    [[nodiscard]] SerializationStatus read()
+    inline void setVersionError(SerializationError &error)
     {
-        std::ifstream inputFile(m_path, std::ios::binary | std::ios::ate);
-        if (!inputFile)
-        {
-            return { .result = false, .size = 0, .errorCode = SerializationError::InvalidFormat };
-        }
-        const auto fileSize = static_cast<size_t>(inputFile.tellg());
-        if (fileSize < sizeof(DataLayer::Persistence::Header) || fileSize > MaxPersistenceFileSize)
-        {
-            return { .result = false, .size = fileSize, .errorCode = SerializationError::InvalidFormat };
-        }
-
-        std::vector<std::byte> input(fileSize);
-        inputFile.seekg(0);
-        inputFile.read(reinterpret_cast<char *>(input.data()), static_cast<std::streamsize>(input.size()));
-        if (inputFile.fail())
-        {
-            return { .result = false, .size = 0, .errorCode = SerializationError::InvalidFormat };
-        }
-
-        DataLayer::Persistence::Header header{};
-        size_t offset = 0;
-        if (!DataLayer::Persistence::read(std::span{ input }, offset, header) || header.magic != DataLayer::Persistence::Magic
-            || header.formatVersion != DataLayer::Persistence::FormatVersion)
-        {
-            return { .result = false, .size = input.size(), .errorCode = SerializationError::InvalidFormat };
-        }
-        if (header.groupId != m_groupId)
-        {
-            return { .result = false, .size = input.size(), .errorCode = SerializationError::GroupIdMismatch };
-        }
-
-        const auto records = std::span<const std::byte>{ input }.subspan(offset);
-        if (header.checksum != DataLayer::Persistence::crc32(records))
-        {
-            return { .result = false, .size = input.size(), .errorCode = SerializationError::ChecksumMismatch };
-        }
-
-        SerializationError error = (m_groupVersionInfo > header.groupVersion && !m_allowUpgrade) ? SerializationError::GroupVersion : SerializationError::None;
-        bool success = true;
-        while (offset < input.size())
-        {
-            DataLayer::Persistence::RecordHeader record{};
-            if (!DataLayer::Persistence::read(std::span{ input }, offset, record) || input.size() - offset < record.payloadSize)
-            {
-                return { .result = false, .size = offset, .errorCode = SerializationError::InvalidFormat };
-            }
-            const auto payload = std::span<const std::byte>{ input }.subspan(offset, record.payloadSize);
-            offset += record.payloadSize;
-            std::apply([&](auto &...dataPoints) { (readRecord(dataPoints, record, payload, error, success), ...); }, m_dataVariables);
-        }
-        return { .result = success, .size = input.size(), .errorCode = error };
+        error = error == SerializationError::GroupVersion ? SerializationError::GroupAndDatapointVersion : SerializationError::DatapointVersion;
     }
 
-  private:
-    static void readRecord(auto &dataPoint, const DataLayer::Persistence::RecordHeader &record, std::span<const std::byte> payload, SerializationError &error, bool &success)
+    inline void readRecord(auto &dataPoint, const RecordHeader &record, const std::span<const std::byte> payload, SerializationError &error, bool &success)
     {
         if (!dataPoint.matchesId(record.dataPointId))
         {
@@ -250,14 +202,109 @@ struct Deserialization
         dataPoint = value;
     }
 
-    static void setVersionError(SerializationError &error)
+    template<StorageBackend Backend, typename Data>
+    [[nodiscard]] SerializationStatus serialize(Backend &backend, const Version &groupVersionInfo, const uint16_t groupId, Data &input)
     {
-        error = error == SerializationError::GroupVersion ? SerializationError::GroupAndDatapointVersion : SerializationError::DatapointVersion;
+        std::vector<std::byte> records;
+        bool success = true;
+        std::apply([&](const auto &...dataPoints) { (appendRecord(records, dataPoints, success), ...); }, input);
+        if (!success)
+        {
+            return { .result = false, .size = 0, .errorCode = SerializationError::InvalidFormat };
+        }
+
+        Header header{ .groupId = groupId, .groupVersion = groupVersionInfo, .checksum = crc32(records) };
+        std::vector<std::byte> output;
+        append(output, header);
+        output.insert(output.end(), records.begin(), records.end());
+        const bool writeSuccess = backend.write(std::span<const std::byte>{ output });
+        return { .result = writeSuccess, .size = output.size(), .errorCode = writeSuccess ? SerializationError::None : SerializationError::InvalidFormat };
     }
 
+    template<StorageBackend Backend, typename Data>
+    [[nodiscard]] SerializationStatus deserialize(const Backend &backend, const Version &groupVersionInfo, const uint16_t groupId, Data &input, const bool allowUpgrade)
+    {
+        const auto storedSize = backend.size();
+        if (!storedSize || *storedSize < sizeof(Header) || *storedSize > MaxPersistenceFileSize)
+        {
+            return { .result = false, .size = storedSize.value_or(0), .errorCode = SerializationError::InvalidFormat };
+        }
+
+        std::vector<std::byte> inputBytes(*storedSize);
+        if (!backend.read(inputBytes))
+        {
+            return { .result = false, .size = 0, .errorCode = SerializationError::InvalidFormat };
+        }
+
+        Header header{};
+        size_t offset = 0;
+        if (!read(std::span{ inputBytes }, offset, header) || header.magic != Magic || header.formatVersion != FormatVersion)
+        {
+            return { .result = false, .size = inputBytes.size(), .errorCode = SerializationError::InvalidFormat };
+        }
+        if (header.groupId != groupId)
+        {
+            return { .result = false, .size = inputBytes.size(), .errorCode = SerializationError::GroupIdMismatch };
+        }
+
+        const auto records = std::span<const std::byte>{ inputBytes }.subspan(offset);
+        if (header.checksum != crc32(records))
+        {
+            return { .result = false, .size = inputBytes.size(), .errorCode = SerializationError::ChecksumMismatch };
+        }
+
+        SerializationError error = (groupVersionInfo > header.groupVersion && !allowUpgrade) ? SerializationError::GroupVersion : SerializationError::None;
+        bool success = true;
+        while (offset < inputBytes.size())
+        {
+            RecordHeader record{};
+            if (!read(std::span{ inputBytes }, offset, record) || inputBytes.size() - offset < record.payloadSize)
+            {
+                return { .result = false, .size = offset, .errorCode = SerializationError::InvalidFormat };
+            }
+            const auto payload = std::span<const std::byte>{ inputBytes }.subspan(offset, record.payloadSize);
+            offset += record.payloadSize;
+            std::apply([&](auto &...dataPoints) { (readRecord(dataPoints, record, payload, error, success), ...); }, input);
+        }
+        return { .result = success, .size = inputBytes.size(), .errorCode = error };
+    }
+}// namespace DataLayer::Persistence
+
+template<typename Data>
+struct Serialization
+{
+    constexpr explicit Serialization(const DataLayer::Version &groupVersionInfo, uint16_t groupId, const std::filesystem::path &path, Data &input)
+      : m_dataVariables(input), m_groupVersionInfo(groupVersionInfo), m_groupId(groupId), m_backend(path)
+    {}
+
+    [[nodiscard]] SerializationStatus write()
+    {
+        return DataLayer::Persistence::serialize(m_backend, m_groupVersionInfo, m_groupId, m_dataVariables);
+    }
+
+  private:
     Data &m_dataVariables;
     DataLayer::Version m_groupVersionInfo;
     uint16_t m_groupId;
-    std::filesystem::path m_path;
+    DataLayer::Persistence::FileBackend m_backend;
+};
+
+template<typename Data>
+struct Deserialization
+{
+    constexpr explicit Deserialization(const DataLayer::Version &groupVersionInfo, uint16_t groupId, const std::filesystem::path &path, Data &input, bool allowUpgrade)
+      : m_dataVariables(input), m_groupVersionInfo(groupVersionInfo), m_groupId(groupId), m_backend(path), m_allowUpgrade(allowUpgrade)
+    {}
+
+    [[nodiscard]] SerializationStatus read()
+    {
+        return DataLayer::Persistence::deserialize(m_backend, m_groupVersionInfo, m_groupId, m_dataVariables, m_allowUpgrade);
+    }
+
+  private:
+    Data &m_dataVariables;
+    DataLayer::Version m_groupVersionInfo;
+    uint16_t m_groupId;
+    DataLayer::Persistence::FileBackend m_backend;
     bool m_allowUpgrade;
 };

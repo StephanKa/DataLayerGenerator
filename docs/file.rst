@@ -8,10 +8,10 @@ groups with group- and datapoint-level version validation.
 Format and Integrity
 --------------------
 
-Persistence writes the ``DLG1`` format only. Each file has a magic value, format version, group ID,
-group version, and CRC32 checksum. Each datapoint is stored as an ID-tagged, versioned,
+Persistence writes the ``DLG1`` format only. Each record set has a magic value, format version, group
+ID, group version, and CRC32 checksum. Each datapoint is stored as an ID-tagged, versioned,
 length-delimited record. Unknown records can therefore be skipped when a newer model adds fields.
-Writes stage data in a ``.tmp`` file before replacing the target file.
+The built-in file backend stages data in a ``.tmp`` file before replacing the target file.
 
 Files without the ``DLG1`` header are rejected with ``SerializationError::InvalidFormat``. The reader
 also rejects unsupported format versions, invalid record bounds, files larger than 16 MiB, checksum
@@ -40,6 +40,32 @@ The generated ``GroupDataPointMapping`` exposes two methods when  ``USE_FILE_PER
    SerializationStatus CyclicGroup.serializeGroup("data/cyclic.bin");
    SerializationStatus CyclicGroup.deserializeGroup("data/cyclic.bin");
 
+Custom Storage Backends
+-----------------------
+
+``serializeGroup`` and ``deserializeGroup`` also accept a caller-owned storage backend. This retains
+the same ``DLG1`` bytes and validation behavior while allowing EEPROM, flash-slot, or application
+storage implementations. A backend must provide these methods:
+
+.. code-block:: cpp
+
+   struct StorageBackend
+   {
+       bool write(std::span<const std::byte> bytes);
+       std::optional<size_t> size() const;
+       bool read(std::span<std::byte> destination) const;
+   };
+
+``write`` should make the supplied record set available atomically according to the backend's medium.
+For example, a flash backend can commit to an inactive slot after programming and verification. The
+framework does not select erase geometry, wear leveling, or power-failure policy for the application.
+
+.. code-block:: cpp
+
+   EepromBackend eeprom{ /* application-owned device and address */ };
+   auto written = CyclicGroup.serializeGroup(eeprom);
+   auto restored = CyclicGroup.deserializeGroup(eeprom);
+
 Version-Aware Upgrade
 ---------------------
 
@@ -66,4 +92,7 @@ API Reference
    :members:
 
 .. doxygenstruct:: Deserialization
+   :members:
+
+.. doxygenclass:: DataLayer::Persistence::FileBackend
    :members:

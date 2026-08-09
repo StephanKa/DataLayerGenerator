@@ -75,6 +75,18 @@ namespace DataLayer
             return value.read();
         }
 
+        template<DataLayer::Persistence::StorageBackend Backend>
+        [[nodiscard]] SerializationStatus serializeGroup(Backend &backend) const
+        {
+            return DataLayer::Persistence::serialize(backend, group.version, group.baseId, datapoints);
+        }
+
+        template<DataLayer::Persistence::StorageBackend Backend>
+        [[nodiscard]] SerializationStatus deserializeGroup(const Backend &backend) const
+        {
+            return DataLayer::Persistence::deserialize(backend, group.version, group.baseId, datapoints, group.allowUpgrade);
+        }
+
 #endif
 
       private:

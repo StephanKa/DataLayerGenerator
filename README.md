@@ -27,7 +27,7 @@ formatters, optional Python bindings, and dependency-free MQTT/CAN adapter bound
 | **Compile-time access control** | `READ_ONLY`, `WRITE_ONLY`, `READ_WRITE` enforced via C++20 Concepts |
 | **Range checking** | Alias types carry `Minimum`/`Maximum`; violations return `RangeCheck::underflow/overflow` |
 | **Versioning & migration** | Groups and datapoints carry versions; legacy IDs and byte-level migration callbacks support model evolution |
-| **Persistence** | `DLG1` records include group identity, versions, lengths, CRC32, and staged replacement writes (`-DENABLE_FILE_PERSISTENCE=ON`) |
+| **Persistence** | `DLG1` records include group identity, versions, lengths, and CRC32; file, EEPROM, flash-slot, and application backends share the same format (`-DENABLE_FILE_PERSISTENCE=ON`) |
 | **Change callbacks** | Optional allocation-free callback invoked after a successful datapoint write |
 | **Transport boundaries** | Dependency-free typed MQTT and CAN/CAN-FD adapters; applications supply the broker client or CAN driver |
 | **fmt support** | Auto-generated `fmt::formatter<>` for all custom structs and enums (`-DENABLE_FMT=ON`) |
