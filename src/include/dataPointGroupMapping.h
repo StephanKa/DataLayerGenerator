@@ -1,4 +1,7 @@
 #pragma once
+#ifdef USE_TRANSACTIONAL_UPDATES
+#include <array>
+#endif
 #include <cstddef>
 #include <cstdint>
 #include <detail.h>
@@ -9,6 +12,18 @@
 
 namespace DataLayer
 {
+#ifdef USE_TRANSACTIONAL_UPDATES
+    template<typename T>
+    struct DatapointUpdate
+    {
+        uint32_t dataPointId;
+        const T &value;
+    };
+
+    template<typename T>
+    DatapointUpdate(uint32_t, const T &) -> DatapointUpdate<T>;
+#endif
+
     template<typename Mapping>
     struct DataPointSize;
 
@@ -61,6 +76,35 @@ namespace DataLayer
               datapoints);
         }
 
+#ifdef USE_TRANSACTIONAL_UPDATES
+
+        template<typename... Updates>
+            requires(sizeof...(Updates) > 0)
+        [[nodiscard]] constexpr Detail::CheckResult setDatapointsAtomically(const Updates &...updates) const
+        {
+            const std::array dataPointIds{ updates.dataPointId... };
+            for (size_t index = 0; index < dataPointIds.size(); ++index)
+            {
+                for (size_t comparison = index + 1; comparison < dataPointIds.size(); ++comparison)
+                {
+                    if (dataPointIds[index] == dataPointIds[comparison])
+                    {
+                        return { .success = false, .check = Detail::RangeCheck::notChecked };
+                    }
+                }
+            }
+
+            auto check = Detail::RangeCheck::notChecked;
+            if (!(validateUpdate(updates, check) && ...))
+            {
+                return { .success = false, .check = check };
+            }
+            (commitUpdate(updates), ...);
+            return { .success = true, .check = Detail::RangeCheck::ok };
+        }
+
+#endif
+
 #ifdef USE_FILE_PERSISTENCE
 
         [[nodiscard]] SerializationStatus serializeGroup(const std::filesystem::path &path) const
@@ -90,6 +134,58 @@ namespace DataLayer
 #endif
 
       private:
+#ifdef USE_TRANSACTIONAL_UPDATES
+        constexpr bool validateUpdate(const auto &update, Detail::RangeCheck &check) const
+        {
+            bool found = false;
+            bool valid = false;
+            std::apply(
+              [&](const auto &...args) {
+                  (([&] {
+                      if (!found && args.matchesId(update.dataPointId))
+                      {
+                          found = true;
+                          valid = validateValue(update, args, check);
+                      }
+                  }()),
+                    ...);
+              },
+              datapoints);
+            if (!found)
+            {
+                check = Detail::RangeCheck::notChecked;
+            }
+            return found && valid;
+        }
+
+        constexpr void commitUpdate(const auto &update) const
+        {
+            std::apply([&](auto &...args) { ((args.matchesId(update.dataPointId) ? commitValue(update, args) : void()), ...); }, datapoints);
+        }
+
+        constexpr static bool validateValue(const auto &update, const auto &args, Detail::RangeCheck &check)
+        {
+            if constexpr (Helper::WriteConcept<std::remove_cvref_t<decltype(args.TypeAccess)>>
+                          && std::is_same_v<std::remove_cvref_t<decltype(args())>, std::remove_cvref_t<decltype(update.value)>>)
+            {
+                const auto value = Detail::checkValue(update.value);
+                check = value.has_value() ? Detail::RangeCheck::ok : value.error();
+                return value.has_value();
+            }
+            check = Detail::RangeCheck::notChecked;
+            return false;
+        }
+
+        constexpr static void commitValue(const auto &update, auto &args)
+        {
+            if constexpr (Helper::WriteConcept<std::remove_cvref_t<decltype(args.TypeAccess)>>
+                          && std::is_same_v<std::remove_cvref_t<decltype(args())>, std::remove_cvref_t<decltype(update.value)>>)
+            {
+                std::ignore = args.set(update.value);
+            }
+        }
+#endif
+
         constexpr static bool setter([[maybe_unused]] const auto &value, [[maybe_unused]] auto &args, [[maybe_unused]] bool &ret, [[maybe_unused]] Detail::RangeCheck &check)
         {
             if constexpr (Helper::WriteConcept<std::remove_cvref_t<decltype(args.TypeAccess)>>

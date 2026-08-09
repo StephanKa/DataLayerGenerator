@@ -285,6 +285,40 @@ TEST_CASE("Test datapoints")
         REQUIRE((test() == Temperature{ newRaw, newValue }));
     }
 
+#ifdef USE_TRANSACTIONAL_UPDATES
+    SECTION("atomic group updates commit only after complete validation")
+    {
+        const auto original = test();
+        constexpr Temperature committed{ .raw = 3214, .value = 32.14F };
+        constexpr Temperature rejected{ .raw = 9876, .value = 98.76F };
+
+        const auto rejectedBatch =
+          DefaultGroup.setDatapointsAtomically(DataLayer::DatapointUpdate{ test.getId(), committed }, DataLayer::DatapointUpdate{ testWithoutDefaultValue.getId(), rejected });
+        REQUIRE_FALSE(rejectedBatch.success);
+        REQUIRE(rejectedBatch.check == DataLayer::Detail::RangeCheck::notChecked);
+        REQUIRE(test() == original);
+
+        const auto committedBatch = DefaultGroup.setDatapointsAtomically(
+          DataLayer::DatapointUpdate{ test.getId(), committed }, DataLayer::DatapointUpdate{ testWithoutDefaultValueWriteOnly.getId(), rejected });
+        REQUIRE(committedBatch.success);
+        REQUIRE(committedBatch.check == DataLayer::Detail::RangeCheck::ok);
+        REQUIRE(test() == committed);
+        REQUIRE(testWithoutDefaultValueWriteOnly() == rejected);
+    }
+
+    SECTION("atomic group updates reject duplicate datapoint IDs")
+    {
+        const auto original = test();
+        constexpr Temperature first{ .raw = 1111, .value = 11.11F };
+        constexpr Temperature second{ .raw = 2222, .value = 22.22F };
+
+        const auto result = DefaultGroup.setDatapointsAtomically(DataLayer::DatapointUpdate{ test.getId(), first }, DataLayer::DatapointUpdate{ test.getId(), second });
+        REQUIRE_FALSE(result.success);
+        REQUIRE(result.check == DataLayer::Detail::RangeCheck::notChecked);
+        REQUIRE(test() == original);
+    }
+#endif
+
     SECTION("datapoint 'testWithoutDefaultValue' default values via get() method")
     {
         REQUIRE((testWithoutDefaultValue.get() == Temperature{}));

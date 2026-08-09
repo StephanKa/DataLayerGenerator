@@ -242,6 +242,7 @@ CMake to choose a different import name.
 |---|---|---|
 | `ENABLE_FMT` | `OFF` | Enable `fmt` library support; compiles with `-DUSE_FMT` |
 | `ENABLE_FILE_PERSISTENCE` | `OFF` | Enable binary file persistence; compiles with `-DUSE_FILE_PERSISTENCE` |
+| `ENABLE_TRANSACTIONAL_UPDATES` | `OFF` | Enable all-or-none group update batches; compiles with `-DUSE_TRANSACTIONAL_UPDATES` |
 | `ENABLE_PYBIND11` | `OFF` | Build pybind11 Python module |
 | `PYBIND11_DISABLE_EXTRAS` | `OFF` | Disable pybind11 LTO/strip extras for faster development builds |
 | `ENABLE_TESTING` | `ON` | Build Catch2 test suite |

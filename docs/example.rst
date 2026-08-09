@@ -30,6 +30,22 @@ The model defines ``AliasTypeUint32t`` with ``"min": 100, "max": 200``.
    auto rc2 = TestAlias.set(AliasTypeUint32t{150});
    // rc2 == DataLayer::Detail::RangeCheck::ok
 
+Transactional Group Updates
+---------------------------
+
+When configured with ``-DENABLE_TRANSACTIONAL_UPDATES=ON``, a group can validate and then commit
+multiple writes as one all-or-none batch. A missing ID, duplicate ID, access/type mismatch, or range
+failure leaves every datapoint and its change observers untouched.
+
+.. code-block:: cpp
+
+   const Temperature temperature{ .value = 23.5f, .raw = 2350 };
+   const auto result = DefaultGroup.setDatapointsAtomically(
+       DataLayer::DatapointUpdate{ Testify::test.getId(), temperature },
+       DataLayer::DatapointUpdate{ TestAlias.getId(), AliasTypeUint32t{150} });
+
+   // result.success is true only when both updates have committed.
+
 Struct Datapoints
 -----------------
 
