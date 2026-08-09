@@ -207,6 +207,30 @@
       "name": "rangeAlias",
       "type": "RangeAlias",
       "version": "1.0.0"
+    },
+    {
+      "access": "READ_WRITE",
+      "group": "RangeCheckGroup",
+      "id": 2,
+      "name": "steppedAlias",
+      "type": "SteppedAlias",
+      "version": "1.0.0"
+    },
+    {
+      "access": "READ_WRITE",
+      "group": "RangeCheckGroup",
+      "id": 3,
+      "name": "modeAlias",
+      "type": "ModeAlias",
+      "version": "1.0.0"
+    },
+    {
+      "access": "READ_WRITE",
+      "group": "RangeCheckGroup",
+      "id": 4,
+      "name": "labelAlias",
+      "type": "LabelAlias",
+      "version": "1.0.0"
     }
   ]
 }

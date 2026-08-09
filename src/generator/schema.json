@@ -168,7 +168,22 @@
               "type": "string"
             },
             "min": {},
-            "max": {}
+            "max": {},
+            "step": {},
+            "allowedValues": {
+              "type": "array"
+            },
+            "minLength": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "maxLength": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "pattern": {
+              "type": "string"
+            }
           },
           "required": [
             "name",

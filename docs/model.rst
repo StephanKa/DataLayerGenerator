@@ -347,6 +347,46 @@ Defines **alias types** — thin wrappers around a base type with optional compi
      ]
    }
 
+Structured Alias Validation
+---------------------------
+
+Alias types can add validation evaluated by the same ``DataLayer::Detail::checkValue`` path used by
+direct datapoint writes, group mappings, dispatchers, and transactional updates. A rejected write
+does not modify the stored value and returns the relevant ``RangeCheck`` result.
+
+Numeric integer aliases support ``min``, ``max``, a positive ``step`` anchored at ``min``, and an
+``allowedValues`` list. ``step`` is intentionally restricted to integer aliases because exact
+floating-point step arithmetic is not reliable in C++23 constant evaluation.
+
+.. code-block:: json
+
+   {
+     "name": "FanPercent",
+     "type": "uint8_t",
+     "min": 0,
+     "max": 100,
+     "step": 5,
+     "allowedValues": [0, 25, 50, 75, 100]
+   }
+
+``std::string_view`` aliases support ``minLength``, ``maxLength``, ``allowedValues``, and a
+constexpr glob ``pattern``. ``?`` matches one character and ``*`` matches zero or more characters;
+this deliberately avoids a runtime regular-expression dependency.
+
+.. code-block:: json
+
+   {
+     "name": "DeviceLabel",
+     "type": "std::string_view",
+     "minLength": 3,
+     "maxLength": 12,
+     "pattern": "DEV-????"
+   }
+
+The returned validation errors are ``underflow``, ``overflow``, ``stepMismatch``, ``notAllowed``,
+``lengthUnderflow``, ``lengthOverflow``, and ``patternMismatch``. All rule metadata and allowed
+value lists are generated as ``constexpr`` objects; glob matching is constexpr when the input is.
+
 When ``"min"`` and ``"max"`` are present, :cpp:func:`DataLayer::Detail::checkValue` enforces the range
 on every ``set()`` call and returns :cpp:enum:`DataLayer::Detail::RangeCheck`:
 

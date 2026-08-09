@@ -90,6 +90,29 @@ class TestTypesValidator(unittest.TestCase):
         self.assertIsNone(result[0]['min'])
         self.assertIsNone(result[0]['max'])
 
+    def test_integral_step_requires_explicit_minimum(self):
+        """Step aliases have an explicit origin and positive integral step."""
+        test_data = [{'name': 'Stepped', 'type': 'uint32_t', 'step': 2}]
+        self.assertRaises(generator.TypeException, generator.type_validator, test_data)
+
+    def test_allowed_values_and_string_rules_are_valid(self):
+        """Allowed sets and constexpr string rules are accepted for compatible aliases."""
+        test_data = [
+            {'name': 'Mode', 'type': 'uint32_t', 'allowedValues': [1, 3, 5]},
+            {'name': 'Label', 'type': 'std::string_view', 'minLength': 3, 'maxLength': 6, 'pattern': 'A*'},
+        ]
+        generator.type_validator(test_data)
+
+    def test_string_rules_on_numeric_type_are_rejected(self):
+        """Length and glob rules apply only to string-view aliases."""
+        test_data = [{'name': 'NotAString', 'type': 'uint32_t', 'minLength': 3}]
+        self.assertRaises(generator.TypeException, generator.type_validator, test_data)
+
+    def test_empty_allowed_values_are_rejected(self):
+        """An explicit allowed-value rule cannot silently contain no values."""
+        test_data = [{'name': 'EmptyMode', 'type': 'uint32_t', 'allowedValues': []}]
+        self.assertRaises(generator.TypeException, generator.type_validator, test_data)
+
 
 if __name__ == '__main__':
     unittest.main()

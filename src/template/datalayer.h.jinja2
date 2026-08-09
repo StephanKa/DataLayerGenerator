@@ -66,8 +66,29 @@ constinit DataLayer::DataPoint<
 struct {{ type.name }} : DataLayer::Detail::BaseType<{{ type.type }}>
 {
     using Type = {{ type.type }};
-    static constexpr Type Minimum{ {% if type.min %}{{ type.min }}{% else %}std::numeric_limits<Type>::min(){% endif %} };
-    static constexpr Type Maximum{ {% if type.max %}{{ type.max }}{% else %}std::numeric_limits<Type>::max(){% endif %} };
+{% if type.type != 'std::string_view' -%}
+    static constexpr Type Minimum{ {% if type.min is not none %}{{ type.min }}{% else %}std::numeric_limits<Type>::min(){% endif %} };
+    static constexpr Type Maximum{ {% if type.max is not none %}{{ type.max }}{% else %}std::numeric_limits<Type>::max(){% endif %} };
+{% endif -%}
+{% if type.step is not none -%}
+    static constexpr Type Step{ {{ type.step }} };
+{% endif -%}
+{% if type.allowedValues -%}
+    static constexpr std::array<Type, {{ type.allowedValues | length }}> AllowedValues{
+{% for value in type.allowedValues -%}
+        {% if type.type == 'std::string_view' %}std::string_view{ {{ value | tojson }} }{% elif type.type == 'bool' %}{{ 'true' if value else 'false' }}{% else %}{{ value }}{% endif %}{% if not loop.last %},{% endif %}
+{% endfor -%}
+    };
+{% endif -%}
+{% if type.minLength is not none -%}
+    static constexpr size_t MinimumLength{ {{ type.minLength }}U };
+{% endif -%}
+{% if type.maxLength is not none -%}
+    static constexpr size_t MaximumLength{ {{ type.maxLength }}U };
+{% endif -%}
+{% if type.pattern is not none -%}
+    static constexpr std::string_view Pattern{ {{ type.pattern | tojson }} };
+{% endif -%}
 
     using BaseType<Type>::BaseType;
 };

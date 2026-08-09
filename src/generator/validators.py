@@ -252,6 +252,7 @@ def type_validator(type_data):
     :return: given type_data
     """
     check_names = dict()
+    integral_types = {'uint8_t', 'uint16_t', 'uint32_t', 'uint64_t', 'int8_t', 'int16_t', 'int32_t', 'int64_t'}
     for temp_group in type_data:
         if temp_group['name'] in check_names:
             raise TypeException(f"Type name '{temp_group['name']}' already defined, please check your model")
@@ -260,15 +261,43 @@ def type_validator(type_data):
             raise TypeException(f"Typed definition is missing 'type', please check your model")
         if temp_group['type'] not in BASE_TYPES:
             raise TypeException(f"Type '{temp_group['type']}' is not defined in base types")
-        if 'min' not in temp_group:
-            temp_group['min'] = None
-        if 'max' not in temp_group:
-            temp_group['max'] = None
-        if 'min' in temp_group and 'max' in temp_group and temp_group['min'] is not None and temp_group['max'] is not None:
+        for field in ('min', 'max', 'step', 'minLength', 'maxLength', 'pattern'):
+            temp_group.setdefault(field, None)
+        has_allowed_values = 'allowedValues' in temp_group
+        temp_group.setdefault('allowedValues', [])
+        if temp_group['type'] == 'std::string_view' and (temp_group['min'] is not None or temp_group['max'] is not None):
+            raise TypeException(f"String type '{temp_group['name']}' must use minLength/maxLength instead of min/max")
+        if temp_group['type'] != 'std::string_view' and any(
+                temp_group[field] is not None for field in ('minLength', 'maxLength', 'pattern')):
+            raise TypeException(f"Non-string type '{temp_group['name']}' cannot use string validation fields")
+        if temp_group['min'] is not None and temp_group['max'] is not None:
             if temp_group['min'] == temp_group['max']:
                 raise TypeException(f"Min and Max are equal! max({temp_group['max']}) and min({temp_group['min']})")
             elif temp_group['min'] > temp_group['max']:
                 raise TypeException(f"For min and max wrong: max({temp_group['max']}) and min({temp_group['min']})")
+        if temp_group['step'] is not None:
+            if temp_group['type'] not in integral_types or isinstance(temp_group['step'], bool) or not isinstance(temp_group['step'], int) or temp_group['step'] <= 0:
+                raise TypeException(f"Type '{temp_group['name']}' step must be a positive integer alias step")
+            if temp_group['min'] is None:
+                raise TypeException(f"Type '{temp_group['name']}' step requires an explicit min")
+        if has_allowed_values and not temp_group['allowedValues']:
+            raise TypeException(f"Type '{temp_group['name']}' allowedValues cannot be empty")
+        if temp_group['allowedValues']:
+            if len(temp_group['allowedValues']) != len(set(temp_group['allowedValues'])):
+                raise TypeException(f"Type '{temp_group['name']}' allowedValues contains duplicates")
+            for value in temp_group['allowedValues']:
+                if temp_group['type'] == 'std::string_view':
+                    valid = isinstance(value, str)
+                elif temp_group['type'] == 'bool':
+                    valid = isinstance(value, bool)
+                else:
+                    valid = isinstance(value, (int, float)) and not isinstance(value, bool)
+                if not valid:
+                    raise TypeException(f"Type '{temp_group['name']}' allowedValues has an incompatible value")
+        if temp_group['minLength'] is not None and temp_group['maxLength'] is not None and temp_group['minLength'] > temp_group['maxLength']:
+            raise TypeException(f"String type '{temp_group['name']}' minLength exceeds maxLength")
+        if temp_group['pattern'] is not None and not temp_group['pattern']:
+            raise TypeException(f"String type '{temp_group['name']}' pattern cannot be empty")
     return type_data
 
 

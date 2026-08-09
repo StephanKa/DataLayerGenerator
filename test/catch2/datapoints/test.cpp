@@ -1026,6 +1026,26 @@ TEST_CASE("Test datapoints")
         REQUIRE(rangeAlias().value == before);
     }
 
+    SECTION("SteppedAlias rejects values outside its configured step")
+    {
+        REQUIRE(steppedAlias.set(SteppedAlias{ 4 }) == DataLayer::Detail::RangeCheck::ok);
+        REQUIRE(steppedAlias.set(SteppedAlias{ 5 }) == DataLayer::Detail::RangeCheck::stepMismatch);
+    }
+
+    SECTION("ModeAlias accepts only configured values")
+    {
+        REQUIRE(modeAlias.set(ModeAlias{ 3 }) == DataLayer::Detail::RangeCheck::ok);
+        REQUIRE(modeAlias.set(ModeAlias{ 4 }) == DataLayer::Detail::RangeCheck::notAllowed);
+    }
+
+    SECTION("LabelAlias validates length and constexpr glob patterns")
+    {
+        REQUIRE(labelAlias.set(LabelAlias{ "AB" }) == DataLayer::Detail::RangeCheck::lengthUnderflow);
+        REQUIRE(labelAlias.set(LabelAlias{ "ABCDEFG" }) == DataLayer::Detail::RangeCheck::lengthOverflow);
+        REQUIRE(labelAlias.set(LabelAlias{ "B123" }) == DataLayer::Detail::RangeCheck::patternMismatch);
+        REQUIRE(labelAlias.set(LabelAlias{ "A123" }) == DataLayer::Detail::RangeCheck::ok);
+    }
+
     SECTION("dispatcher setDatapoint() fan-out to datapoint")
     {
         constexpr Temperature newValue{ .raw = 7777, .value = 77.7F };
