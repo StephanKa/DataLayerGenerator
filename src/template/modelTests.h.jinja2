@@ -2,6 +2,17 @@
 #include <catch2/catch_test_macros.hpp>
 #include <include/datalayer.h>
 
+TEST_CASE("Generated model fingerprint and layout contract", "[generated][model][layout]")
+{
+    STATIC_REQUIRE(DataLayer::Model::fingerprint == 0x{{ metadata.modelFingerprint.value }}ULL);
+    STATIC_REQUIRE(DataLayer::Model::datapointLayouts.size() == {{ metadata.datapoints | length }}U);
+    STATIC_REQUIRE(DataLayer::Model::groupLayouts.size() == {{ metadata.groups | length }}U);
+{% for datapoint in metadata.datapoints %}
+    STATIC_REQUIRE(DataLayer::Model::datapointLayouts[{{ loop.index0 }}].ramBytes == sizeof({{ datapoint.qualifiedName }}));
+    STATIC_REQUIRE(DataLayer::Model::datapointLayouts[{{ loop.index0 }}].alignmentBytes == alignof(decltype({{ datapoint.qualifiedName }})));
+{% endfor %}
+}
+
 TEST_CASE("Generated model persistence contract", "[generated][model][persistence]")
 {
 {% for group in metadata.groups %}

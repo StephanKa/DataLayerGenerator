@@ -275,7 +275,8 @@ def main(template_file_name, template_formatter_file_name, python_binding_file_n
     template = env.get_template(template_file_name)
     output = template.render(enums=enums, groups=groups, structs=structs, data_points=data_points,
                              group_data_points_mapping=group_data_points_mapping, perfect_hash=perfect_hash_data,
-                             prefix_map=PREFIX_MAP, types=types, processors=processors)
+                             prefix_map=PREFIX_MAP, types=types, processors=processors,
+                             model_fingerprint=int(model_metadata['modelFingerprint']['value'], 16))
     with open(f'{args.out_dir}{GENERATED_FOLDER}/datalayer.h', 'w') as f:
         f.write(output)
 

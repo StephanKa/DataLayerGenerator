@@ -192,7 +192,7 @@ Generated output under `build/generated/`:
 | `datalayer_example/rtt.py` | Optional SEGGER RTT/PyLink reader for model datapoint frames |
 | `doc/*.puml` | PlantUML class diagrams |
 | `doc/overview.csv` | Datapoint overview table |
-| `doc/model-metadata.json` | Machine-readable model metadata for host tools |
+| `doc/model-metadata.json` | Machine-readable model metadata and deterministic compatibility fingerprint for host tools |
 | `test/modelTests.h` | Catch2 vectors for model IDs, access, ranges, serialization, and persistence metadata |
 
 See the [SEGGER RTT monitoring guide](https://stephanka.github.io/DataLayerGenerator/rtt.html) for the

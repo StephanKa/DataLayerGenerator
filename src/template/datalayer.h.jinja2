@@ -3,6 +3,7 @@
 #include <array>
 #include <cstddef>
 #include <limits>
+#include <persistenceLayout.h>
 #include <span>
 #include <string_view>
 #include <type_traits>
@@ -245,6 +246,8 @@ namespace DataLayer::Ipo
 
 namespace DataLayer::Model
 {
+    inline constexpr uint64_t fingerprint{ 0x{{ "%016x" | format(model_fingerprint) }}ULL };
+
     enum class Access : uint8_t
     {
         ReadOnly,
@@ -275,6 +278,25 @@ namespace DataLayer::Model
         size_t arraySize;
     };
 
+    struct DatapointLayoutDescriptor
+    {
+        std::string_view qualifiedName;
+        std::string_view group;
+        size_t ramBytes;
+        size_t flashBytes;
+        size_t alignmentBytes;
+        size_t persistenceBytes;
+    };
+
+    struct GroupLayoutDescriptor
+    {
+        std::string_view name;
+        size_t ramBytes;
+        size_t flashBytes;
+        size_t alignmentBytes;
+        size_t persistenceBytes;
+    };
+
 {% for datapoint in data_points %}
     inline constexpr std::array<uint32_t, {{ datapoint.renamedFrom | length }}> DatapointLegacyIds{{ loop.index0 }}{
 {%- for legacy_id in datapoint.renamedFrom %}
@@ -290,6 +312,16 @@ namespace DataLayer::Model
     inline constexpr std::array<DatapointDescriptor, {{ data_points | length }}> datapoints{
 {%- for datapoint in data_points %}
         DatapointDescriptor{ "{{ datapoint.name }}", "{% if datapoint.namespace %}{{ datapoint.namespace }}::{% endif %}{{ datapoint.name }}", "{{ datapoint.group }}", "{{ datapoint.type }}", 0x{{ "%04x" | format(datapoint.id) }}, 0x{{ "%04x" | format(groups | selectattr('name', 'equalto', datapoint.group) | map(attribute='baseId') | first | int(base=0) + datapoint.id) }}, std::span<const uint32_t>{ DatapointLegacyIds{{ loop.index0 }} }, Version{ {{ datapoint.version.major }}, {{ datapoint.version.minor }}, {{ datapoint.version.build }} }, Access::{% if datapoint.access == 'READ_ONLY' %}ReadOnly{% elif datapoint.access == 'WRITE_ONLY' %}WriteOnly{% else %}ReadWrite{% endif %}, {{ datapoint.arraySize }}U }{% if not loop.last %},{% endif %}
+{%- endfor %}
+    };
+    inline constexpr std::array<DatapointLayoutDescriptor, {{ data_points | length }}> datapointLayouts{
+{%- for datapoint in data_points %}
+        DatapointLayoutDescriptor{ "{% if datapoint.namespace %}{{ datapoint.namespace }}::{% endif %}{{ datapoint.name }}", "{{ datapoint.group }}", sizeof({{ datapoint.qualifiedName if datapoint.qualifiedName is defined else (datapoint.namespace ~ '::' if datapoint.namespace else '') ~ datapoint.name }}), sizeof({{ (datapoint.namespace ~ '::' if datapoint.namespace else '') ~ datapoint.name }}()), alignof(decltype({{ (datapoint.namespace ~ '::' if datapoint.namespace else '') ~ datapoint.name }})), {% set datapoint_group = groups | selectattr('name', 'equalto', datapoint.group) | first %}{% if datapoint_group.persistence == 'None' %}0U{% else %}sizeof(DataLayer::Persistence::RecordHeader) + sizeof({{ (datapoint.namespace ~ '::' if datapoint.namespace else '') ~ datapoint.name }}()){% endif %} }{% if not loop.last %},{% endif %}
+{%- endfor %}
+    };
+    inline constexpr std::array<GroupLayoutDescriptor, {{ groups | length }}> groupLayouts{
+{%- for group in groups %}
+        GroupLayoutDescriptor{ "{{ group.name }}", {{ group.name }}Info.observerStorageBytes(){% for datapoint in data_points if datapoint.group == group.name %} + sizeof({{ (datapoint.namespace ~ '::' if datapoint.namespace else '') ~ datapoint.name }}){% endfor %}, 0U{% for datapoint in data_points if datapoint.group == group.name %} + sizeof({{ (datapoint.namespace ~ '::' if datapoint.namespace else '') ~ datapoint.name }}()){% endfor %}, std::max<std::size_t>({ 1U{% for datapoint in data_points if datapoint.group == group.name %}, alignof(decltype({{ (datapoint.namespace ~ '::' if datapoint.namespace else '') ~ datapoint.name }})){% endfor %} }), {% if group.persistence == 'None' %}0U{% else %}sizeof(DataLayer::Persistence::Header){% for datapoint in data_points if datapoint.group == group.name %} + sizeof(DataLayer::Persistence::RecordHeader) + sizeof({{ (datapoint.namespace ~ '::' if datapoint.namespace else '') ~ datapoint.name }}()){% endfor %}{% endif %} }{% if not loop.last %},{% endif %}
 {%- endfor %}
     };
 

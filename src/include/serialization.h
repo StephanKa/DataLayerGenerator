@@ -8,6 +8,7 @@
 #include <helper.h>
 #include <limits>
 #include <optional>
+#include <persistenceLayout.h>
 #include <tuple>
 #include <vector>
 
@@ -33,25 +34,6 @@ struct SerializationStatus
 
 namespace DataLayer::Persistence
 {
-    inline constexpr std::array Magic{ 'D', 'L', 'G', '1' };
-    inline constexpr uint16_t FormatVersion = 1;
-
-    struct Header
-    {
-        std::array<char, 4> magic{ Magic };
-        uint16_t formatVersion{ FormatVersion };
-        uint16_t groupId{};
-        Version groupVersion{};
-        uint32_t checksum{};
-    };
-
-    struct RecordHeader
-    {
-        uint16_t dataPointId{};
-        Version version{};
-        uint32_t payloadSize{};
-    };
-
     [[nodiscard]] inline uint32_t crc32(std::span<const std::byte> data) noexcept
     {
         uint32_t checksum = 0xFFFFFFFFU;

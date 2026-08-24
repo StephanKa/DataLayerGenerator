@@ -86,6 +86,12 @@ you also want to include the four observer callback/context slots stored by ever
 The generated header asserts this total across all generated datapoints. Both checks are
 compile-time only and add no runtime memory or execution cost.
 
+For a detailed target-ABI report, inspect ``DataLayer::Model::datapointLayouts`` and
+``DataLayer::Model::groupLayouts`` in the generated header. They expose object RAM, value
+initialization flash, alignment, and persistence bytes for each datapoint and group. Persistence
+costs are zero for non-persisted groups; persisted groups include the actual file and record header
+types used by the serializer.
+
 datapoints.json
 ---------------
 

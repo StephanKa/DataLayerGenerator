@@ -51,6 +51,23 @@ registering the same callback/context pair more than once is idempotent. The cal
 lifetime, synchronization, and ISR/thread-safety decisions. Observers are not invoked when a range
 check rejects the value.
 
+Each generated group info also supports four allocation-free observers. A group observer receives
+the global datapoint ID, allowing one callback to react to every change in that group without knowing
+the datapoint value type:
+
+.. code-block:: cpp
+
+   void onConfigurationChanged(uint32_t datapointId, void* context) noexcept;
+
+   ConfigurationInfo.addChangeCallback(onConfigurationChanged, applicationContext);
+   std::ignore = temperature.set(Temperature{ .raw = 2310, .value = 23.1f });
+   ConfigurationInfo.removeChangeCallback(onConfigurationChanged, applicationContext);
+   ConfigurationInfo.clearChangeCallbacks();
+
+Datapoint and group observers run after successful whole-value writes, indexed array writes, and
+deserialization. Both registries use fixed storage and perform no allocation. Callback execution is
+synchronous; callers remain responsible for synchronization and callback lifetime.
+
 MQTT
 ----
 

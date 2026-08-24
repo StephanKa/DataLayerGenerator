@@ -108,7 +108,7 @@ All files are written under ``<out_dir>/generated/``:
      - CSV listing all datapoints: ID, name, type, access, group, version.
    * - ``doc/model-metadata.json``
      - Machine-readable catalog of groups, global datapoint IDs, legacy IDs, types, access, versions,
-       enums, structs, aliases, and model counts.
+       enums, structs, aliases, model counts, and the model fingerprint.
    * - ``test/modelTests.h``
      - Catch2 vectors derived from group persistence and versions, current and legacy datapoint IDs,
        access permissions, serialization sizes, and alias range boundaries.
@@ -124,6 +124,17 @@ legacy global IDs, version, access, and array size.
 
 ``findGroup(name)`` and ``findDatapoint(global_id)`` provide constexpr lookup helpers. Datapoint lookup
 accepts both current and legacy global IDs.
+
+``fingerprint`` is a deterministic 64-bit value formed from the canonical compatibility metadata by
+truncating SHA-256 to its first 64 bits. The same value is written to ``model-metadata.json`` as
+``modelFingerprint.value``. Firmware, persisted-data tooling, and external clients can compare this
+value before exchanging model-dependent data. Declaration order does not affect the fingerprint.
+
+``datapointLayouts`` and ``groupLayouts`` provide compile-time memory reports. Each entry contains RAM
+object bytes, initial-value flash bytes, alignment, and serialized persistence bytes. RAM, alignment,
+and persistence values use ``sizeof`` and ``alignof`` and therefore match the target ABI. Flash bytes
+are a portable estimate of the value initialization payload; use the final linker map for exact flash
+occupancy after zero-initialization, section placement, and linker optimizations.
 
 Model Compatibility
 -------------------

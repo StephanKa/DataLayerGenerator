@@ -1,4 +1,6 @@
 """Create machine-readable metadata from validated data-layer models."""
+import hashlib
+import json
 
 
 def _version_string(version):
@@ -22,6 +24,30 @@ def _enum_values(values):
         else:
             result.append({'name': value.name, 'value': value.value})
     return result
+
+
+def create_model_fingerprint(metadata):
+    """Return a deterministic 64-bit fingerprint for model compatibility data."""
+    datapoints = [
+        {**data_point, 'legacyGlobalIds': sorted(data_point.get('legacyGlobalIds', []))}
+        for data_point in metadata['datapoints']
+    ]
+    enums = []
+    for enum in metadata['enums']:
+        values = enum['values']
+        if not enum['autoId']:
+            values = sorted(values, key=lambda value: (value['value'], value['name']))
+        enums.append({**enum, 'values': values})
+    canonical_metadata = {
+        'summary': metadata['summary'],
+        'groups': sorted(metadata['groups'], key=lambda group: group['name']),
+        'datapoints': sorted(datapoints, key=lambda data_point: data_point['qualifiedName']),
+        'enums': sorted(enums, key=lambda enum: enum['name']),
+        'structs': sorted(metadata['structs'], key=lambda struct: struct['name']),
+        'types': sorted(metadata['types'], key=lambda data_type: data_type['name']),
+    }
+    encoded_metadata = json.dumps(canonical_metadata, sort_keys=True, separators=(',', ':'), ensure_ascii=True).encode('utf-8')
+    return int.from_bytes(hashlib.sha256(encoded_metadata).digest()[:8], byteorder='big')
 
 
 def create_model_metadata(enums, groups, structs, data_points, types):
@@ -48,7 +74,7 @@ def create_model_metadata(enums, groups, structs, data_points, types):
             'description': data_point['description'],
         })
 
-    return {
+    metadata = {
         'formatVersion': 1,
         'summary': {
             'groups': len(groups),
@@ -71,6 +97,7 @@ def create_model_metadata(enums, groups, structs, data_points, types):
         'enums': [{
             'name': enum['name'],
             'type': enum['type'],
+            'autoId': enum.get('autoId', False),
             'values': _enum_values(enum['values']),
         } for enum in enums],
         'structs': [{
@@ -82,5 +109,16 @@ def create_model_metadata(enums, groups, structs, data_points, types):
             'type': data_type['type'],
             'minimum': data_type['min'],
             'maximum': data_type['max'],
+            'step': data_type['step'],
+            'allowedValues': data_type['allowedValues'],
+            'minimumLength': data_type['minLength'],
+            'maximumLength': data_type['maxLength'],
+            'pattern': data_type['pattern'],
         } for data_type in types],
     }
+    fingerprint = create_model_fingerprint(metadata)
+    metadata['modelFingerprint'] = {
+        'algorithm': 'sha256-64',
+        'value': f'{fingerprint:016x}',
+    }
+    return metadata

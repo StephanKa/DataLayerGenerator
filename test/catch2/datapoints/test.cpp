@@ -159,6 +159,11 @@ namespace
         ++*static_cast<size_t *>(context);
     }
 
+    void recordGroupChange(uint32_t dataPointId, void *context) noexcept
+    {
+        *static_cast<uint32_t *>(context) = dataPointId;
+    }
+
     constexpr bool operator==(const Temperature &lhs, const Temperature &rhs)
     {
         return (lhs.raw == rhs.raw) && (static_cast<double>(std::fabs(lhs.value - rhs.value)) <= EPSILON);
@@ -269,6 +274,27 @@ TEST_CASE("Test datapoints")
             REQUIRE(notificationCounts[index] == 2);
         }
         test.clearChangeCallbacks();
+    }
+
+    SECTION("group change observers")
+    {
+        std::array<uint32_t, decltype(DefaultGroupInfo)::ObserverCapacity> observedIds{};
+        DefaultGroupInfo.clearChangeCallbacks();
+        for (auto &observedId : observedIds)
+        {
+            REQUIRE(DefaultGroupInfo.addChangeCallback(recordGroupChange, &observedId));
+        }
+        REQUIRE_FALSE(DefaultGroupInfo.addChangeCallback(recordGroupChange, nullptr));
+
+        REQUIRE(test.set(Temperature{ .raw = 2468, .value = 24.5F }) == DataLayer::Detail::RangeCheck::ok);
+        for (const auto observedId : observedIds)
+        {
+            REQUIRE(observedId == test.getId());
+        }
+
+        REQUIRE(DefaultGroupInfo.removeChangeCallback(recordGroupChange, &observedIds[0]));
+        REQUIRE_FALSE(DefaultGroupInfo.removeChangeCallback(recordGroupChange, &observedIds[0]));
+        DefaultGroupInfo.clearChangeCallbacks();
     }
 
     SECTION("datapoint name")

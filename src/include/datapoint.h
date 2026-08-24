@@ -121,6 +121,7 @@ namespace DataLayer
         constexpr void set(size_t index, const auto &value)
         {
             m_value.at(index) = value;
+            notifyChange();
         }
 
         template<typename A = Access>
@@ -130,6 +131,7 @@ namespace DataLayer
             if (bytes.size() == sizeof(T))
             {
                 std::memcpy(&m_value, bytes.data(), sizeof(T));
+                notifyChange();
             }
         }
 
@@ -213,8 +215,7 @@ namespace DataLayer
             if (result.has_value())
             {
                 m_value = *result;
-                std::ranges::for_each(m_changeCallbacks | std::views::filter([](const ChangeObserver &observer) { return observer.callback != nullptr; }),
-                  [this](const ChangeObserver &observer) { observer.callback(m_value, observer.context); });
+                notifyChange();
                 return Detail::RangeCheck::ok;
             }
 #ifdef USE_TRACE_HOOKS
@@ -228,6 +229,13 @@ namespace DataLayer
             }
 #endif
             return result.error();
+        }
+
+        constexpr void notifyChange() noexcept
+        {
+            std::ranges::for_each(m_changeCallbacks | std::views::filter([](const ChangeObserver &observer) { return observer.callback != nullptr; }),
+              [this](const ChangeObserver &observer) { observer.callback(m_value, observer.context); });
+            group.notifyChange(getId());
         }
 
         T m_value{};
